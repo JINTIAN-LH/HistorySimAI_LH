@@ -96,56 +96,6 @@ HistorySimAI/
 └── README.md
 ```
 
----
-
-## 🚀 快速开始
-
-### 1. 克隆项目
-
-```bash
-git clone https://github.com/tmadmao/HistorySimAI_a.git
-cd HistorySimAI_a/ChongzhenSim
-```
-
-### 2. 配置后端
-
-```bash
-cd server
-cp config.example.json config.json
-```
-
-编辑 `config.json`，填入你的 API 密钥：
-
-```json
-{
-  "LLM_API_KEY": "你的智谱AI API密钥",
-  "LLM_API_BASE": "https://open.bigmodel.cn/api/paas/v4",
-  "LLM_MODEL": "glm-4-flash",
-  "LLM_CHAT_MODEL": "glm-4-flash",
-  "PORT": 3002
-}
-```
-
-### 3. 安装依赖并启动后端
-
-```bash
-npm install
-npm start
-```
-
-### 4. 启动前端
-
-新开一个终端：
-
-```bash
-cd ChongzhenSim
-npm install
-npm run dev
-```
-
-浏览器会自动打开 `http://localhost:8080`
-
----
 
 ## ⚙️ 配置说明
 
@@ -154,9 +104,7 @@ npm run dev
 | 字段 | 说明 | 示例 |
 |------|------|------|
 | `LLM_API_KEY` | 大模型 API 密钥（必填） | `your-api-key` |
-| `LLM_API_BASE` | API 网关地址 | `https://open.bigmodel.cn/api/paas/v4` |
-| `LLM_MODEL` | 剧情生成模型 | `glm-4-flash` |
-| `LLM_CHAT_MODEL` | 大臣聊天模型 | `glm-4-flash` |
+| `LLM_API_BASE` | API 网关地址 | ` |
 | `PORT` | 服务端口 | `3002` |
 
 ### 前端配置 (`data/config.json`)
@@ -167,52 +115,6 @@ npm run dev
 | `apiBase` | 后端地址 | `http://localhost:3002` |
 | `totalDays` | 游戏总天数 | `30` |
 | `autoSave` | 自动存档 | `true` / `false` |
-
----
-
-## 🧪 测试
-
-项目包含完整的测试套件：
-
-```bash
-# 后端测试
-cd ChongzhenSim/server
-npm test
-
-# 前端测试
-cd ChongzhenSim
-npm test
-```
-
-**测试覆盖**：
-- 后端 API 测试：13 个测试
-- Schema 验证测试：16 个测试
-- 前端单元测试：27 个测试
-- **总计：56 个测试**
-
----
-
-## 📦 构建部署
-
-### 开发模式
-
-```bash
-npm run dev
-```
-
-### 生产构建
-
-```bash
-npm run build
-```
-
-构建产物位于 `dist/` 目录。
-
-### 预览生产构建
-
-```bash
-npm run preview
-```
 
 ---
 
