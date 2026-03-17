@@ -47,7 +47,7 @@
 |------|------|------|
 | **前端** | 原生 JavaScript ES6+ | 无框架依赖，模块化设计 |
 | **后端** | Node.js + Express | LLM API 代理服务 |
-| **LLM** | 智谱AI GLM-4-Flash | 可配置其他 OpenAI 兼容 API |
+| **LLM** |  | 可配置其他 OpenAI 兼容 API |
 | **数据** | 静态 JSON | 无数据库，轻量部署 |
 | **存储** | localStorage | 存档持久化 |
 | **构建** | Vite | 现代化构建工具 |
