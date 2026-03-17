@@ -51,6 +51,9 @@ const SYSTEM_PROMPT = `你是《崇祯皇帝模拟器》游戏的剧情写手。
 可选字段：
   "news": [ { "title": "奏折标题", "summary": "简述", "province": "涉及地区" } ],
   "publicOpinion": [ { "source": "来源（如：京城百姓/江南士绅/边军将士）", "text": "舆论内容" } ]
+effects 中可选扩展字段：
+  "hostileDamage": { "敌对势力id或名称": 正整数, ... }
+含义：本回合对目标敌对势力造成的打击值；系统将据此降低敌对势力值，降至0即灭亡。
 
 【重要】lastChoiceEffects 和 choices 中的 effects 必须是 JSON 字段，不能写在 storyParagraphs 里面！例如：
 - 正确：{"lastChoiceEffects": {"treasury": 500000, "corruptionLevel": -10}}
@@ -71,6 +74,8 @@ const SYSTEM_PROMPT = `你是《崇祯皇帝模拟器》游戏的剧情写手。
 - 涉及大臣对话时，使用大臣全名（如"毕自严"、"梁廷栋"）
 - lastChoiceEffects：评估上一回合玩家选择（尤其是自拟诏书）的实际执行效果。如果上一回合是自拟诏书，必须根据诏书内容合理推演效果
 - choices 必须恰好 3 个，每个选项的 effects 须合理反映该决策对国家数值和大臣忠诚度的影响
+- 若当前仍有未灭亡敌对势力，3个 choices 中必须至少有1个“军事开拓/征讨/围剿”选项，且 effects.hostileDamage 必须命中一个在存敌对势力
+- 若某敌对势力已标记为灭亡，则剧情、news、publicOpinion 与 choices 中不得再以可行动主线方式使用该势力；相关故事线视为闭锁
 - effects 中的数值范围（单位均为"两"或"石"，不是"万两"或"万石"）：
   * treasury（国库，单位两）：支出如发军饷约 -100000 到 -300000，收入如抄家可高达数百万两（李自成在北京抄家得七千万两），根据剧情合理设定
   * grain（粮储，单位石）：通常 -50000 到 +50000，开仓放粮约 -5000 到 -20000，征收粮草约 +3000 到 +10000
@@ -80,7 +85,7 @@ const SYSTEM_PROMPT = `你是《崇祯皇帝模拟器》游戏的剧情写手。
 - id 用英文或数字，如 increase_tax`;
 
 function buildUserMessage(body) {
-  const { state = {}, lastChoiceId, lastChoiceText, courtChatSummary, currentQuarterAgenda, currentQuarterFocus, playerAbilities, unlockedPolicies, customPolicies } = body;
+  const { state = {}, lastChoiceId, lastChoiceText, courtChatSummary, currentQuarterAgenda, currentQuarterFocus, playerAbilities, unlockedPolicies, customPolicies, hostileForces, closedStorylines } = body;
   const year = state.currentYear ?? 1;
   const month = state.currentMonth ?? 1;
   const phase = state.currentPhase ?? "morning";
@@ -148,6 +153,24 @@ ${effectHint}
     base += `\n\n自定义国策：${customPolicies.map((item) => item.name || item.id).join("、")}`;
   }
 
+  if (Array.isArray(hostileForces) && hostileForces.length > 0) {
+    const alive = hostileForces.filter((item) => !item.isDefeated);
+    const defeated = hostileForces.filter((item) => item.isDefeated);
+    if (alive.length) {
+      const aliveText = alive
+        .map((item) => `${item.id}:${item.name}(势力值${item.power || 0}/100，首领${item.leader || "未知"})`)
+        .join("；");
+      base += `\n\n当前存活敌对势力：${aliveText}。请确保 choices 中至少1项为军事开拓并在 effects.hostileDamage 指定目标。`;
+    }
+    if (defeated.length) {
+      base += `\n\n已灭亡敌对势力：${defeated.map((item) => item.name).join("、")}。这些势力相关主线已闭锁，不可再作为可推进主线。`;
+    }
+  }
+
+  if (Array.isArray(closedStorylines) && closedStorylines.length > 0) {
+    base += `\n\n已闭锁故事线：${closedStorylines.join("、")}。请避免继续展开这些线。`;
+  }
+
   if (courtChatSummary && typeof courtChatSummary === "string" && courtChatSummary.trim()) {
     base += `\n\n（以下为陛下与大臣的私下议事记录，仅供参考、权重偏低）\n${courtChatSummary.trim()}`;
   }
@@ -173,7 +196,11 @@ app.post("/api/chongzhen/story", async (req, res) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${LLM_API_KEY}`,
       },
-      body: JSON.stringify({ model: LLM_MODEL, messages }),
+      body: JSON.stringify({
+        model: LLM_MODEL,
+        messages,
+        response_format: { type: "json_object" },
+      }),
     });
 
     if (!response.ok) {
@@ -209,6 +236,8 @@ app.post("/api/chongzhen/ministerChat", async (req, res) => {
   const currentQuarterFocus = body.currentQuarterFocus || null;
   const currentQuarterAgenda = Array.isArray(body.currentQuarterAgenda) ? body.currentQuarterAgenda : [];
   const customPolicies = Array.isArray(body.customPolicies) ? body.customPolicies : [];
+  const hostileForces = Array.isArray(body.hostileForces) ? body.hostileForces : [];
+  const closedStorylines = Array.isArray(body.closedStorylines) ? body.closedStorylines : [];
 
   if (!ministerId) {
     return res.status(400).json({ error: "ministerId is required" });
@@ -229,6 +258,12 @@ app.post("/api/chongzhen/ministerChat", async (req, res) => {
   const policyHint = customPolicies.length
     ? `\n当前自定义国策：${customPolicies.map((p) => p.name).join("、")}`
     : "";
+  const hostileHint = hostileForces.length
+    ? `\n敌对势力态势：${hostileForces.map((h) => `${h.name}${h.isDefeated ? "(已灭亡)" : `(势力值${h.power || 0})`}`).join("、")}`
+    : "";
+  const closedHint = closedStorylines.length
+    ? `\n已闭锁故事线：${closedStorylines.join("、")}`
+    : "";
 
   const systemPrompt = `你现在是明末崇祯朝的大臣，正在与崇祯皇帝（玩家）私下议事。
 你扮演的大臣基本信息：
@@ -239,6 +274,8 @@ app.post("/api/chongzhen/ministerChat", async (req, res) => {
 - 政治态度：${attitude}
 ${agendaHint}
 ${policyHint}
+${hostileHint}
+${closedHint}
 
 要求：
 - 你始终以"${minister.name}"本人的口吻说话，使用明代官场语气（臣、陛下、圣上等称谓）

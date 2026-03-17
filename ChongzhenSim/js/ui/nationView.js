@@ -5,6 +5,96 @@ import { getStatBarClass, formatTreasury, formatGrain } from "../systems/nationS
 import { PLAYER_ABILITY_KEYS, getPolicyCatalog, spendAbilityPoint, unlockPolicy } from "../systems/coreGameplaySystem.js";
 
 let nationInitCache = null;
+let provinceRulesCache = null;
+
+const DEFAULT_PROVINCE_RULES = {
+  regionRules: [
+    {
+      namePattern: "辽东",
+      default: { threat: "critical", status: "后金压力犹存，关宁防线需持续戒备。" },
+      states: [
+        {
+          whenAny: [
+            { metric: "borderThreat", op: ">=", value: 75 },
+            { metric: "militaryStrength", op: "<=", value: 45 },
+          ],
+          threat: "critical",
+          status: "关宁防线告急，敌情频仍，需尽快补饷增援。",
+        },
+        {
+          whenAll: [
+            { metric: "borderThreat", op: "<=", value: 45 },
+            { metric: "militaryStrength", op: ">=", value: 65 },
+          ],
+          threat: "medium",
+          status: "边防暂稳，但仍需持续警戒后金动向。",
+        },
+      ],
+    },
+    {
+      namePattern: "陕西|河南",
+      default: { threat: "high", status: "灾情与流民问题仍需持续处置。" },
+      states: [
+        {
+          whenAny: [
+            { metric: "disasterLevel", op: ">=", value: 70 },
+            { metric: "civilMorale", op: "<=", value: 40 },
+            { metric: "unrest", op: ">=", value: 30 },
+          ],
+          threat: "high",
+          status: "灾情与流民压力并存，若赈济不足将迅速恶化。",
+        },
+        {
+          whenAll: [
+            { metric: "disasterLevel", op: "<=", value: 45 },
+            { metric: "civilMorale", op: ">=", value: 55 },
+          ],
+          threat: "medium",
+          status: "灾情有所缓解，地方秩序逐步恢复。",
+        },
+      ],
+    },
+    {
+      namePattern: "山东",
+      default: { threat: "medium", status: "军务可控，但需防局部哗变反复。" },
+      states: [
+        {
+          whenAny: [
+            { metric: "militaryStrength", op: "<=", value: 50 },
+            { metric: "unrest", op: ">=", value: 28 },
+          ],
+          threat: "high",
+          status: "军纪与饷银压力偏高，兵变隐患仍在。",
+        },
+      ],
+    },
+    {
+      namePattern: "江南|湖广",
+      default: { threat: "low", status: "税粮产出稳定，仍是朝廷主要财赋支撑。" },
+      states: [
+        {
+          whenAny: [
+            { metric: "treasury", op: "<=", value: 250000 },
+            { metric: "corruptionLevel", op: ">=", value: 70 },
+          ],
+          threat: "medium",
+          status: "赋税与漕运承压，财政回流效率下降。",
+        },
+      ],
+    },
+    {
+      namePattern: "四川",
+      default: { threat: "low", status: "整体安稳，可作为战略后方调度区域。" },
+      states: [
+        {
+          whenAny: [{ metric: "unrest", op: ">=", value: 35 }],
+          threat: "medium",
+          status: "地方治安波动，需要提前防范土司与流民联动。",
+        },
+      ],
+    },
+  ],
+};
 
 function createFoldSection(title, renderBody) {
   const section = document.createElement("div");
@@ -32,6 +122,87 @@ function createFoldSection(title, renderBody) {
   section.appendChild(header);
   section.appendChild(body);
   return section;
+}
+
+function getProvinceRuntimeMetrics(state) {
+  const nation = state.nation || {};
+  return {
+    unrest: state.unrest || 0,
+    civilMorale: nation.civilMorale || 50,
+    disasterLevel: nation.disasterLevel || 50,
+    borderThreat: nation.borderThreat || 50,
+    militaryStrength: nation.militaryStrength || 50,
+    treasury: nation.treasury || 0,
+    corruptionLevel: nation.corruptionLevel || 50,
+  };
+}
+
+function evaluateProvinceCondition(condition, metrics) {
+  if (!condition || typeof condition !== "object") return false;
+  const { metric, op, value } = condition;
+  if (!metric || typeof op !== "string") return false;
+  const actual = metrics[metric];
+  if (typeof actual !== "number" || typeof value !== "number") return false;
+
+  if (op === ">") return actual > value;
+  if (op === ">=") return actual >= value;
+  if (op === "<") return actual < value;
+  if (op === "<=") return actual <= value;
+  if (op === "==") return actual === value;
+  if (op === "!=") return actual !== value;
+  return false;
+}
+
+function evaluateProvinceStateRule(stateRule, metrics) {
+  if (!stateRule || typeof stateRule !== "object") return false;
+  const whenAll = Array.isArray(stateRule.whenAll) ? stateRule.whenAll : [];
+  const whenAny = Array.isArray(stateRule.whenAny) ? stateRule.whenAny : [];
+  if (!whenAll.length && !whenAny.length) return true;
+  const allPass = whenAll.every((c) => evaluateProvinceCondition(c, metrics));
+  const anyPass = whenAny.length ? whenAny.some((c) => evaluateProvinceCondition(c, metrics)) : true;
+  return allPass && anyPass;
+}
+
+function matchProvinceRegionRule(provinceName, regionRule) {
+  if (!regionRule || typeof regionRule !== "object") return false;
+  const pattern = regionRule.namePattern;
+  if (typeof pattern !== "string" || !pattern.trim()) return false;
+  try {
+    const regexp = new RegExp(pattern);
+    return regexp.test(provinceName || "");
+  } catch {
+    return false;
+  }
+}
+
+function deriveProvinceRuntimeState(province, state) {
+  const metrics = getProvinceRuntimeMetrics(state);
+  const rulesSource = provinceRulesCache && Array.isArray(provinceRulesCache.regionRules)
+    ? provinceRulesCache
+    : DEFAULT_PROVINCE_RULES;
+  const regionRules = Array.isArray(rulesSource.regionRules) ? rulesSource.regionRules : [];
+
+  const matchedRegionRule = regionRules.find((rule) => matchProvinceRegionRule(province.name || "", rule));
+  if (!matchedRegionRule) {
+    return {
+      threat: province.threat || "medium",
+      status: province.status || "暂无情报",
+    };
+  }
+
+  const states = Array.isArray(matchedRegionRule.states) ? matchedRegionRule.states : [];
+  const matchedState = states.find((rule) => evaluateProvinceStateRule(rule, metrics));
+  if (matchedState) {
+    return {
+      threat: matchedState.threat || matchedRegionRule.default?.threat || province.threat || "medium",
+      status: matchedState.status || matchedRegionRule.default?.status || province.status || "暂无情报",
+    };
+  }
+
+  return {
+    threat: matchedRegionRule.default?.threat || province.threat || "medium",
+    status: matchedRegionRule.default?.status || province.status || "暂无情报",
+  };
 }
 
 function renderNationView(container) {
@@ -227,6 +398,7 @@ function renderNationView(container) {
   root.appendChild(abilitySection);
 
   const policies = getPolicyCatalog();
+  const policyTitleMap = Object.fromEntries(policies.map((item) => [item.id, item.title]));
   const policySection = createFoldSection(`国策树（可用点数 ${state.policyPoints || 0}）`, (body) => {
     policies.forEach((policy) => {
       const unlocked = (state.unlockedPolicies || []).includes(policy.id);
@@ -240,7 +412,9 @@ function renderNationView(container) {
       titleEl.textContent = `${policy.branch} · ${policy.title}${unlocked ? "（已实施）" : ""}`;
       const summaryEl = document.createElement("div");
       summaryEl.className = "nation-card-summary";
-      const requiresText = (policy.requires || []).length ? ` 前置：${policy.requires.join("、")}` : "";
+      const requiresText = (policy.requires || []).length
+        ? ` 前置：${(policy.requires || []).map((id) => policyTitleMap[id] || id).join("、")}`
+        : "";
       summaryEl.textContent = `${policy.description} 消耗 ${policy.cost} 点。${requiresText}`;
       cardBody.appendChild(titleEl);
       cardBody.appendChild(summaryEl);
@@ -308,6 +482,7 @@ function renderNationView(container) {
   if (nationInitCache && nationInitCache.provinces) {
     const provinceSection = createFoldSection("各省概况", (body) => {
       nationInitCache.provinces.forEach((p) => {
+        const runtime = deriveProvinceRuntimeState(p, state);
         const card = document.createElement("div");
         card.className = "nation-card";
         card.style.padding = "8px";
@@ -319,14 +494,14 @@ function renderNationView(container) {
         titleEl.textContent = p.name;
         const summaryEl = document.createElement("div");
         summaryEl.className = "nation-card-summary";
-        summaryEl.textContent = p.status;
+        summaryEl.textContent = runtime.status;
 
         const threatTag = document.createElement("span");
         threatTag.className = "nation-card-tag";
         const threatMap = { critical: "nation-card-tag--urgent", high: "nation-card-tag--important", medium: "nation-card-tag--normal", low: "nation-card-tag--normal" };
         const threatLabelMap = { critical: "危", high: "警", medium: "稳", low: "安" };
-        threatTag.classList.add(threatMap[p.threat] || "nation-card-tag--normal");
-        threatTag.textContent = threatLabelMap[p.threat] || "稳";
+        threatTag.classList.add(threatMap[runtime.threat] || "nation-card-tag--normal");
+        threatTag.textContent = threatLabelMap[runtime.threat] || "稳";
 
         cardBody.appendChild(titleEl);
         cardBody.appendChild(summaryEl);
@@ -338,10 +513,13 @@ function renderNationView(container) {
     root.appendChild(provinceSection);
   }
 
-  // ── 外部势力(折叠) ──
-  if (nationInitCache && nationInitCache.externalThreats) {
-    const threatSection = createFoldSection("外部势力", (body) => {
-      nationInitCache.externalThreats.forEach((t) => {
+  // ── 敌对势力(折叠) ──
+  const hostileForces = Array.isArray(state.hostileForces) && state.hostileForces.length
+    ? state.hostileForces
+    : (nationInitCache && Array.isArray(nationInitCache.externalThreats) ? nationInitCache.externalThreats : []);
+  if (hostileForces.length) {
+    const threatSection = createFoldSection("敌对势力", (body) => {
+      hostileForces.forEach((t) => {
         const card = document.createElement("div");
         card.className = "nation-card";
 
@@ -353,10 +531,12 @@ function renderNationView(container) {
         cardBody.className = "nation-card-body";
         const titleEl = document.createElement("div");
         titleEl.className = "nation-card-title";
-        titleEl.textContent = `${t.name}（${t.leader}）`;
+        const defeatedText = t.isDefeated ? "（已灭亡）" : "";
+        titleEl.textContent = `${t.name}（${t.leader || "未知"}）${defeatedText}`;
         const summaryEl = document.createElement("div");
         summaryEl.className = "nation-card-summary";
-        summaryEl.textContent = t.status;
+        const powerText = typeof t.power === "number" ? `势力值 ${t.power}/100` : "势力值未知";
+        summaryEl.textContent = `${t.status || "暂无情报"} · ${powerText}`;
         cardBody.appendChild(titleEl);
         cardBody.appendChild(summaryEl);
 
@@ -473,6 +653,13 @@ export function registerNationView() {
         nationInitCache = await loadJSON("data/nationInit.json");
       } catch (e) {
         nationInitCache = {};
+      }
+    }
+    if (!provinceRulesCache) {
+      try {
+        provinceRulesCache = await loadJSON("data/provinceRules.json");
+      } catch (e) {
+        provinceRulesCache = null;
       }
     }
     renderNationView(container);

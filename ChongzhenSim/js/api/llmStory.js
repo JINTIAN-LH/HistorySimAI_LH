@@ -30,6 +30,12 @@ export async function requestStoryTurn(state, lastChoice) {
   if (Array.isArray(state.customPolicies) && state.customPolicies.length) {
     body.customPolicies = state.customPolicies;
   }
+  if (Array.isArray(state.hostileForces) && state.hostileForces.length) {
+    body.hostileForces = state.hostileForces;
+  }
+  if (Array.isArray(state.closedStorylines) && state.closedStorylines.length) {
+    body.closedStorylines = state.closedStorylines;
+  }
   if (lastChoice) {
     body.lastChoiceId = lastChoice.id;
     body.lastChoiceText = lastChoice.text;
@@ -67,6 +73,8 @@ export async function requestStoryTurn(state, lastChoice) {
     return null;
   }
 
+  const ensuredChoices = ensureMilitaryExpansionChoice(parsed.choices.slice(0, 3), state);
+
   const phaseKey = state.currentPhase || "morning";
   const phaseLabel = phaseKey === "morning" ? "早朝" : phaseKey === "afternoon" ? "午后" : "夜间";
   const expectedTime = `崇祯${state.currentYear || 1}年${state.currentMonth || 1}月 ${phaseLabel}`;
@@ -76,10 +84,37 @@ export async function requestStoryTurn(state, lastChoice) {
   return {
     header,
     storyParagraphs: parsed.storyParagraphs,
-    choices: parsed.choices.slice(0, 3),
+    choices: ensuredChoices,
     news: Array.isArray(parsed.news) ? parsed.news : [],
     publicOpinion: Array.isArray(parsed.publicOpinion) ? parsed.publicOpinion : [],
   };
+}
+
+function ensureMilitaryExpansionChoice(choices, state) {
+  const list = Array.isArray(choices) ? choices.slice(0, 3) : [];
+  const activeHostiles = (state.hostileForces || []).filter((item) => !item.isDefeated);
+  if (!activeHostiles.length || list.length < 3) return list;
+
+  const hasMilitary = list.some((item) => /军事|开拓|征讨|围剿|剿灭|北伐|平叛/.test(item?.text || ""));
+  if (hasMilitary) return list;
+
+  const target = activeHostiles.slice().sort((a, b) => (b.power || 0) - (a.power || 0))[0];
+  const fallback = {
+    id: "military_expansion_auto",
+    text: `调集边军开拓战线，重点围剿${target.name}`,
+    hint: "以军力换取敌对势力衰减，若持续打击可至灭亡",
+    effects: {
+      treasury: -180000,
+      militaryStrength: -2,
+      borderThreat: -6,
+      civilMorale: 2,
+      hostileDamage: {
+        [target.id]: 12,
+      },
+    },
+  };
+  list[2] = fallback;
+  return list;
 }
 
 const COURT_CHAT_SUMMARY_MAX_LEN = 800;
@@ -136,8 +171,39 @@ function parseLLMContent(raw) {
     return t;
   };
 
+  // 将字符串字面量中的裸换行修复为 \n，避免 JSON.parse 因模型输出换行失败
+  const escapeRawNewlinesInStrings = (input) => {
+    let out = "";
+    let inString = false;
+    let escape = false;
+    for (let i = 0; i < input.length; i++) {
+      const ch = input[i];
+      if (escape) {
+        out += ch;
+        escape = false;
+        continue;
+      }
+      if (ch === "\\") {
+        out += ch;
+        escape = true;
+        continue;
+      }
+      if (ch === '"') {
+        out += ch;
+        inString = !inString;
+        continue;
+      }
+      if (inString && (ch === "\n" || ch === "\r")) {
+        out += "\\n";
+        continue;
+      }
+      out += ch;
+    }
+    return out;
+  };
+
   // 1) 优先尝试完整解析
-  const normalized = normalize(str);
+  const normalized = escapeRawNewlinesInStrings(normalize(str));
   let parsed = tryParse(normalized);
   if (parsed) return parsed;
 
@@ -181,7 +247,7 @@ function parseLLMContent(raw) {
         depth--;
         if (depth === 0 && begin !== -1) {
           const substr = text.slice(begin, i + 1);
-          const candidate = tryParse(normalize(substr));
+          const candidate = tryParse(escapeRawNewlinesInStrings(normalize(substr)));
           if (candidate) return candidate;
         }
       }

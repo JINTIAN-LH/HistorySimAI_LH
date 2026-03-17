@@ -3,7 +3,7 @@ import { getState, setState } from "../state.js";
 import { updateMinisterTabBadge } from "../layout.js";
 import { requestStoryTurn } from "../api/llmStory.js";
 import { startDanmuForEdict, stopDanmu } from "./danmuSystem.js";
-import { computeCustomPolicyQuarterBonus } from "./coreGameplaySystem.js";
+import { computeCustomPolicyQuarterBonus, getPolicyBonusSummary } from "./coreGameplaySystem.js";
 
 let storyCache = { key: null, data: null };
 let lastAppliedKey = null;
@@ -117,7 +117,7 @@ export function pushCurrentTurnToHistory(state, chosenChoice, effects) {
   });
 }
 
-function renderDeltaCard(container, effects, state) {
+function renderDeltaCard(container, effects, state, titleText = "") {
   if (!effects) return;
   const entries = [];
   const labels = {
@@ -143,6 +143,12 @@ function renderDeltaCard(container, effects, state) {
 
   const card = document.createElement("div");
   card.className = "story-delta-card";
+  if (titleText) {
+    const title = document.createElement("div");
+    title.className = "story-history-label";
+    title.textContent = titleText;
+    card.appendChild(title);
+  }
   entries.forEach(({ label, delta, invertColor }) => {
     const row = document.createElement("div");
     row.className = "story-delta-row";
@@ -295,6 +301,7 @@ function computeQuarterlyEffects(state, currentMonth) {
   const policy = (state.config && state.config.economicPolicy) || {};
   const abilities = state.playerAbilities || {};
   const unlocked = state.unlockedPolicies || [];
+  const policyBonus = getPolicyBonusSummary(unlocked, state.config?.balance);
   const customBonus = computeCustomPolicyQuarterBonus(state);
 
   const baseTreasury = policy.baseTreasury || 100000;
@@ -305,8 +312,8 @@ function computeQuarterlyEffects(state, currentMonth) {
 
   const managementBonus = 1 + (abilities.management || 0) * 0.08;
   const scholarshipBonus = 1 + (abilities.scholarship || 0) * 0.05;
-  const treasuryPolicyBonus = 1 + (unlocked.includes("civil_reform") ? 0.12 : 0) + (unlocked.includes("tech_engineering") ? 0.1 : 0);
-  const grainPolicyBonus = 1 + (unlocked.includes("tech_agri") ? 0.15 : 0);
+  const treasuryPolicyBonus = policyBonus.quarterlyTreasuryRatio;
+  const grainPolicyBonus = policyBonus.quarterlyGrainRatio;
 
   const treasuryGain = Math.round(baseTreasury * efficiency * moraleBonus * managementBonus * treasuryPolicyBonus * customBonus.treasuryRatio);
   const grainGain = Math.round(baseGrain * efficiency * moraleBonus * scholarshipBonus * grainPolicyBonus * customBonus.grainRatio);
@@ -314,8 +321,8 @@ function computeQuarterlyEffects(state, currentMonth) {
   return {
     treasury: treasuryGain,
     grain: grainGain,
-    militaryStrength: customBonus.militaryDelta,
-    corruptionLevel: customBonus.corruptionDelta,
+    militaryStrength: customBonus.militaryDelta + (policyBonus.quarterlyMilitaryDelta || 0),
+    corruptionLevel: customBonus.corruptionDelta + (policyBonus.quarterlyCorruptionDelta || 0),
     _customPolicyBonus: customBonus,
   };
 }
@@ -512,7 +519,10 @@ function renderStoryHistory(container, history, phaseLabels, state, renderId) {
     
     if (entry.chosenChoice && entry.chosenChoice.text) {
       renderChosenChoice(container, entry.chosenChoice);
-      renderDeltaCard(container, entry.effects, state);
+      renderDeltaCard(container, entry.effects, state, "本轮推演数值变动");
+    }
+    if (entry.quarterSettlementEffects) {
+      renderDeltaCard(container, entry.quarterSettlementEffects, state, "季度结算数值变动");
     }
   }
   return true;
@@ -557,6 +567,16 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
     loadingBlock.remove();
     
     if (renderId != null && container._storyRenderId !== renderId) return null;
+  }
+
+  if (useLLM && data == null) {
+    if (renderId != null && container._storyRenderId !== renderId) return null;
+    renderStoryError(container, "剧情返回格式异常（JSON 解析失败）。请点击重新生成，或检查后端模型配置。", () => {
+      storyCache = { key: null, data: null };
+      container.innerHTML = "";
+      renderStoryTurn(getState(), container, onChoice, options);
+    });
+    return null;
   }
 
   if (data == null) {
@@ -631,7 +651,7 @@ function renderQuarterAgendaPanel(container, state, onChoice, options = {}) {
 
   const subtitle = document.createElement("div");
   subtitle.className = "quarter-agenda-panel__subtitle";
-  subtitle.textContent = `依文档逻辑，本季度必须先浏览 3-5 条时政议题，选定商议派系与观点后再颁布诏书。`;
+  subtitle.textContent = `依文档逻辑，本季度必须先浏览 3-5 条时政议题，选定商议派系与观点后再颁布诏书；若存在敌对势力，将出现“军事开拓”议题。`;
   panel.appendChild(subtitle);
 
   const cards = document.createElement("div");
@@ -738,6 +758,14 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
     quarterNote.className = "story-history-label";
     quarterNote.textContent = `季末结算 · 崇祯${settlement.year}年${settlement.month}月：国库 +${(settlement.effects?.treasury || 0).toLocaleString()} 两，粮储 +${(settlement.effects?.grain || 0).toLocaleString()} 石`;
     currentWrap.appendChild(quarterNote);
+
+    const settlementDisplayEffects = {
+      treasury: settlement.effects?.treasury || 0,
+      grain: settlement.effects?.grain || 0,
+      militaryStrength: settlement.effects?.militaryStrength || 0,
+      corruptionLevel: settlement.effects?.corruptionLevel || 0,
+    };
+    renderDeltaCard(currentWrap, settlementDisplayEffects, state, "季度结算数值变动");
   }
   
   const textBlock = document.createElement("div");

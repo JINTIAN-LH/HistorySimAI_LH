@@ -11,8 +11,9 @@ import { loadGame, applyLoadedGame } from "./storage.js";
 import { initializeCoreGameplayState } from "./systems/coreGameplaySystem.js";
 
 async function preloadBasicData() {
-  const [config, characters, factionsData, goals, nationInit] = await Promise.all([
+  const [config, balanceConfig, characters, factionsData, goals, nationInit] = await Promise.all([
     loadJSON("data/config.json"),
+    loadJSON("data/balanceConfig.json").catch(() => ({})),
     loadJSON("data/characters.json"),
     loadJSON("data/factions.json").catch(() => ({ factions: [] })),
     loadJSON("data/goals.json").catch(() => []),
@@ -45,11 +46,14 @@ async function preloadBasicData() {
         corruptionLevel: nationInit.corruptionLevel || 80,
       };
 
-  const coreState = initializeCoreGameplayState(current, factions, config);
+  const coreState = initializeCoreGameplayState(current, factions, config, nationInit);
   const mergedFactions = Array.isArray(current.factions) && current.factions.length ? current.factions : factions;
 
   setState({
-    config,
+    config: {
+      ...(config || {}),
+      balance: balanceConfig || {},
+    },
     ministers,
     factions: mergedFactions,
     loyalty: mergedLoyalty,

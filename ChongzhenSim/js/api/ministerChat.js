@@ -22,6 +22,8 @@ export async function requestMinisterReply(ministerId, history) {
         currentQuarterFocus: state.currentQuarterFocus || null,
         currentQuarterAgenda: state.currentQuarterAgenda || [],
         customPolicies: state.customPolicies || [],
+        hostileForces: state.hostileForces || [],
+        closedStorylines: state.closedStorylines || [],
       }),
     });
   } catch (e) {

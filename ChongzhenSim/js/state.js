@@ -59,6 +59,8 @@ const initialState = {
   },
   unlockedPolicies: [],
   customPolicies: [],
+  hostileForces: [],
+  closedStorylines: [],
 
   goals: [],
   trackedGoalId: null,

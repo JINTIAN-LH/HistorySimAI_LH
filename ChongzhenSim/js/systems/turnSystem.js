@@ -1,8 +1,8 @@
 import { getState, setState } from "../state.js";
-import { renderStoryTurn, pushCurrentTurnToHistory, applyEffects, renderDeltaCard, computeQuarterlyEffects, estimateEffectsFromEdict, mergeEffects } from "./storySystem.js";
+import { renderStoryTurn, pushCurrentTurnToHistory, applyEffects, renderDeltaCard, computeQuarterlyEffects, estimateEffectsFromEdict } from "./storySystem.js";
 import { autoSaveIfEnabled } from "../storage.js";
 import { updateTopbarByState } from "../layout.js";
-import { applyProgressionToChoiceEffects, extractCustomPoliciesFromEdict, mergeCustomPolicies, processCoreGameplayTurn, scaleEffectsByExecution } from "./coreGameplaySystem.js";
+import { applyProgressionToChoiceEffects, extractCustomPoliciesFromEdict, mergeCustomPolicies, processCoreGameplayTurn, resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
 
 export function runCurrentTurn(container, options = {}) {
   const state = getState();
@@ -74,6 +74,18 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     applyEffects(coreTurn.consequenceEffects);
   }
 
+  const hostileTurn = resolveHostileForcesAfterChoice(getState(), choiceText || "", effectiveEffects || {}, nextYear, nextMonth);
+  if (hostileTurn) {
+    setState(hostileTurn.statePatch);
+    if (hostileTurn.effectsPatch) {
+      applyEffects(hostileTurn.effectsPatch);
+    }
+    if (hostileTurn.prestigeDelta) {
+      const s = getState();
+      setState({ prestige: Math.max(0, Math.min(100, (s.prestige || 0) + hostileTurn.prestigeDelta)) });
+    }
+  }
+
   // 每季度（3 个月）自动加入税收/粮仓收入
   const quarterEffects = computeQuarterlyEffects(getState(), nextMonth);
   if (quarterEffects) {
@@ -98,16 +110,21 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
       },
     });
 
-    // 将季度收入效果合并到本回合历史中，便于界面展示
+    // 将季度收入效果单独挂到本回合历史中，避免与当轮推演效果混在一起
     const currentState = getState();
     const history = currentState.storyHistory || [];
     if (history.length > 0) {
       const lastEntry = history[history.length - 1];
-      const mergedEffects = mergeEffects(lastEntry.effects, quarterEffects);
+      const quarterDisplayEffects = {
+        treasury: quarterEffects.treasury || 0,
+        grain: quarterEffects.grain || 0,
+        militaryStrength: quarterEffects.militaryStrength || 0,
+        corruptionLevel: quarterEffects.corruptionLevel || 0,
+      };
       const updatedHistory = [...history];
       updatedHistory[updatedHistory.length - 1] = {
         ...lastEntry,
-        effects: mergedEffects,
+        quarterSettlementEffects: quarterDisplayEffects,
       };
       setState({ storyHistory: updatedHistory });
     }
