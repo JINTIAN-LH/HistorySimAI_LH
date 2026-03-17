@@ -42,3 +42,9 @@ coverage/
 *.temp
 .tmp/
 .temp/
+
+# Local development tools (Trae IDE / GSD framework)
+.agents/
+.trae/
+.planning/
+skills-lock.json
