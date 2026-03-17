@@ -40,17 +40,46 @@ const SYSTEM_PROMPT = `你是《崇祯皇帝模拟器》游戏的剧情写手。
   "lastChoiceEffects": {
     "treasury": 数值变化, "grain": 数值变化, "militaryStrength": 数值变化,
     "civilMorale": 数值变化, "borderThreat": 数值变化, "disasterLevel": 数值变化,
-    "corruptionLevel": 数值变化, "loyalty": { "大臣id": 数值变化 }
+    "corruptionLevel": 数值变化, "loyalty": { "大臣id": 数值变化 },
+    "external": { "后金(清)": 数值变化, "农民军": 数值变化, "登州叛军": 数值变化 }
   },
   "choices": [
     { "id": "唯一id", "text": "选项文案", "hint": "可选提示",
-      "effects": { "treasury": 数值变化, "grain": 数值变化, ... }
+      "effects": {
+        "treasury": 数值变化, "grain": 数值变化, ...,
+        "external": { "后金(清)": 数值变化, "农民军": 数值变化, "登州叛军": 数值变化 }
+      }
     }, ...
   ]
 }
-可选字段：
+
+【外部势力势力值】
+当前存在以下外部势力（对应国家界面的势力条，名称必须严格一致）：
+- "后金(清)"：皇太极统率的后金政权
+- "农民军"：李自成等农民起义军
+- "登州叛军"：孔有德部
+
+你可以通过 "external" 字段表示对这些势力强弱的影响：
+- 在 "lastChoiceEffects.external" 中表示上一回合玩家决策对各势力的实际影响。
+- 在每个选项的 "effects.external" 中预告该选项一旦执行会对各势力造成的影响。
+
+约束规则：
+- 数值为负表示削弱该势力（势力条下降），数值为正表示壮大该势力（势力条上升）。
+- 单次变化通常在 -20 到 +20 之间，根据剧情严重程度合理设定。
+- "external" 对象的 key 只能从 ["后金(清)","农民军","登州叛军"] 中选择，不得自造新势力名称。
+
+何时必须填写 external：
+- 如果上一回合玩家的诏书或选项明显针对某个外部势力（例如：出兵攻打后金、围剿农民军、平叛登州叛军），
+  或通过议和、资助等方式明显削弱/壮大某一势力，你必须在 "lastChoiceEffects.external" 中为相关势力填写合理的数值变化。
+
+【天下大事与民间舆论（每回合必填）】
+你必须在 JSON 中额外输出两个数组字段：
   "news": [ { "title": "奏折标题", "summary": "简述", "province": "涉及地区" } ],
   "publicOpinion": [ { "source": "来源（如：京城百姓/江南士绅/边军将士）", "text": "舆论内容" } ]
+要求：
+- 每回合 "news" 至少 1 条，通常 1~3 条，必须与本回合剧情或国势变动（如国库变化、边患变化、外部势力势力条变化等）紧密相关。
+- 每回合 "publicOpinion" 至少 1 条，可以来自不同社会阶层（京城百姓、江南士绅、边军将士等），对本回合决策或大事做出正面或负面反应。
+- 只有在确实没有任何合适事件或舆论时，才允许这两个字段为空数组 []。
 
 【重要】lastChoiceEffects 和 choices 中的 effects 必须是 JSON 字段，不能写在 storyParagraphs 里面！例如：
 - 正确：{"lastChoiceEffects": {"treasury": 500000, "corruptionLevel": -10}}
@@ -155,7 +184,18 @@ app.post("/api/chongzhen/story", async (req, res) => {
       return res.status(response.status).json({ error: errText || "LLM request failed" });
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      const preview = text.slice(0, 300);
+      console.error("LLM returned non-JSON (possibly HTML) for story:", preview);
+      return res.status(502).json({
+        error: "LLM 返回了非 JSON 内容（可能是 HTML 错误页），请检查 LLM_API_BASE 与 API Key",
+      });
+    }
+
     const content = data?.choices?.[0]?.message?.content;
     if (content == null) {
       return res.status(502).json({ error: "No content in LLM response" });

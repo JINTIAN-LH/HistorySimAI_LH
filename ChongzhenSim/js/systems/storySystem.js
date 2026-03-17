@@ -122,39 +122,96 @@ function renderDeltaCard(container, effects, state) {
     civilMorale: "民心", borderThreat: "边患", disasterLevel: "天灾",
     corruptionLevel: "贪腐",
   };
+
   for (const [key, label] of Object.entries(labels)) {
     if (typeof effects[key] === "number" && effects[key] !== 0) {
-      entries.push({ label, delta: effects[key], invertColor: ["borderThreat", "disasterLevel", "corruptionLevel"].includes(key) });
+      entries.push({
+        key,
+        label,
+        delta: effects[key],
+        invertColor: ["borderThreat", "disasterLevel", "corruptionLevel"].includes(key),
+        kind: "nation",
+      });
     }
   }
+
   if (effects.loyalty && typeof effects.loyalty === "object") {
     const ministers = state.ministers || [];
     const nameById = Object.fromEntries(ministers.map((m) => [m.id, m.name || m.id]));
     for (const [id, delta] of Object.entries(effects.loyalty)) {
       if (typeof delta === "number" && delta !== 0) {
-        entries.push({ label: (nameById[id] || id) + " 忠诚", delta, invertColor: false });
+        entries.push({
+          key: id,
+          label: (nameById[id] || id) + " 忠诚",
+          delta,
+          invertColor: false,
+          kind: "loyalty",
+        });
       }
     }
   }
+
+  if (effects.external && typeof effects.external === "object") {
+    const externalPowers = state.externalPowers || {};
+    for (const [id, delta] of Object.entries(effects.external)) {
+      if (typeof delta !== "number" || delta === 0) continue;
+      const label = `${id} 势力`;
+      entries.push({
+        key: id,
+        label,
+        delta,
+        invertColor: true, // 外部势力数值下降是好事
+        kind: "external",
+      });
+    }
+  }
+
   if (entries.length === 0) return;
+
+  const nation = state.nation || {};
+  const loyalty = state.loyalty || {};
+  const externalPowers = state.externalPowers || {};
 
   const card = document.createElement("div");
   card.className = "story-delta-card";
-  entries.forEach(({ label, delta, invertColor }) => {
+
+  entries.forEach(({ key, label, delta, invertColor, kind }) => {
     const row = document.createElement("div");
     row.className = "story-delta-row";
+
     const lbl = document.createElement("span");
     lbl.className = "story-delta-label";
     lbl.textContent = label;
+
     const val = document.createElement("span");
     const isPositive = invertColor ? delta < 0 : delta > 0;
     val.className = "story-delta-value " + (isPositive ? "story-delta-value--positive" : "story-delta-value--negative");
+
     const sign = delta > 0 ? "+" : "";
-    val.textContent = sign + delta.toLocaleString();
+    let current = null;
+    if (kind === "nation") {
+      const v = nation[key];
+      if (typeof v === "number" && Number.isFinite(v)) current = v;
+    } else if (kind === "loyalty") {
+      const v = loyalty[key];
+      if (typeof v === "number" && Number.isFinite(v)) current = v;
+    } else if (kind === "external") {
+      const v = externalPowers[key];
+      if (typeof v === "number" && Number.isFinite(v)) current = v;
+    }
+
+    if (current != null) {
+      const currentStr = current.toLocaleString();
+      val.textContent = `${sign}${delta.toLocaleString()}→${currentStr}`;
+    } else {
+      val.textContent = sign + delta.toLocaleString();
+    }
+
     row.appendChild(lbl);
     row.appendChild(val);
     card.appendChild(row);
   });
+
   container.appendChild(card);
 }
 
@@ -281,6 +338,17 @@ function applyEffects(effects) {
       loyalty[id] = Math.max(0, Math.min(100, (loyalty[id] || 0) + clampedDelta));
     }
     setState({ loyalty });
+  }
+
+  if (effects.external && typeof effects.external === "object") {
+    const externalPowers = { ...(s.externalPowers || {}) };
+    for (const [id, delta] of Object.entries(effects.external)) {
+      if (typeof delta !== "number") continue;
+      const current = externalPowers[id] || 0;
+      const next = Math.max(0, Math.min(100, current + delta));
+      externalPowers[id] = next;
+    }
+    setState({ externalPowers });
   }
 }
 
