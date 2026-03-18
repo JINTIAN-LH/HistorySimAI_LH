@@ -318,6 +318,31 @@
   - Root：`cd ChongzhenSim && npm test` 通过（98/98）
   - Server：`cd ChongzhenSim/server && npm test -- --runInBand` 通过（49/49）
 
+#### 6.1.12 b6536e3 · fix(story): harden effect validation and stabilize custom-edict corrections
+- 全哈希：`b6536e38f898535c72aacfe5945392884dd4b84f`
+- 时间：2026-03-19
+- 分支：my-feature-branch
+- 作者：JINTIAN-LIU
+- 类型：fix
+- 变更文件：
+  - ChongzhenSim/js/api/validators.js
+  - ChongzhenSim/js/api/llmStory.js
+  - ChongzhenSim/js/systems/turnSystem.js
+  - ChongzhenSim/js/systems/storySystem.js
+  - ChongzhenSim/js/api/validators.test.js
+  - ChongzhenSim/server/index.js
+- 问题描述：
+  - 每轮推理在自拟诏书链路中存在“先估算后修正”的正负翻转观感。
+  - LLM 返回的 effects 缺乏统一限幅，偶发出现不合理大幅波动。
+- 修复策略：
+  - 新增 `sanitizeStoryEffects` 统一限幅并接入 choice effects / lastChoiceEffects / 入账前守卫。
+  - LLM 模式下自拟诏书不再先行估算入账，减少反向冲销。
+  - 增加 custom-edict 翻转审计日志，并新增 `validators.test.js` 覆盖限幅逻辑。
+  - 同步精简服务端 `buildUserMessage` 重复文案拼接，保持语义一致。
+- 自检结果：
+  - Root：`cd ChongzhenSim && npm test` 通过（100/100）
+  - Server：`cd ChongzhenSim/server && npm test -- --runInBand` 通过（49/49）
+
 每次执行 `git commit` 后，按以下模板在“6. 增量提交记录”末尾追加一条：
 
 ```markdown
