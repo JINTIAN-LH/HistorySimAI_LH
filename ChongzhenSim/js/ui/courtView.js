@@ -127,14 +127,15 @@ function applyLocalAppointmentState(positionId, characterId) {
 
 function createAvatarImg(name, fallbackChar) {
   const img = document.createElement("img");
-  img.alt = name || "";
+  const displayName = getDisplayName(name);
+  img.alt = displayName || "";
   img.onerror = function () {
     this.style.display = "none";
-    createAvatarFallback(this.parentElement, fallbackChar || (name ? name.charAt(0) : "臣"));
+    createAvatarFallback(this.parentElement, fallbackChar || (displayName ? displayName.charAt(0) : "臣"));
   };
 
-  if (name && AVAILABLE_AVATAR_NAMES.has(name)) {
-    img.src = `assets/${name}.jpg`;
+  if (displayName && AVAILABLE_AVATAR_NAMES.has(displayName)) {
+    img.src = `assets/${displayName}.jpg`;
   } else {
     queueMicrotask(() => img.onerror());
   }
@@ -146,6 +147,18 @@ const MINISTER_NAME_COLORS = [
   "#8B0000", "#2e7d32", "#1565c0", "#e65100", "#6a1b9a",
   "#00695c", "#ad1457", "#4527a0",
 ];
+
+function stripEnglishParenAfterChinese(text) {
+  if (typeof text !== "string") return "";
+  return text
+    .replace(/([\u4e00-\u9fa5]{2,})\s*[（(]\s*[A-Za-z0-9_\-\s]+\s*[）)]/g, "$1")
+    .replace(/([\u4e00-\u9fa5]{2,})\s*[（(]\s*[A-Za-z][A-Za-z0-9_\-\s,:;\.]*\s*[）)]/g, "$1")
+    .trim();
+}
+
+function getDisplayName(name) {
+  return stripEnglishParenAfterChinese(name || "");
+}
 
 function showMinisterDetail(minister, state, tagsConfig) {
   const app = document.getElementById("app");
@@ -164,6 +177,7 @@ function showMinisterDetail(minister, state, tagsConfig) {
 
   const card = document.createElement("div");
   card.className = "minister-detail-card";
+  const displayName = getDisplayName(minister.name);
 
   const header = document.createElement("div");
   header.className = "minister-detail-card__header";
@@ -176,11 +190,11 @@ function showMinisterDetail(minister, state, tagsConfig) {
 
   const avatar = document.createElement("div");
   avatar.className = "minister-detail-avatar";
-  avatar.appendChild(createAvatarImg(minister.name, minister.name ? minister.name.charAt(0) : "臣"));
+  avatar.appendChild(createAvatarImg(displayName, displayName ? displayName.charAt(0) : "臣"));
 
   const nameEl = document.createElement("div");
   nameEl.className = "minister-detail-card__name";
-  nameEl.textContent = minister.name;
+  nameEl.textContent = displayName;
 
   const roleEl = document.createElement("div");
   roleEl.className = "minister-detail-card__role";
@@ -262,7 +276,7 @@ async function showPositionSelectDialog(minister, state) {
   header.className = "appointment-dialog-card__header";
   const title = document.createElement("div");
   title.className = "appointment-dialog-card__title";
-  title.textContent = `为 ${minister.name} 调整官职`;
+  title.textContent = `为 ${getDisplayName(minister.name)} 调整官职`;
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
   closeBtn.className = "appointment-dialog-card__close";
@@ -458,11 +472,12 @@ function showFactionPanel(state) {
     (f.members || []).forEach((mid) => {
       const m = ministers.find((mi) => mi.id === mid);
       if (!m) return;
+      const displayName = getDisplayName(m.name);
       const row = document.createElement("div");
       row.style.display = "flex";
       row.style.justifyContent = "space-between";
       row.style.padding = "2px 0";
-      row.textContent = `${m.name}（${m.role}）`;
+      row.textContent = `${displayName}（${m.role}）`;
       const lval = document.createElement("span");
       lval.textContent = `忠诚: ${loyalty[mid] || 0}`;
       lval.style.color = "var(--color-text-sub)";
@@ -495,23 +510,8 @@ function showFactionPanel(state) {
   app.appendChild(overlay);
 }
 
-function renderMinisterList(container, state, tagsConfig) {
+function createMinisterListElement(state, tagsConfig, onSelectMinister) {
   const { ministers, loyalty } = state;
-
-  const header = document.createElement("div");
-  header.className = "court-view-header";
-  const title = document.createElement("div");
-  title.className = "court-view-title";
-  title.textContent = "朝堂群臣";
-  const relBtn = document.createElement("button");
-  relBtn.type = "button";
-  relBtn.className = "court-relations-btn";
-  relBtn.textContent = "派系";
-  relBtn.addEventListener("click", () => showFactionPanel(state));
-  header.appendChild(title);
-  header.appendChild(relBtn);
-  container.appendChild(header);
-
   const list = document.createElement("div");
   list.className = "minister-list";
 
@@ -527,9 +527,10 @@ function renderMinisterList(container, state, tagsConfig) {
     const item = document.createElement("div");
     item.className = "minister-item" + (ministerUnread[m.id] ? " minister-item--unread" : "");
 
+    const displayName = getDisplayName(m.name);
     const avatar = document.createElement("div");
     avatar.className = "minister-avatar";
-    avatar.appendChild(createAvatarImg(m.name, m.name ? m.name.charAt(0) : "臣"));
+    avatar.appendChild(createAvatarImg(displayName, displayName ? displayName.charAt(0) : "臣"));
     const score = loyalty ? loyalty[m.id] || 0 : 0;
     const loyaltyBadge = document.createElement("div");
     loyaltyBadge.className = "minister-avatar-loyalty";
@@ -545,7 +546,7 @@ function renderMinisterList(container, state, tagsConfig) {
     main.className = "minister-main";
     const nameLine = document.createElement("div");
     nameLine.className = "minister-name";
-    nameLine.textContent = m.name;
+    nameLine.textContent = displayName;
     nameLine.style.color = MINISTER_NAME_COLORS[index % MINISTER_NAME_COLORS.length];
     const roleLine = document.createElement("div");
     roleLine.className = "minister-role";
@@ -587,15 +588,104 @@ function renderMinisterList(container, state, tagsConfig) {
     item.appendChild(meta);
 
     item.addEventListener("click", () => {
-      currentMinisterChatId = m.id;
-      container.innerHTML = "";
-      renderCourtView(container);
+      onSelectMinister(m.id);
     });
 
     list.appendChild(item);
   });
 
-  container.appendChild(list);
+  return list;
+}
+
+function showMinisterPanel(state, tagsConfig) {
+  const app = document.getElementById("app");
+  if (!app) return;
+
+  let overlay = document.getElementById("minister-panel-overlay");
+  if (overlay) overlay.remove();
+  overlay = document.createElement("div");
+  overlay.id = "minister-panel-overlay";
+  overlay.className = "relationship-panel-overlay";
+
+  const card = document.createElement("div");
+  card.className = "relationship-panel-card minister-panel-card";
+
+  const header = document.createElement("div");
+  header.className = "relationship-panel-card__header";
+  const title = document.createElement("div");
+  title.className = "relationship-panel-card__title";
+  title.textContent = "朝堂群臣";
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "relationship-panel-card__close";
+  closeBtn.textContent = "✕";
+  closeBtn.addEventListener("click", () => overlay.remove());
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+
+  const body = document.createElement("div");
+  body.className = "relationship-panel-card__body minister-panel-body";
+  body.appendChild(createMinisterListElement(state, tagsConfig, (ministerId) => {
+    overlay.remove();
+    currentMinisterChatId = ministerId;
+    rerenderCourtMainView();
+  }));
+
+  const footer = document.createElement("div");
+  footer.className = "relationship-panel-card__footer";
+  const closeBtnBottom = document.createElement("button");
+  closeBtnBottom.type = "button";
+  closeBtnBottom.className = "relationship-panel-card__footer-close";
+  closeBtnBottom.textContent = "关闭";
+  closeBtnBottom.addEventListener("click", () => overlay.remove());
+  footer.appendChild(closeBtnBottom);
+
+  card.appendChild(header);
+  card.appendChild(body);
+  card.appendChild(footer);
+  overlay.appendChild(card);
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+
+  app.appendChild(overlay);
+}
+
+function renderMinisterList(container, state, tagsConfig) {
+  const { ministers } = state;
+
+  const header = document.createElement("div");
+  header.className = "court-view-header";
+  const title = document.createElement("div");
+  title.className = "court-view-title";
+  title.textContent = `朝堂群臣 ${ministers?.length || 0} 人`;
+
+  const actions = document.createElement("div");
+  actions.className = "court-view-header__actions";
+
+  const ministerBtn = document.createElement("button");
+  ministerBtn.type = "button";
+  ministerBtn.className = "court-relations-btn";
+  ministerBtn.textContent = "群臣列表";
+  ministerBtn.addEventListener("click", () => showMinisterPanel(state, tagsConfig));
+
+  const relBtn = document.createElement("button");
+  relBtn.type = "button";
+  relBtn.className = "court-relations-btn";
+  relBtn.textContent = "派系";
+  relBtn.addEventListener("click", () => showFactionPanel(state));
+
+  actions.appendChild(ministerBtn);
+  actions.appendChild(relBtn);
+  header.appendChild(title);
+  header.appendChild(actions);
+  container.appendChild(header);
+
+  const summary = document.createElement("div");
+  summary.className = "court-view-summary";
+  summary.textContent = "群臣列表与派系图改为弹窗展示，避免占用朝堂官职版面。";
+  container.appendChild(summary);
 }
 
 async function renderPositionMap(container, state) {
@@ -693,7 +783,8 @@ async function renderPositionMap(container, state) {
         .filter((c) => !occupied.has(c.id))
         .filter((c) => {
           if (!keyword) return true;
-          return c.name.includes(keyword) || (c.courtesyName || "").includes(keyword);
+          const displayName = getDisplayName(c.name);
+          return displayName.includes(keyword) || (c.courtesyName || "").includes(keyword);
         })
         .slice(0, 60);
 
@@ -709,7 +800,8 @@ async function renderPositionMap(container, state) {
         row.type = "button";
         row.className = "court-appoint-inline__item" + (appointUIState.selectedId === c.id ? " is-selected" : "");
         const loyaltyVal = state.loyalty?.[c.id] != null ? state.loyalty[c.id] : (c.loyalty || 0);
-        row.textContent = `${c.name}${c.courtesyName ? `（字${c.courtesyName}）` : ""} · ${c.factionLabel || "未知派系"} · 忠诚 ${loyaltyVal}`;
+        const displayName = getDisplayName(c.name);
+        row.textContent = `${displayName}${c.courtesyName ? `（字${c.courtesyName}）` : ""} · ${c.factionLabel || "未知派系"} · 忠诚 ${loyaltyVal}`;
         row.addEventListener("click", () => {
           appointUIState.selectedId = c.id;
           renderInlinePanel(activeDeptId);
@@ -746,7 +838,7 @@ async function renderPositionMap(container, state) {
         return;
       }
 
-      panelTitle.textContent = `调整官职：${minister.name}（仅文字信息，无头像）`;
+      panelTitle.textContent = `调整官职：${getDisplayName(minister.name)}（仅文字信息，无头像）`;
 
       const targetPositions = positions
         .filter((p) => {
@@ -765,7 +857,7 @@ async function renderPositionMap(container, state) {
 
       targetPositions.forEach((p) => {
         const holderId = appointments[p.id];
-        const holderName = holderId ? (characterMap.get(holderId)?.name || holderId) : "空缺";
+        const holderName = holderId ? getDisplayName(characterMap.get(holderId)?.name || holderId) : "空缺";
         const row = document.createElement("button");
         row.type = "button";
         row.className = "court-appoint-inline__item" + (appointUIState.selectedId === p.id ? " is-selected" : "");
@@ -900,7 +992,8 @@ async function renderPositionMap(container, state) {
       const avatarWrap = document.createElement("div");
       avatarWrap.className = "court-position-avatar";
       if (holder) {
-        avatarWrap.appendChild(createAvatarImg(holder.name, holder.name?.charAt(0) || "臣"));
+        const displayName = getDisplayName(holder.name);
+        avatarWrap.appendChild(createAvatarImg(displayName, displayName?.charAt(0) || "臣"));
       } else {
         const placeholder = document.createElement("div");
         placeholder.className = "court-position-avatar-placeholder";
@@ -917,7 +1010,7 @@ async function renderPositionMap(container, state) {
       const nameEl = document.createElement("div");
       nameEl.className = "court-position-item__name";
       if (holder) {
-        nameEl.textContent = holder.name;
+        nameEl.textContent = getDisplayName(holder.name);
       } else {
         nameEl.textContent = "待任命";
         nameEl.style.color = "var(--color-text-sub)";
@@ -1015,7 +1108,8 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
   });
   const title = document.createElement("div");
   title.className = "court-chat-title";
-  title.textContent = `${minister.name}（${minister.role}）`;
+  const displayName = getDisplayName(minister.name);
+  title.textContent = `${displayName}（${minister.role}）`;
   header.appendChild(backBtn);
   header.appendChild(title);
   root.appendChild(header);
@@ -1053,7 +1147,7 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
       if (msg.from === "player") {
         avatar.appendChild(createAvatarImg("朱由检", "帝"));
       } else {
-        avatar.appendChild(createAvatarImg(minister.name, minister.name ? minister.name.charAt(0) : "臣"));
+        avatar.appendChild(createAvatarImg(displayName, displayName ? displayName.charAt(0) : "臣"));
       }
 
       const bubble = document.createElement("div");
@@ -1228,7 +1322,7 @@ async function showAppointmentDialogAsync(position, state) {
   const updateConfirmState = () => {
     confirmBtn.disabled = !selectedCharacter || appointing;
     selectedHint.textContent = selectedCharacter
-      ? `已选择：${selectedCharacter.name}`
+      ? `已选择：${getDisplayName(selectedCharacter.name)}`
       : "请先选择一位角色，再点击“确认任命”。";
   };
 
@@ -1256,19 +1350,20 @@ async function showAppointmentDialogAsync(position, state) {
     }
 
     filtered.slice(0, 30).forEach(char => {
+      const displayName = getDisplayName(char.name);
       const item = document.createElement("div");
       item.className = "appointment-character-item";
       
       const avatar = document.createElement("div");
       avatar.className = "appointment-character-avatar";
-      avatar.appendChild(createAvatarImg(char.name, char.name?.charAt(0) || "?"));
+      avatar.appendChild(createAvatarImg(displayName, displayName?.charAt(0) || "?"));
 
       const info = document.createElement("div");
       info.className = "appointment-character-info";
       
       const nameEl = document.createElement("div");
       nameEl.className = "appointment-character-name";
-      nameEl.textContent = char.name;
+      nameEl.textContent = displayName;
       
       const metaEl = document.createElement("div");
       metaEl.className = "appointment-character-meta";
