@@ -1185,7 +1185,10 @@ export async function renderStoryTurn(state, container, onChoice, options = {}) 
       setState({ storyHistory: updatedHistory });
 
       const historyContainer = container.querySelector('.story-history-container') || container;
-      renderDeltaCard(historyContainer, deltaEffects || data.lastChoiceEffects, state);
+      const deltaCards = historyContainer.querySelectorAll('.story-delta-card');
+      const lastDeltaCard = deltaCards[deltaCards.length - 1];
+      if (lastDeltaCard) lastDeltaCard.remove();
+      renderDeltaCard(historyContainer, deltaEffects || data.lastChoiceEffects, state, "本轮推演数值变动");
     }
   }
 

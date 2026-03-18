@@ -34,8 +34,11 @@ export async function requestStoryTurn(state, lastChoice) {
   const phaseKey = state.currentPhase || "morning";
   const phaseLabel = phaseKey === "morning" ? "早朝" : phaseKey === "afternoon" ? "午后" : "夜间";
   const expectedTime = `崇祯${state.currentYear || 1}年${state.currentMonth || 1}月 ${phaseLabel}`;
+  const expectedSeason = getSeasonByMonth(state.currentMonth || 1);
   const header = { ...(normalized.header || {}) };
   header.time = expectedTime;
+  header.season = header.season || expectedSeason;
+  header.weather = header.weather || state.weather || "未记载";
 
   return {
     header,
@@ -45,6 +48,14 @@ export async function requestStoryTurn(state, lastChoice) {
     news: normalized.news,
     publicOpinion: normalized.publicOpinion,
   };
+}
+
+function getSeasonByMonth(month) {
+  const m = Number(month) || 1;
+  if (m >= 3 && m <= 5) return "春";
+  if (m >= 6 && m <= 8) return "夏";
+  if (m >= 9 && m <= 11) return "秋";
+  return "冬";
 }
 
 function normalizeAppointmentsMap(raw) {

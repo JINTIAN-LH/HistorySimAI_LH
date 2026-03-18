@@ -60,12 +60,24 @@ function createApp(options = {}) {
     return state?.characterStatus?.[characterId]?.isAlive !== false;
   }
 
+  function getSeasonByMonth(month) {
+    const m = Number(month) || 1;
+    if (m >= 3 && m <= 5) return "春";
+    if (m >= 6 && m <= 8) return "夏";
+    if (m >= 9 && m <= 11) return "秋";
+    return "冬";
+  }
+
   function buildUserMessage(body) {
     const { state = {}, lastChoiceId, lastChoiceText, courtChatSummary } = body || {};
 
     const day = state.currentDay ?? 1;
+    const year = state.currentYear ?? 1;
+    const month = state.currentMonth ?? 1;
     const phase = state.currentPhase ?? "morning";
     const phaseLabel = phase === "morning" ? "早朝" : phase === "afternoon" ? "午后" : "夜间";
+    const season = getSeasonByMonth(month);
+    const weather = state.weather || "未记载";
 
     const nation = state.nation || {};
     const treasury = nation.treasury ?? 0;
@@ -82,13 +94,13 @@ function createApp(options = {}) {
 
     let base = "";
     if (lastChoiceId == null || lastChoiceText == null) {
-      base = `当前是崇祯三年第 ${day} 天 ${phaseLabel}。国势：${nationStr}。这是新开档第一回合，请生成完整剧情与 3 个选项。`;
+      base = `当前是崇祯${year}年${month}月（第${day}回合）${phaseLabel}，季节=${season}，天气=${weather}。国势：${nationStr}。这是新开档第一回合，请生成完整剧情与 3 个选项，并在 header 中提供 time、season、weather。`;
     } else {
       const isCustomEdict = lastChoiceId === "custom_edict";
       const hint = isCustomEdict
         ? "上一回合是自拟诏书，请在 lastChoiceEffects 中体现执行效果。"
         : "上一回合是预设选项，请推演执行效果。";
-      base = `当前是崇祯三年第 ${day} 天 ${phaseLabel}。国势：${nationStr}。上一回合陛下选择了：id=${lastChoiceId}，文案=\"${lastChoiceText}\"。${hint}`;
+      base = `当前是崇祯${year}年${month}月（第${day}回合）${phaseLabel}，季节=${season}，天气=${weather}。国势：${nationStr}。上一回合陛下选择了：id=${lastChoiceId}，文案="${lastChoiceText}"。${hint} 请在 header 中提供 time、season、weather。`;
     }
 
     const ministers = getCharacters();
