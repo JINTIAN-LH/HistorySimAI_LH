@@ -186,6 +186,23 @@
   - Root：`npm --prefix ChongzhenSim test --silent` 通过（98/98）
   - Server：`npm --prefix ChongzhenSim/server test --silent` 通过（49/49）
 
+#### 6.1.5 <待生成> · feat(court): switch appointment to inline text panel
+- 全哈希：提交后由 `git log -1` 回填
+- 时间：2026-03-18
+- 分支：my-feature-branch
+- 作者：JINTIAN-LIU
+- 类型：feat
+- 变更文件：
+  - ChongzhenSim/js/ui/courtView.js
+  - ChongzhenSim/css/components.css
+- 玩法兼容与冲突取舍：
+  - 朝堂“任命/调整”改为页内面板，不再使用弹窗链路，提升连续操作体验。
+  - 任命候选改为纯文字信息（姓名/字号/派系/忠诚或官职占位），去除图片展示。
+  - 保留现有 appoint API 调用和任命状态更新逻辑，避免破坏服务端兼容。
+- 自检结果：
+  - Root：`npm --prefix ChongzhenSim test --silent` 通过（98/98）
+  - Server：`npm --prefix ChongzhenSim/server test --silent` 通过（49/49）
+
 ---
 
 ## 7. 提交更新模板（每次复用）
