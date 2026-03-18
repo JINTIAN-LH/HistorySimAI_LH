@@ -1,93 +1,106 @@
+import { buildStoryRequestBody } from "./requestContext.js";
+import { getApiBase, postJsonAndReadText } from "./httpClient.js";
+import { normalizeStoryPayload } from "./validators.js";
+
 export async function requestStoryTurn(state, lastChoice) {
   const config = state.config || {};
-  const apiBase = (config.apiBase || "").replace(/\/$/, "");
+  const apiBase = getApiBase(config, "requestStoryTurn");
   if (!apiBase) return null;
 
   const url = `${apiBase}/api/chongzhen/story`;
-  const body = {
-    state: {
-      currentDay: state.currentDay,
-      currentPhase: state.currentPhase,
-      currentMonth: state.currentMonth,
-      currentYear: state.currentYear,
-      nation: state.nation || {},
-      prestige: state.prestige,
-      executionRate: state.executionRate,
-    },
-  };
-  if (Array.isArray(state.currentQuarterAgenda) && state.currentQuarterAgenda.length) {
-    body.currentQuarterAgenda = state.currentQuarterAgenda;
-  }
-  if (state.currentQuarterFocus) {
-    body.currentQuarterFocus = state.currentQuarterFocus;
-  }
-  if (state.playerAbilities) {
-    body.playerAbilities = state.playerAbilities;
-  }
-  if (Array.isArray(state.unlockedPolicies) && state.unlockedPolicies.length) {
-    body.unlockedPolicies = state.unlockedPolicies;
-  }
-  if (Array.isArray(state.customPolicies) && state.customPolicies.length) {
-    body.customPolicies = state.customPolicies;
-  }
-  if (Array.isArray(state.hostileForces) && state.hostileForces.length) {
-    body.hostileForces = state.hostileForces;
-  }
-  if (Array.isArray(state.closedStorylines) && state.closedStorylines.length) {
-    body.closedStorylines = state.closedStorylines;
-  }
-  if (lastChoice) {
-    body.lastChoiceId = lastChoice.id;
-    body.lastChoiceText = lastChoice.text;
-    if (lastChoice.hint) body.lastChoiceHint = lastChoice.hint;
-  }
+  const body = buildStoryRequestBody(state, lastChoice);
   const courtChatSummary = buildCourtChatSummary(state);
   if (courtChatSummary) body.courtChatSummary = courtChatSummary;
 
-  let res;
-  try {
-    res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-  } catch (e) {
-    console.error("requestStoryTurn fetch error", e);
-    return null;
-  }
-
-  const raw = await res.text();
-  if (!res.ok) {
-    console.error("requestStoryTurn non-ok", res.status, raw);
+  const raw = await postJsonAndReadText(url, body, "requestStoryTurn");
+  if (raw == null) {
     return null;
   }
 
   const parsed = parseLLMContent(raw);
-  if (!parsed || !parsed.storyParagraphs || !Array.isArray(parsed.choices) || parsed.choices.length < 3) {
+  const normalized = normalizeStoryPayload(parsed, state);
+  if (!normalized) {
     console.error("requestStoryTurn invalid shape", {
       rawPreview: raw?.slice?.(0, 200) + (raw?.length > 200 ? "..." : ""),
       rawLength: raw?.length,
       parsed,
-      note: "期望 { storyParagraphs: [...], choices: [...] }，至少 3 个 choices",
+      note: "期望可归一化为 { storyParagraphs: [...], choices: [...] }，且可提供至少 3 个 choices",
     });
     return null;
   }
 
-  const ensuredChoices = ensureMilitaryExpansionChoice(parsed.choices.slice(0, 3), state);
+  const ensuredChoices = ensureMilitaryExpansionChoice(normalized.choices.slice(0, 3), state);
 
   const phaseKey = state.currentPhase || "morning";
   const phaseLabel = phaseKey === "morning" ? "早朝" : phaseKey === "afternoon" ? "午后" : "夜间";
   const expectedTime = `崇祯${state.currentYear || 1}年${state.currentMonth || 1}月 ${phaseLabel}`;
-  const header = { ...(parsed.header || {}) };
+  const header = { ...(normalized.header || {}) };
   header.time = expectedTime;
 
   return {
     header,
-    storyParagraphs: parsed.storyParagraphs,
+    storyParagraphs: normalized.storyParagraphs,
     choices: ensuredChoices,
-    news: Array.isArray(parsed.news) ? parsed.news : [],
-    publicOpinion: Array.isArray(parsed.publicOpinion) ? parsed.publicOpinion : [],
+    news: normalized.news,
+    publicOpinion: normalized.publicOpinion,
   };
+}
+
+function safeJsonParse(input) {
+  try {
+    return JSON.parse(input);
+  } catch (_) {
+    return null;
+  }
+}
+
+function normalizeLLMJsonText(input) {
+  let t = String(input || "");
+  // 智能引号 / 全角标点 -> 普通 ASCII
+  t = t.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+  t = t.replace(/，/g, ',').replace(/：/g, ':').replace(/；/g, ';');
+  // 去掉 + 前缀数字（JSON 不允许 '+2'）
+  t = t.replace(/:\s*\+([0-9]+)/g, ': $1');
+  t = t.replace(/\s\+([0-9]+)([\s,}])/g, ' $1$2');
+  // 去掉多余的尾随逗号
+  t = t.replace(/,\s*([}\]])/g, '$1');
+  return t;
+}
+
+function escapeRawNewlinesInJsonStrings(input) {
+  let out = "";
+  let inString = false;
+  let escape = false;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (escape) {
+      out += ch;
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      out += ch;
+      escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      out += ch;
+      inString = !inString;
+      continue;
+    }
+    if (inString && (ch === "\n" || ch === "\r")) {
+      out += "\\n";
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+function parseLooseJson(input) {
+  if (!input || typeof input !== "string") return null;
+  const normalized = escapeRawNewlinesInJsonStrings(normalizeLLMJsonText(input));
+  return safeJsonParse(normalized) || safeJsonParse(input);
 }
 
 function ensureMilitaryExpansionChoice(choices, state) {
@@ -146,71 +159,14 @@ function parseLLMContent(raw) {
   const codeBlockMatch = str.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (codeBlockMatch) str = codeBlockMatch[1].trim();
 
-  const tryParse = (s) => {
-    try {
-      return JSON.parse(s);
-    } catch (e) {
-      return null;
-    }
-  };
-
-  const normalize = (s) => {
-    let t = s;
-
-    // 智能引号 / 全角标点 -> 普通 ASCII
-    t = t.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
-    t = t.replace(/，/g, ',').replace(/：/g, ':').replace(/；/g, ';');
-
-    // 去掉 + 前缀数字（JSON 不允许 '+2'）
-    t = t.replace(/:\s*\+([0-9]+)/g, ': $1');
-    t = t.replace(/\s\+([0-9]+)([\s,}])/g, ' $1$2');
-
-    // 去掉多余的尾随逗号
-    t = t.replace(/,\s*([}\]])/g, '$1');
-
-    return t;
-  };
-
-  // 将字符串字面量中的裸换行修复为 \n，避免 JSON.parse 因模型输出换行失败
-  const escapeRawNewlinesInStrings = (input) => {
-    let out = "";
-    let inString = false;
-    let escape = false;
-    for (let i = 0; i < input.length; i++) {
-      const ch = input[i];
-      if (escape) {
-        out += ch;
-        escape = false;
-        continue;
-      }
-      if (ch === "\\") {
-        out += ch;
-        escape = true;
-        continue;
-      }
-      if (ch === '"') {
-        out += ch;
-        inString = !inString;
-        continue;
-      }
-      if (inString && (ch === "\n" || ch === "\r")) {
-        out += "\\n";
-        continue;
-      }
-      out += ch;
-    }
-    return out;
-  };
-
   // 1) 优先尝试完整解析
-  const normalized = escapeRawNewlinesInStrings(normalize(str));
-  let parsed = tryParse(normalized);
+  let parsed = parseLooseJson(str);
   if (parsed) return parsed;
 
   // 2) 如果 LLM 包了一层字符串
-  parsed = tryParse(str);
+  parsed = safeJsonParse(str);
   if (typeof parsed === 'string') {
-    const nested = tryParse(parsed);
+    const nested = parseLooseJson(parsed);
     if (nested) return nested;
   }
 
@@ -247,7 +203,7 @@ function parseLLMContent(raw) {
         depth--;
         if (depth === 0 && begin !== -1) {
           const substr = text.slice(begin, i + 1);
-          const candidate = tryParse(escapeRawNewlinesInStrings(normalize(substr)));
+          const candidate = parseLooseJson(substr);
           if (candidate) return candidate;
         }
       }
@@ -258,5 +214,91 @@ function parseLLMContent(raw) {
   parsed = findFirstJsonObject(str);
   if (parsed) return parsed;
 
+  // 4) 若整体 JSON 仍不可解析，尝试按字段分段抽取并重组
+  parsed = extractBySegments(str);
+  if (parsed) return parsed;
+
   return null;
+}
+
+function extractBySegments(text) {
+  const extractJsonSegment = (source, key, openChar, closeChar) => {
+    const keyRegex = new RegExp(`"${key}"\\s*:\\s*`);
+    const keyMatch = keyRegex.exec(source);
+    if (!keyMatch) return null;
+
+    let i = keyMatch.index + keyMatch[0].length;
+    while (i < source.length && /\s/.test(source[i])) i++;
+    if (source[i] !== openChar) return null;
+
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+    const start = i;
+
+    for (; i < source.length; i++) {
+      const ch = source[i];
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (ch === "\\") {
+        escape = true;
+        continue;
+      }
+      if (ch === '"') {
+        inString = !inString;
+        continue;
+      }
+      if (inString) continue;
+
+      if (ch === openChar) {
+        depth++;
+      } else if (ch === closeChar) {
+        depth--;
+        if (depth === 0) {
+          return source.slice(start, i + 1);
+        }
+      }
+    }
+    return null;
+  };
+
+  const headerSegment = extractJsonSegment(text, "header", "{", "}");
+  const storySegment = extractJsonSegment(text, "storyParagraphs", "[", "]");
+  const choicesSegment = extractJsonSegment(text, "choices", "[", "]");
+  const newsSegment = extractJsonSegment(text, "news", "[", "]");
+  const opinionSegment = extractJsonSegment(text, "publicOpinion", "[", "]");
+
+  const header = parseLooseJson(headerSegment) || {};
+  let storyParagraphs = parseLooseJson(storySegment);
+  const choices = parseLooseJson(choicesSegment);
+  const news = parseLooseJson(newsSegment);
+  const publicOpinion = parseLooseJson(opinionSegment);
+
+  if (!Array.isArray(storyParagraphs)) {
+    const storyStringMatch = text.match(/"storyParagraphs"\s*:\s*"([\s\S]*?)"\s*,\s*"choices"/);
+    if (storyStringMatch && storyStringMatch[1]) {
+      const rawStory = storyStringMatch[1]
+        .replace(/\\n/g, "\n")
+        .replace(/\"/g, '"')
+        .trim();
+      storyParagraphs = rawStory
+        .split(/\n{2,}|\r\n{2,}/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+    }
+  }
+
+  if (!Array.isArray(storyParagraphs) || !Array.isArray(choices)) {
+    return null;
+  }
+
+  return {
+    header: header && typeof header === "object" ? header : {},
+    storyParagraphs,
+    choices,
+    news: Array.isArray(news) ? news : [],
+    publicOpinion: Array.isArray(publicOpinion) ? publicOpinion : [],
+  };
 }

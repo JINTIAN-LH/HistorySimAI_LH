@@ -521,9 +521,6 @@ function renderStoryHistory(container, history, phaseLabels, state, renderId) {
       renderChosenChoice(container, entry.chosenChoice);
       renderDeltaCard(container, entry.effects, state, "本轮推演数值变动");
     }
-    if (entry.quarterSettlementEffects) {
-      renderDeltaCard(container, entry.quarterSettlementEffects, state, "季度结算数值变动");
-    }
   }
   return true;
 }
@@ -635,6 +632,12 @@ function renderQuarterAgendaPanel(container, state, onChoice, options = {}) {
   const agenda = Array.isArray(state.currentQuarterAgenda) ? state.currentQuarterAgenda : [];
   if (!agenda.length) return;
 
+  const resolveSeverity = (value) => {
+    if (value === "急") return { label: "急", cls: "urgent" };
+    if (value === "缓") return { label: "缓", cls: "normal" };
+    return { label: "重", cls: "important" };
+  };
+
   const focus = state.currentQuarterFocus || {};
   const rerender = () => {
     container.innerHTML = "";
@@ -660,7 +663,8 @@ function renderQuarterAgendaPanel(container, state, onChoice, options = {}) {
     const card = document.createElement("button");
     card.type = "button";
     card.className = "quarter-agenda-card" + (focus.agendaId === item.id ? " quarter-agenda-card--active" : "");
-    card.innerHTML = `<div class="quarter-agenda-card__title">${item.title}</div><div class="quarter-agenda-card__summary">${item.summary}</div><div class="quarter-agenda-card__meta">关联：${(item.impacts || []).join("、")}</div>`;
+    const severity = resolveSeverity(item.severity);
+    card.innerHTML = `<div class="quarter-agenda-card__title-row"><div class="quarter-agenda-card__title">${item.title}</div><span class="quarter-agenda-card__badge quarter-agenda-card__badge--${severity.cls}">${severity.label}</span></div><div class="quarter-agenda-card__summary">${item.summary}</div><div class="quarter-agenda-card__meta">关联：${(item.impacts || []).join("、")}</div>`;
     card.addEventListener("click", () => {
       setState({
         currentQuarterFocus: {
@@ -745,9 +749,6 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
   currentWrap.className = "edict-current-wrap";
   container.appendChild(currentWrap);
 
-  const quarterPanel = renderQuarterAgendaPanel(container, state, onChoice, options);
-  if (quarterPanel) currentWrap.appendChild(quarterPanel);
-
   const settlement = state.lastQuarterSettlement;
   if (
     settlement &&
@@ -767,7 +768,10 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
     };
     renderDeltaCard(currentWrap, settlementDisplayEffects, state, "季度结算数值变动");
   }
-  
+
+  const quarterPanel = renderQuarterAgendaPanel(container, state, onChoice, options);
+  if (quarterPanel) currentWrap.appendChild(quarterPanel);
+
   const textBlock = document.createElement("div");
   textBlock.className = "edict-block";
   const fullText = buildBlockText(data);

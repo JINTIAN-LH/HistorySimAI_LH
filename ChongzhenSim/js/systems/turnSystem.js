@@ -1,8 +1,8 @@
 import { getState, setState } from "../state.js";
-import { renderStoryTurn, pushCurrentTurnToHistory, applyEffects, renderDeltaCard, computeQuarterlyEffects, estimateEffectsFromEdict } from "./storySystem.js";
+import { renderStoryTurn, pushCurrentTurnToHistory, applyEffects, computeQuarterlyEffects, estimateEffectsFromEdict } from "./storySystem.js";
 import { autoSaveIfEnabled } from "../storage.js";
 import { updateTopbarByState } from "../layout.js";
-import { applyProgressionToChoiceEffects, extractCustomPoliciesFromEdict, mergeCustomPolicies, processCoreGameplayTurn, resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
+import { applyProgressionToChoiceEffects, extractCustomPoliciesFromEdict, mergeCustomPolicies, processCoreGameplayTurn, refreshQuarterAgendaByState, resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
 
 export function runCurrentTurn(container, options = {}) {
   const state = getState();
@@ -110,27 +110,13 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
       },
     });
 
-    // 将季度收入效果单独挂到本回合历史中，避免与当轮推演效果混在一起
-    const currentState = getState();
-    const history = currentState.storyHistory || [];
-    if (history.length > 0) {
-      const lastEntry = history[history.length - 1];
-      const quarterDisplayEffects = {
-        treasury: quarterEffects.treasury || 0,
-        grain: quarterEffects.grain || 0,
-        militaryStrength: quarterEffects.militaryStrength || 0,
-        corruptionLevel: quarterEffects.corruptionLevel || 0,
-      };
-      const updatedHistory = [...history];
-      updatedHistory[updatedHistory.length - 1] = {
-        ...lastEntry,
-        quarterSettlementEffects: quarterDisplayEffects,
-      };
-      setState({ storyHistory: updatedHistory });
-    }
   } else {
     setState({ lastQuarterSettlement: null });
   }
+
+  // 用本回合全部结算后的最新状态重算季度议题，避免议题落后于实时局势
+  const agendaPatch = refreshQuarterAgendaByState(getState());
+  setState(agendaPatch);
 
   autoSaveIfEnabled();
   updateTopbarByState(getState());

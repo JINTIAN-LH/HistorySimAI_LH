@@ -257,6 +257,44 @@
   margin-bottom: 4px;
 }
 
+.quarter-agenda-card__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.quarter-agenda-card__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.quarter-agenda-card__badge--urgent {
+  color: #8e1f1f;
+  background: #f8dfdf;
+  border-color: #e9bcbc;
+}
+
+.quarter-agenda-card__badge--important {
+  color: #7a4f20;
+  background: #f5ead7;
+  border-color: #dfc7a4;
+}
+
+.quarter-agenda-card__badge--normal {
+  color: #2f5a3e;
+  background: #e2f0e5;
+  border-color: #bdd8c6;
+}
+
 .quarter-agenda-card__summary {
   font-size: 12px;
   color: var(--color-text-main);

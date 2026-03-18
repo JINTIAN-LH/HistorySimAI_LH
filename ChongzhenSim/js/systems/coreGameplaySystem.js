@@ -684,20 +684,59 @@ function buildQuarterAgenda(state) {
   const nation = state.nation || {};
   const agenda = [];
   const activeHostiles = (state.hostileForces || []).filter((item) => !item.isDefeated);
+  const lastTags = parseChoiceTags(state.lastChoiceText || "");
+  const lastTurnSummary = buildLastTurnAgendaSummary(state, lastTags);
+  const currentSerial = monthSerial(state.currentYear || 1, state.currentMonth || 1);
+  const upcomingConsequence = (state.pendingConsequences || [])
+    .slice()
+    .sort((a, b) => (a.dueSerial || 0) - (b.dueSerial || 0))
+    .find((item) => (item.dueSerial || 0) <= currentSerial + 3);
 
-  const pushAgenda = (id, title, summary, impacts) => {
+  const pushAgenda = (id, title, summary, impacts, severity = "重") => {
     if (agenda.some((item) => item.id === id)) return;
-    agenda.push({ id, title, summary, impacts });
+    agenda.push({ id, title, summary, impacts, severity });
   };
 
+  const effectsToImpacts = (effects) => {
+    if (!effects || typeof effects !== "object") return ["国势"];
+    const impacts = [];
+    if (typeof effects.treasury === "number" || typeof effects.grain === "number") impacts.push("财政");
+    if (typeof effects.civilMorale === "number" || typeof effects.unrest === "number") impacts.push("民心");
+    if (typeof effects.militaryStrength === "number" || typeof effects.borderThreat === "number" || effects.hostileDamage) impacts.push("军事");
+    if (typeof effects.corruptionLevel === "number" || typeof effects.loyalty === "object") impacts.push("吏治");
+    return impacts.length ? impacts : ["国势"];
+  };
+
+  if (upcomingConsequence) {
+    const consequenceSeverity = (upcomingConsequence.dueSerial || 0) <= currentSerial + 1 ? "急" : "重";
+    pushAgenda(
+      `followup_${upcomingConsequence.id}`,
+      `承接上轮：${upcomingConsequence.title}`,
+      `上轮政令余波将至（预计近期触发），需提前部署以降低副作用并放大收益。${lastTurnSummary ? ` ${lastTurnSummary}` : ""}`,
+      effectsToImpacts(upcomingConsequence.effects),
+      consequenceSeverity
+    );
+  }
+
+  // 上轮偏向什么，本季优先给对应承接议题，保持“连续推理”的叙事感。
+  if (lastTags.relief || lastTags.reform || lastTags.tax || lastTags.royalReform) {
+    pushAgenda("domestic_followup", "内政承接：赋役与赈抚复盘", `上轮政令已触达地方，本季需围绕赋税、赈济与吏治做二次校准。${lastTurnSummary ? ` ${lastTurnSummary}` : ""}`, ["内政", "财政", "民心"], "重");
+  }
+  if (lastTags.maritime || (nation.treasury || 0) < 320000) {
+    pushAgenda("diplomacy_trade", "外交议题：通商与周边协同", `在财政与海贸压力下，需通过通商与外部协同缓释内政压力。${lastTurnSummary ? ` ${lastTurnSummary}` : ""}`, ["外交", "财政", "边患"], "重");
+  }
+  if (lastTags.military || lastTags.promoteYuan || activeHostiles.length) {
+    pushAgenda("military_followup", "军事承接：边防部署复核", `上轮军务动作已改变战场态势，本季需复核兵力、补给与目标优先级。${lastTurnSummary ? ` ${lastTurnSummary}` : ""}`, ["军事", "边患", "执行"], "重");
+  }
+
   if ((nation.treasury || 0) < 400000) {
-    pushAgenda("fiscal_gap", "军饷与财政缺口", "财政已逼近红线，需尽快开源或节流。", ["财政", "军饷", "派系"]);
+    pushAgenda("fiscal_gap", "军饷与财政缺口", "财政已逼近红线，需尽快开源或节流。", ["财政", "军饷", "派系"], "急");
   }
   if ((nation.grain || 0) < 25000 || (nation.civilMorale || 0) < 50) {
-    pushAgenda("relief_shaanxi", "陕西赈灾与安民", "粮储或民心偏低，应优先稳住流民与灾情。", ["民心", "粮储", "动乱"]);
+    pushAgenda("relief_shaanxi", "陕西赈灾与安民", "粮储或民心偏低，应优先稳住流民与灾情。", ["民心", "粮储", "动乱"], "急");
   }
   if ((nation.militaryStrength || 0) < 60 || (nation.borderThreat || 0) > 65) {
-    pushAgenda("frontier_defense", "关宁补饷与边防", "关外军务承压，若军饷不足将直接冲击守边。", ["军力", "边患", "财政"]);
+    pushAgenda("frontier_defense", "关宁补饷与边防", "关外军务承压，若军饷不足将直接冲击守边。", ["军力", "边患", "财政"], "急");
   }
   if (activeHostiles.length) {
     const topHostile = activeHostiles.slice().sort((a, b) => (b.power || 0) - (a.power || 0))[0];
@@ -705,28 +744,148 @@ function buildQuarterAgenda(state) {
       "military_expansion",
       `军事开拓：对${topHostile.name}用兵`,
       `敌对势力“${topHostile.name}”当前势力值约 ${topHostile.power}/100，可通过军事选项持续削弱直至灭亡。`,
-      ["军力", "边患", "敌对势力"]
+      ["军力", "边患", "敌对势力"],
+      (topHostile.power || 0) >= 70 ? "急" : "重"
     );
   }
   if ((state.partyStrife || 0) > 70) {
-    pushAgenda("faction_conflict", "终止党争", "党争已接近失控，需调岗与监察并用。", ["派系", "威望", "财政"]);
+    pushAgenda("faction_conflict", "终止党争", "党争已接近失控，需调岗与监察并用。", ["派系", "威望", "财政"], "急");
   }
   if ((state.unrest || 0) > 20) {
-    pushAgenda("local_unrest", "地方动乱", "地方骚动蔓延，应结合剿匪与安抚同步处理。", ["动乱", "民心", "军力"]);
+    pushAgenda("local_unrest", "地方动乱", "地方骚动蔓延，应结合剿匪与安抚同步处理。", ["动乱", "民心", "军力"], "急");
   }
 
-  const stageDefaults = [
-    { id: "purge_eunuch", title: "处置阉党残余", summary: "借威望整肃旧党，以稳朝纲。", impacts: ["威望", "派系"] },
-    { id: "supply_army", title: "调拨军饷", summary: "优先稳住边军军心，避免关外先崩。", impacts: ["军力", "财政"] },
-    { id: "balance_factions", title: "平衡派系", summary: "调和东林、阉党余部与中立派，压住党争。", impacts: ["派系", "执行"] },
+  const categoryDefaults = [
+    { id: "domestic_governance", title: "内政：赋役与仓储统筹", summary: "统筹税赋、仓储与赈抚节奏，稳住地方治理预期。", impacts: ["内政", "财政", "民心"], severity: "缓" },
+    { id: "diplomacy_coordination", title: "外交：周边关系与通商谈判", summary: "通过边贸、使节与缓冲策略减轻前线与财政压力。", impacts: ["外交", "边患", "财政"], severity: "缓" },
+    { id: "military_readiness", title: "军事：战备轮整与边军补给", summary: "围绕战备、补给与轮换训练，提升持续作战能力。", impacts: ["军事", "军力", "边患"], severity: "缓" },
   ];
 
-  for (const item of stageDefaults) {
+  for (const item of categoryDefaults) {
     if (agenda.length >= 5) break;
-    pushAgenda(item.id, item.title, item.summary, item.impacts);
+    pushAgenda(item.id, item.title, item.summary, item.impacts, item.severity);
   }
 
   return agenda.slice(0, clamp(agenda.length, 3, 5));
+}
+
+function buildLastTurnAgendaSummary(state, tags) {
+  const keywordMap = [
+    ["tax", "税赋"],
+    ["relief", "赈济"],
+    ["military", "军务"],
+    ["reform", "改革"],
+    ["maritime", "海贸"],
+    ["antiEunuch", "肃清旧党"],
+    ["royalReform", "宗室改革"],
+  ];
+  const keywords = keywordMap
+    .filter(([key]) => tags && tags[key])
+    .map(([, label]) => label)
+    .slice(0, 3);
+
+  const history = Array.isArray(state.storyHistory) ? state.storyHistory : [];
+  const lastEntry = history.length ? history[history.length - 1] : null;
+  const effects = lastEntry?.effects && typeof lastEntry.effects === "object" ? lastEntry.effects : null;
+
+  const effectItems = [];
+  if (effects) {
+    const deltaMap = ["treasury", "grain", "militaryStrength", "civilMorale", "borderThreat", "corruptionLevel", "unrest"];
+    deltaMap.forEach((key) => {
+      const value = effects[key];
+      if (typeof value !== "number" || value === 0) return;
+      const phrase = toSemanticDeltaText(key, value);
+      if (phrase) effectItems.push(phrase);
+    });
+  }
+
+  if (!keywords.length && !effectItems.length) return "";
+  const keywordText = keywords.length ? `上轮关键词：${keywords.join("、")}` : "";
+  const deltaText = effectItems.length ? `形势纪要：${effectItems.slice(0, 3).join("，")}` : "";
+  if (keywordText && deltaText) return `${keywordText}；${deltaText}。`;
+  return keywordText || `${deltaText}。`;
+}
+
+function toSemanticDeltaText(key, value) {
+  const abs = Math.abs(value);
+  const level = abs >= 8 ? "明显" : abs >= 4 ? "" : "轻微";
+  const prefix = level ? `${level}` : "";
+
+  if (key === "borderThreat") {
+    return value < 0 ? `${prefix}边患趋缓` : `${prefix}边患承压`;
+  }
+  if (key === "corruptionLevel") {
+    return value < 0 ? `${prefix}吏治回稳` : `${prefix}吏治承压`;
+  }
+  if (key === "civilMorale") {
+    return value > 0 ? `${prefix}民心回升` : `${prefix}民情波动`;
+  }
+  if (key === "unrest") {
+    return value < 0 ? `${prefix}地方趋稳` : `${prefix}地方躁动`;
+  }
+  if (key === "militaryStrength") {
+    return value > 0 ? `${prefix}军备整饬` : `${prefix}军备消耗`;
+  }
+  if (key === "treasury") {
+    return value > 0 ? `${prefix}国库回暖` : `${prefix}财政吃紧`;
+  }
+  if (key === "grain") {
+    return value > 0 ? `${prefix}仓储充实` : `${prefix}粮储紧绷`;
+  }
+  return "";
+}
+
+function deriveAgendaImpactAdjustment(focus, agenda) {
+  if (!focus || !agenda) {
+    return {
+      taxPressureDelta: 0,
+      unrestDelta: 0,
+      strifeDelta: 0,
+      prestigeDelta: 0,
+    };
+  }
+  const impacts = Array.isArray(agenda.impacts) ? agenda.impacts : [];
+  const score = (tokens) => impacts.some((item) => tokens.includes(item));
+  const weight = focus.stance === "support" ? 1 : focus.stance === "compromise" ? 0.5 : focus.stance === "oppose" ? -0.6 : 0;
+
+  let taxPressureDelta = 0;
+  let unrestDelta = 0;
+  let strifeDelta = 0;
+  let prestigeDelta = 0;
+
+  if (score(["财政", "军饷", "粮储"])) taxPressureDelta += Math.round(-2 * weight);
+  if (score(["民心", "动乱"])) unrestDelta += Math.round(-2 * weight);
+  if (score(["派系", "执行", "威望"])) strifeDelta += Math.round(-2 * weight);
+  if (score(["军事", "军力", "边患"])) prestigeDelta += Math.round(1 * weight);
+  if (score(["外交"])) prestigeDelta += Math.round(1 * weight);
+
+  return {
+    taxPressureDelta,
+    unrestDelta,
+    strifeDelta,
+    prestigeDelta,
+  };
+}
+
+export function refreshQuarterAgendaByState(state) {
+  const month = state.currentMonth || 1;
+  if (month % 3 !== 0) {
+    return {
+      currentQuarterAgenda: [],
+      currentQuarterFocus: null,
+    };
+  }
+
+  const nextAgenda = buildQuarterAgenda(state);
+  const focus = state.currentQuarterFocus || null;
+  const validStance = focus && ["support", "compromise", "oppose", "suppress"].includes(focus.stance);
+  const validAgenda = focus && nextAgenda.some((item) => item.id === focus.agendaId);
+  const validFaction = focus && (state.factions || []).some((item) => item.id === focus.factionId);
+
+  return {
+    currentQuarterAgenda: nextAgenda,
+    currentQuarterFocus: validStance && validAgenda && validFaction ? focus : null,
+  };
 }
 
 export function initializeCoreGameplayState(currentState, factions, config, nationInit) {
@@ -1060,6 +1219,8 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
   const balance = getBalanceFromState(state);
   const policyBonus = getPolicyBonusSummary(state.unlockedPolicies || [], balance);
   const focus = state.currentQuarterFocus || null;
+  const selectedAgenda = focus ? (state.currentQuarterAgenda || []).find((item) => item.id === focus.agendaId) : null;
+  const agendaAdjust = deriveAgendaImpactAdjustment(focus, selectedAgenda);
   const prestigeBase = derivePrestigeDelta(choiceText, effectiveEffects);
   let focusPrestige = 0;
   let focusStrifeDelta = 0;
@@ -1080,7 +1241,7 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
     focusStrifeDelta += 6;
   }
 
-  const prestige = clamp((state.prestige || 58) + prestigeBase + focusPrestige, 0, 100);
+  const prestige = clamp((state.prestige || 58) + prestigeBase + focusPrestige + agendaAdjust.prestigeDelta, 0, 100);
   const politicsLevel = state.playerAbilities?.politics || 0;
   const executionRate = clamp(
     computeExecutionRate(prestige, balance.executionRate) + politicsLevel * 2 + policyBonus.executionRateBonus,
@@ -1097,14 +1258,16 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
   if (tags.tax) taxPressure += 10;
   if (tags.relief) taxPressure -= 8;
   if (tags.reform) taxPressure -= 4;
+  taxPressure += agendaAdjust.taxPressureDelta;
   taxPressure = clamp(taxPressure + policyBonus.taxPressureOffset, 0, 100);
 
   let unrest = clamp(state.unrest || 18, 0, 100);
   unrest = clamp(unrest + (taxPressure >= 65 ? 5 : 0) + ((effectiveEffects?.civilMorale || 0) < 0 ? 4 : 0) - ((effectiveEffects?.civilMorale || 0) > 0 ? 3 : 0) + policyBonus.unrestDelta, 0, 100);
+  unrest = clamp(unrest + agendaAdjust.unrestDelta, 0, 100);
   if ((state.nation?.disasterLevel || 0) > 70) unrest = clamp(unrest + 3, 0, 100);
 
   const politicsReduction = clamp(policyBonus.politicsReduction + politicsLevel, 0, balance.politicsReductionTotalCap);
-  const partyStrife = clamp(computePartyStrife(factionSupport, state.partyStrife, balance.partyStrife) + focusStrifeDelta - politicsReduction, 0, 100);
+  const partyStrife = clamp(computePartyStrife(factionSupport, state.partyStrife, balance.partyStrife) + focusStrifeDelta + agendaAdjust.strifeDelta - politicsReduction, 0, 100);
 
   const serial = monthSerial(nextYear, nextMonth);
   const scheduled = scheduleConsequences(choiceText, nextYear, nextMonth);
