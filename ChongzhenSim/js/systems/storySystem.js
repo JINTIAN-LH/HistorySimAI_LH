@@ -7,11 +7,15 @@ import { startDanmuForEdict, stopDanmu } from "./danmuSystem.js";
 let storyCache = { key: null, data: null };
 let lastAppliedKey = null;
 
+// 大臣名称高亮相关配置
 const MINISTER_NAME_COLORS = [
   "#8B0000", "#2e7d32", "#1565c0", "#e65100", "#6a1b9a",
   "#00695c", "#ad1457", "#4527a0",
 ];
 
+/**
+ * 构建大臣名称到ID的映射
+ */
 function buildSpeakerMap() {
   const state = getState();
   const map = {};
@@ -21,6 +25,9 @@ function buildSpeakerMap() {
   return map;
 }
 
+/**
+ * 构建大臣名称到信息（ID/颜色/角色）的映射
+ */
 function buildMinisterNameToInfo() {
   const state = getState();
   const ministers = state.ministers || [];
@@ -37,6 +44,9 @@ function buildMinisterNameToInfo() {
   return map;
 }
 
+/**
+ * 按大臣名称拆分文本片段
+ */
 function splitTextByNames(text, nameToInfo) {
   const names = Object.keys(nameToInfo || {}).filter(Boolean).sort((a, b) => b.length - a.length);
   if (!names.length) return [{ type: "text", value: text }];
@@ -67,6 +77,9 @@ function splitTextByNames(text, nameToInfo) {
   return segments;
 }
 
+/**
+ * 高亮渲染大臣名称
+ */
 function highlightMinisterNames(text, nameToInfo) {
   const segments = splitTextByNames(text, nameToInfo || {});
   const frag = document.createDocumentFragment();
@@ -84,6 +97,9 @@ function highlightMinisterNames(text, nameToInfo) {
   return frag;
 }
 
+/**
+ * 将当前回合数据推入历史记录
+ */
 export function pushCurrentTurnToHistory(state, chosenChoice, effects) {
   const key = `${state.currentDay}_${state.currentPhase}`;
   if (storyCache.key !== key || !storyCache.data) return;
@@ -114,6 +130,9 @@ export function pushCurrentTurnToHistory(state, chosenChoice, effects) {
   });
 }
 
+/**
+ * 渲染数值变化卡片
+ */
 function renderDeltaCard(container, effects, state) {
   if (!effects) return;
   const entries = [];
@@ -123,6 +142,7 @@ function renderDeltaCard(container, effects, state) {
     corruptionLevel: "贪腐",
   };
 
+  // 国家数值处理
   for (const [key, label] of Object.entries(labels)) {
     if (typeof effects[key] === "number" && effects[key] !== 0) {
       entries.push({
@@ -135,6 +155,7 @@ function renderDeltaCard(container, effects, state) {
     }
   }
 
+  // 大臣忠诚度处理
   if (effects.loyalty && typeof effects.loyalty === "object") {
     const ministers = state.ministers || [];
     const nameById = Object.fromEntries(ministers.map((m) => [m.id, m.name || m.id]));
@@ -151,6 +172,7 @@ function renderDeltaCard(container, effects, state) {
     }
   }
 
+  // 外部势力数值处理
   if (effects.external && typeof effects.external === "object") {
     const externalPowers = state.externalPowers || {};
     for (const [id, delta] of Object.entries(effects.external)) {
@@ -215,6 +237,9 @@ function renderDeltaCard(container, effects, state) {
   container.appendChild(card);
 }
 
+/**
+ * 渲染伪行文本（支持标题/对话/普通文本，大臣名称高亮+头像）
+ */
 function renderPseudoLines(blockEl, text) {
   if (!blockEl) return;
   blockEl.innerHTML = "";
@@ -294,6 +319,9 @@ function renderPseudoLines(blockEl, text) {
   }
 }
 
+/**
+ * 构建剧情文本块
+ */
 function buildBlockText(data) {
   const header = data.header || {};
   const storyParagraphs = data.storyParagraphs || [];
@@ -311,6 +339,9 @@ function buildBlockText(data) {
   return text.trimEnd();
 }
 
+/**
+ * 应用数值变化（兼容旧版本的任命/角色死亡 + 新版本的外部势力）
+ */
 function applyEffects(effects) {
   if (!effects) return;
   const s = getState();
@@ -318,6 +349,7 @@ function applyEffects(effects) {
   
   const PERCENT_KEYS = ["militaryStrength", "civilMorale", "borderThreat", "disasterLevel", "corruptionLevel"];
   
+  // 国家基础数值处理
   Object.entries(effects).forEach(([key, value]) => {
     if (typeof value !== "number") return;
     
@@ -330,6 +362,7 @@ function applyEffects(effects) {
   });
   setState({ nation });
 
+  // 大臣忠诚度处理
   if (effects.loyalty && typeof effects.loyalty === "object") {
     const loyalty = { ...(s.loyalty || {}) };
     for (const [id, delta] of Object.entries(effects.loyalty)) {
@@ -340,6 +373,7 @@ function applyEffects(effects) {
     setState({ loyalty });
   }
 
+  // 新增：外部势力数值处理
   if (effects.external && typeof effects.external === "object") {
     const externalPowers = { ...(s.externalPowers || {}) };
     for (const [id, delta] of Object.entries(effects.external)) {
@@ -350,8 +384,50 @@ function applyEffects(effects) {
     }
     setState({ externalPowers });
   }
+
+  // 保留旧版本：任命处理
+  if (effects.appointments && typeof effects.appointments === "object") {
+    const currentState = getState();
+    const appointments = { ...(currentState.appointments || {}) };
+    for (const [positionId, characterId] of Object.entries(effects.appointments)) {
+      if (typeof positionId !== "string" || typeof characterId !== "string") continue;
+      for (const [posId, charId] of Object.entries(appointments)) {
+        if (charId === characterId && posId !== positionId) {
+          delete appointments[posId];
+        }
+      }
+      appointments[positionId] = characterId;
+    }
+    setState({ appointments });
+  }
+
+  // 保留旧版本：角色死亡处理
+  if (effects.characterDeath && typeof effects.characterDeath === "object") {
+    const currentState = getState();
+    const characterStatus = { ...(currentState.characterStatus || {}) };
+    for (const [characterId, reason] of Object.entries(effects.characterDeath)) {
+      if (typeof characterId !== "string") continue;
+      characterStatus[characterId] = {
+        isAlive: false,
+        deathReason: typeof reason === "string" ? reason : "处死",
+        deathDay: currentState.currentDay || 1
+      };
+    }
+    const appointments = { ...(currentState.appointments || {}) };
+    for (const characterId of Object.keys(effects.characterDeath)) {
+      for (const [posId, charId] of Object.entries(appointments)) {
+        if (charId === characterId) {
+          delete appointments[posId];
+        }
+      }
+    }
+    setState({ characterStatus, appointments });
+  }
 }
 
+/**
+ * 渲染加载中状态
+ */
 function renderStoryLoading(container) {
   const block = document.createElement("div");
   block.className = "edict-block story-loading";
@@ -360,6 +436,9 @@ function renderStoryLoading(container) {
   return block;
 }
 
+/**
+ * 清理弹幕层（防止内存泄漏）
+ */
 function cleanupDanmuLayer(container) {
   if (container._edictDanmuLayer) {
     stopDanmu(container._edictDanmuLayer);
@@ -368,6 +447,9 @@ function cleanupDanmuLayer(container) {
   }
 }
 
+/**
+ * 设置弹幕层（先清理旧层，再创建新层）
+ */
 function setupDanmuLayer(container) {
   cleanupDanmuLayer(container);
   const danmuLayer = document.createElement("div");
@@ -377,12 +459,18 @@ function setupDanmuLayer(container) {
   return danmuLayer;
 }
 
+/**
+ * 启动弹幕
+ */
 function startDanmu(container) {
   if (container._edictDanmuLayer) {
     startDanmuForEdict(container._edictDanmuLayer);
   }
 }
 
+/**
+ * 渲染已选择的选项
+ */
 function renderChosenChoice(container, chosenChoice) {
   const choiceWrap = document.createElement("div");
   choiceWrap.className = "story-choice-history";
@@ -406,7 +494,27 @@ function renderChosenChoice(container, chosenChoice) {
   container.appendChild(choiceWrap);
 }
 
-function renderStoryHistory(container, history, phaseLabels, state, renderId) {
+/**
+ * 渲染剧情错误提示
+ */
+function renderStoryError(container, errorMessage, retryCallback) {
+  const block = document.createElement("div");
+  block.className = "edict-block";
+  block.textContent = errorMessage;
+  
+  const retryBtn = document.createElement("button");
+  retryBtn.className = "story-action-btn";
+  retryBtn.textContent = "重新生成";
+  retryBtn.addEventListener("click", retryCallback);
+  
+  block.appendChild(retryBtn);
+  container.appendChild(block);
+}
+
+/**
+ * 渲染剧情历史记录
+ */
+async function renderStoryHistory(container, history, phaseLabels, state, renderId) {
   for (const entry of history) {
     if (renderId != null && container._storyRenderId !== renderId) return false;
     
@@ -427,26 +535,18 @@ function renderStoryHistory(container, history, phaseLabels, state, renderId) {
     
     if (entry.chosenChoice && entry.chosenChoice.text) {
       renderChosenChoice(container, entry.chosenChoice);
-      renderDeltaCard(container, entry.effects, state);
+      if (entry.effects) {
+        applyEffects(entry.effects);
+      }
+      await renderDeltaCard(container, entry.effects, state);
     }
   }
   return true;
 }
 
-function renderStoryError(container, errorMessage, retryCallback) {
-  const block = document.createElement("div");
-  block.className = "edict-block";
-  block.textContent = errorMessage;
-  
-  const retryBtn = document.createElement("button");
-  retryBtn.className = "story-action-btn";
-  retryBtn.textContent = "重新生成";
-  retryBtn.addEventListener("click", retryCallback);
-  
-  block.appendChild(retryBtn);
-  container.appendChild(block);
-}
-
+/**
+ * 加载剧情数据（兼容LLM和本地JSON）
+ */
 async function loadStoryData(state, container, renderId, onChoice, options) {
   const phaseKey = state.currentPhase || "morning";
   const path = `data/story/day${state.currentDay}_${phaseKey}.json`;
@@ -457,7 +557,9 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
     return storyCache.data;
   }
 
-  const useLLM = config.storyMode === "llm" && (config.apiBase || "").trim().length > 0;
+  const apiBase = (config.apiBase || "").trim();
+  const isCustomEdict = state.lastChoiceId === "custom_edict";
+  const useLLM = (config.storyMode === "llm" || isCustomEdict) && apiBase.length > 0;
   let data = null;
 
   if (useLLM) {
@@ -472,15 +574,13 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
     if (renderId != null && container._storyRenderId !== renderId) return null;
   }
 
-  if (data == null) {
+  if (!data) {
     try {
       data = await loadJSON(path);
     } catch (e) {
-      if (renderId != null && container._storyRenderId !== renderId) return null;
-      
-      const errorMessage = useLLM 
-        ? "本回合剧情生成失败，请检查网络或后端配置。"
-        : "本回合剧情尚未准备好，请稍后再试。";
+      const errorMessage = config.storyMode === "llm" && apiBase.length > 0
+        ? "LLM 生成失败，已切换到本地模板。本地模板不适用于自拟诏书场景。"
+        : "剧情文件加载失败";
       
       renderStoryError(container, errorMessage, () => {
         storyCache = { key: null, data: null };
@@ -495,6 +595,9 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
   return data;
 }
 
+/**
+ * 更新剧情状态（新闻、舆情、天气）
+ */
 function updateStoryState(data) {
   if (data.news) {
     setState({ newsToday: data.news });
@@ -507,6 +610,9 @@ function updateStoryState(data) {
   }
 }
 
+/**
+ * 创建选项按钮
+ */
 function createChoiceButton(choice, onChoice) {
   const btn = document.createElement("button");
   btn.type = "button";
@@ -518,37 +624,54 @@ function createChoiceButton(choice, onChoice) {
   return btn;
 }
 
+/**
+ * 渲染当前回合剧情
+ */
 function renderCurrentTurn(container, data, state, phaseLabels, onChoice) {
-  const phaseKey = state.currentPhase || "morning";
-  const currentPhaseLabel = phaseLabels[phaseKey] || phaseKey;
-  
+  const header = data.header || {};
+  const phase = state.currentPhase || "morning";
+  const phaseLabel = phaseLabels[phase] || phase;
+
+  // 保留旧版本的头部信息 + 新版本的样式优化
+  const headerEl = document.createElement("div");
+  headerEl.className = "story-header";
+  headerEl.innerHTML = `
+    <span class="story-header__time">${header.time || ""}</span>
+    <span class="story-header__info">${header.season || ""} · ${header.weather || ""} · ${header.location || ""}</span>
+  `;
+  container.appendChild(headerEl);
+
   const currentLabel = document.createElement("div");
   currentLabel.className = "story-history-label story-current-label";
-  currentLabel.textContent = `当前 · 第${state.currentDay}天 · ${currentPhaseLabel}`;
+  currentLabel.textContent = `当前 · 第${state.currentDay}天 · ${phaseLabel}`;
   container.appendChild(currentLabel);
   
   const currentWrap = document.createElement("div");
   currentWrap.className = "edict-current-wrap";
   container.appendChild(currentWrap);
   
-  const textBlock = document.createElement("div");
-  textBlock.className = "edict-block";
-  const fullText = buildBlockText(data);
-  renderPseudoLines(textBlock, fullText);
-  currentWrap.appendChild(textBlock);
-  
+  const block = document.createElement("div");
+  block.className = "edict-block story-current-block";
+  const storyText = Array.isArray(data.storyParagraphs) ? data.storyParagraphs.join("\n") : data.storyParagraphs || "";
+  renderPseudoLines(block, storyText);
+  currentWrap.appendChild(block);
+
   const actionsWrap = document.createElement("div");
-  actionsWrap.className = "story-actions";
-  
-  (data.choices || []).forEach((choice) => {
+  actionsWrap.className = "story-choices story-actions";
+
+  // 保留旧版本：最多显示3个选项（可根据需求移除.slice(0,3)）
+  const choices = data.choices || [];
+  const validChoices = choices.slice(0, 3);
+
+  validChoices.forEach(choice => {
     const btn = createChoiceButton(choice, onChoice);
     actionsWrap.appendChild(btn);
   });
-  
+
   const customBtn = document.createElement("button");
   customBtn.type = "button";
   customBtn.className = "story-action-btn story-action-btn--custom";
-  customBtn.innerHTML = `<div>自拟诏书</div><span>亲笔拟定旨意，由朝臣代为施行</span>`;
+  customBtn.innerHTML = `<div>✍️ 自拟诏书</div><span>亲笔拟定旨意，由朝臣代为施行</span>`;
   customBtn.addEventListener("click", () => {
     showCustomEdictPanel(onChoice);
   });
@@ -557,44 +680,9 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice) {
   currentWrap.appendChild(actionsWrap);
 }
 
-export async function renderStoryTurn(state, container, onChoice, options = {}) {
-  const renderId = options && options.renderId;
-  if (renderId != null && container._storyRenderId !== renderId) return;
-
-  setupDanmuLayer(container);
-
-  const config = state.config || {};
-  const phaseLabels = config.phaseLabels || { morning: "早朝", afternoon: "午后", evening: "夜间" };
-  const history = state.storyHistory || [];
-  
-  if (!renderStoryHistory(container, history, phaseLabels, state, renderId)) return;
-
-  const data = await loadStoryData(state, container, renderId, onChoice, options);
-  if (data == null) return;
-
-  if (data.lastChoiceEffects && state.lastChoiceId === "custom_edict") {
-    const lastEntry = history[history.length - 1];
-    if (lastEntry && lastEntry.chosenChoice && !lastEntry.effects) {
-      lastEntry.effects = data.lastChoiceEffects;
-      applyEffects(data.lastChoiceEffects);
-      const updatedHistory = [...history];
-      updatedHistory[updatedHistory.length - 1] = lastEntry;
-      setState({ storyHistory: updatedHistory });
-      
-      const historyContainer = container.querySelector('.story-history-container') || container;
-      renderDeltaCard(historyContainer, data.lastChoiceEffects, state);
-    }
-  }
-
-  updateStoryState(data);
-
-  if (renderId != null && container._storyRenderId !== renderId) return;
-
-  renderCurrentTurn(container, data, state, phaseLabels, onChoice);
-
-  startDanmu(container);
-}
-
+/**
+ * 自拟诏书面板（内置完整逻辑）
+ */
 function showCustomEdictPanel(onChoice) {
   const existing = document.getElementById("custom-edict-overlay");
   if (existing) existing.remove();
@@ -680,4 +768,47 @@ function showCustomEdictPanel(onChoice) {
   (app || document.body).appendChild(overlay);
 }
 
-export { applyEffects, renderDeltaCard };
+/**
+ * 核心渲染函数（整合新旧版本逻辑）
+ */
+export async function renderStoryTurn(state, container, onChoice, options = {}) {
+  const renderId = options && options.renderId;
+  if (renderId != null && container._storyRenderId !== renderId) return;
+
+  setupDanmuLayer(container);
+
+  const config = state.config || {};
+  const phaseLabels = config.phaseLabels || { morning: "早朝", afternoon: "午后", evening: "夜间" };
+  const currentState = getState();
+  const history = currentState.storyHistory || [];
+  
+  if (!await renderStoryHistory(container, history, phaseLabels, currentState, renderId)) return;
+
+  const data = await loadStoryData(currentState, container, renderId, onChoice, options);
+  if (data == null) return;
+
+  if (data.lastChoiceEffects && currentState.lastChoiceId === "custom_edict") {
+    const lastEntry = history[history.length - 1];
+    if (lastEntry && lastEntry.chosenChoice && !lastEntry.effects) {
+      lastEntry.effects = data.lastChoiceEffects;
+      applyEffects(data.lastChoiceEffects);
+      const updatedHistory = [...history];
+      updatedHistory[updatedHistory.length - 1] = lastEntry;
+      setState({ storyHistory: updatedHistory });
+      
+      const historyContainer = container.querySelector('.story-history-container') || container;
+      await renderDeltaCard(historyContainer, data.lastChoiceEffects, getState());
+    }
+  }
+
+  updateStoryState(data);
+
+  if (renderId != null && container._storyRenderId !== renderId) return;
+
+  renderCurrentTurn(container, data, currentState, phaseLabels, onChoice);
+
+  startDanmu(container);
+}
+
+// 导出核心函数，保持与旧版本兼容
+export { applyEffects, renderDeltaCard, showCustomEdictPanel };
