@@ -9,6 +9,53 @@ function asParagraphArray(value) {
   return [];
 }
 
+const EFFECT_DELTA_LIMITS = {
+  treasury: 300000,
+  grain: 30000,
+  militaryStrength: 12,
+  civilMorale: 12,
+  borderThreat: 12,
+  disasterLevel: 12,
+  corruptionLevel: 12,
+};
+
+function clampDelta(key, value) {
+  const limit = EFFECT_DELTA_LIMITS[key];
+  if (typeof limit !== "number") return value;
+  return Math.max(-limit, Math.min(limit, value));
+}
+
+export function sanitizeStoryEffects(effects) {
+  if (!effects || typeof effects !== "object" || Array.isArray(effects)) return {};
+  const out = { ...effects };
+
+  for (const [key, value] of Object.entries(out)) {
+    if (typeof value === "number") {
+      out[key] = clampDelta(key, value);
+    }
+  }
+
+  if (out.loyalty && typeof out.loyalty === "object" && !Array.isArray(out.loyalty)) {
+    const loyalty = {};
+    for (const [id, delta] of Object.entries(out.loyalty)) {
+      if (typeof delta !== "number") continue;
+      loyalty[id] = Math.max(-10, Math.min(10, delta));
+    }
+    out.loyalty = loyalty;
+  }
+
+  if (out.hostileDamage && typeof out.hostileDamage === "object" && !Array.isArray(out.hostileDamage)) {
+    const hostileDamage = {};
+    for (const [targetId, delta] of Object.entries(out.hostileDamage)) {
+      if (typeof delta !== "number") continue;
+      hostileDamage[targetId] = Math.max(-25, Math.min(25, delta));
+    }
+    out.hostileDamage = hostileDamage;
+  }
+
+  return out;
+}
+
 function normalizeChoice(item, index) {
   if (!item) return null;
   if (typeof item === "string") {
@@ -27,7 +74,7 @@ function normalizeChoice(item, index) {
     id: String(item.id ?? `choice_${index + 1}`),
     text,
     hint: typeof item.hint === "string" ? item.hint : "",
-    effects: item.effects && typeof item.effects === "object" ? item.effects : {},
+    effects: sanitizeStoryEffects(item.effects && typeof item.effects === "object" ? item.effects : {}),
   };
 }
 

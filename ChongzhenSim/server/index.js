@@ -91,16 +91,17 @@ function createApp(options = {}) {
     const treasuryStatus = treasury >= 5000000 ? "极度充裕" : treasury >= 1000000 ? "充裕" : treasury >= 300000 ? "一般" : treasury >= 100000 ? "紧张" : "极度空虚";
 
     const nationStr = `国库=${treasury.toLocaleString()}两（${treasuryStatus}）, 粮储=${grain.toLocaleString()}石, 军力=${militaryStrength}, 民心=${civilMorale}, 边患=${borderThreat}, 天灾=${disasterLevel}, 贪腐=${corruptionLevel}`;
+    const timeContext = `当前是崇祯${year}年${month}月（第${day}回合）${phaseLabel}，季节=${season}，天气=${weather}。国势：${nationStr}。`;
 
     let base = "";
     if (lastChoiceId == null || lastChoiceText == null) {
-      base = `当前是崇祯${year}年${month}月（第${day}回合）${phaseLabel}，季节=${season}，天气=${weather}。国势：${nationStr}。这是新开档第一回合，请生成完整剧情与 3 个选项，并在 header 中提供 time、season、weather。`;
+      base = `${timeContext}这是新开档第一回合，请生成完整剧情与 3 个选项，并在 header 中提供 time、season、weather。`;
     } else {
       const isCustomEdict = lastChoiceId === "custom_edict";
       const hint = isCustomEdict
         ? "上一回合是自拟诏书，请在 lastChoiceEffects 中体现执行效果。"
         : "上一回合是预设选项，请推演执行效果。";
-      base = `当前是崇祯${year}年${month}月（第${day}回合）${phaseLabel}，季节=${season}，天气=${weather}。国势：${nationStr}。上一回合陛下选择了：id=${lastChoiceId}，文案="${lastChoiceText}"。${hint} 请在 header 中提供 time、season、weather。`;
+      base = `${timeContext}上一回合陛下选择了：id=${lastChoiceId}，文案="${lastChoiceText}"。${hint} 请在 header 中提供 time、season、weather。`;
     }
 
     const ministers = getCharacters();

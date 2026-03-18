@@ -2,6 +2,7 @@ import { loadJSON } from "../dataLoader.js";
 import { getState, setState } from "../state.js";
 import { updateMinisterTabBadge } from "../layout.js";
 import { requestStoryTurn } from "../api/llmStory.js";
+import { sanitizeStoryEffects } from "../api/validators.js";
 import { startDanmuForEdict, stopDanmu } from "./danmuSystem.js";
 import { computeCustomPolicyQuarterBonus, getPolicyBonusSummary } from "./coreGameplaySystem.js";
 
@@ -669,7 +670,7 @@ function estimateEffectsFromEdict(edictText) {
 
   // 常见词条推理
   if (matches(["抄家", "抄家得", "抄了", "没收", "抄" ])) {
-    add("treasury", 5000000);
+    add("treasury", 300000);
     add("corruptionLevel", -5);
   }
   if (matches(["发军饷", "军饷", "军费"])) {
@@ -711,7 +712,25 @@ function estimateEffectsFromEdict(edictText) {
   }
 
   // 如果没有检测到任何关键词，则不估算效果
-  return Object.keys(effects).length ? effects : null;
+  return Object.keys(effects).length ? sanitizeStoryEffects(effects) : null;
+}
+
+function auditCustomEdictCorrection(prevEffects, nextEffects, deltaEffects) {
+  if (!prevEffects || !nextEffects || !deltaEffects) return;
+  const keys = ["treasury", "grain", "militaryStrength", "civilMorale", "borderThreat", "disasterLevel", "corruptionLevel"];
+  const issues = [];
+  for (const key of keys) {
+    const prevVal = typeof prevEffects[key] === "number" ? prevEffects[key] : 0;
+    const nextVal = typeof nextEffects[key] === "number" ? nextEffects[key] : 0;
+    const deltaVal = typeof deltaEffects[key] === "number" ? deltaEffects[key] : 0;
+    if (!prevVal || !nextVal || !deltaVal) continue;
+    if ((prevVal > 0 && nextVal < 0) || (prevVal < 0 && nextVal > 0)) {
+      issues.push({ key, prevVal, nextVal, deltaVal });
+    }
+  }
+  if (issues.length) {
+    console.warn("[story-self-check] custom_edict effect sign flip detected", issues);
+  }
 }
 
 function computeEffectDelta(prevEffects, nextEffects) {
@@ -1170,8 +1189,10 @@ export async function renderStoryTurn(state, container, onChoice, options = {}) 
   if (data.lastChoiceEffects && state.lastChoiceId === "custom_edict") {
     const lastEntry = history[history.length - 1];
     if (lastEntry && lastEntry.chosenChoice) {
-      const prevEffects = lastEntry.effects || null;
-      const deltaEffects = computeEffectDelta(prevEffects, data.lastChoiceEffects);
+      const prevEffects = sanitizeStoryEffects(lastEntry.effects || null);
+      const nextEffects = sanitizeStoryEffects(data.lastChoiceEffects);
+      const deltaEffects = computeEffectDelta(prevEffects, nextEffects);
+      auditCustomEdictCorrection(prevEffects, nextEffects, deltaEffects);
 
       // 如果 LLM 给出了更精准的数值变化，则使用差值进行调整
       if (deltaEffects) {
@@ -1179,7 +1200,7 @@ export async function renderStoryTurn(state, container, onChoice, options = {}) 
       }
 
       // 保持历史记录中的 effects 为 LLM 最终输出
-      lastEntry.effects = data.lastChoiceEffects;
+      lastEntry.effects = nextEffects;
       const updatedHistory = [...history];
       updatedHistory[updatedHistory.length - 1] = lastEntry;
       setState({ storyHistory: updatedHistory });

@@ -1,6 +1,6 @@
 import { buildStoryRequestBody } from "./requestContext.js";
 import { getApiBase, postJsonAndReadText } from "./httpClient.js";
-import { normalizeStoryPayload } from "./validators.js";
+import { normalizeStoryPayload, sanitizeStoryEffects } from "./validators.js";
 
 export async function requestStoryTurn(state, lastChoice) {
   const config = state.config || {};
@@ -81,7 +81,7 @@ function normalizeAppointmentsMap(raw) {
 
 function normalizeLastChoiceEffects(raw) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-  const effects = { ...raw };
+  const effects = sanitizeStoryEffects(raw);
   if (effects.appointments != null) {
     const map = normalizeAppointmentsMap(effects.appointments);
     if (map) {

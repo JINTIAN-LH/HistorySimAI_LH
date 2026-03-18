@@ -3,6 +3,7 @@ import { renderStoryTurn, pushCurrentTurnToHistory, applyEffects, computeQuarter
 import { autoSaveIfEnabled } from "../storage.js";
 import { updateTopbarByState } from "../layout.js";
 import { applyProgressionToChoiceEffects, extractCustomPoliciesFromEdict, mergeCustomPolicies, processCoreGameplayTurn, refreshQuarterAgendaByState, resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
+import { sanitizeStoryEffects } from "../api/validators.js";
 
 export function runCurrentTurn(container, options = {}) {
   const state = getState();
@@ -33,7 +34,8 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
 
   // 如果是自拟诏书，优先根据文本做一个简单的效果预估，让数值立刻能体现变化
   let appliedEffects = effects;
-  if (choiceId === "custom_edict" && !effects) {
+  const isLLMStoryMode = (state.config?.storyMode || "template") === "llm";
+  if (choiceId === "custom_edict" && !effects && !isLLMStoryMode) {
     const est = estimateEffectsFromEdict(choiceText || "");
     if (est) {
       appliedEffects = est;
@@ -42,11 +44,12 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
 
   const progressedEffects = appliedEffects ? applyProgressionToChoiceEffects(appliedEffects, state, choiceText || "") : appliedEffects;
   const effectiveEffects = progressedEffects ? scaleEffectsByExecution(progressedEffects, state) : progressedEffects;
-  if (effectiveEffects) {
-    applyEffects(effectiveEffects);
+  const guardedEffects = effectiveEffects ? sanitizeStoryEffects(effectiveEffects) : effectiveEffects;
+  if (guardedEffects) {
+    applyEffects(guardedEffects);
   }
 
-  pushCurrentTurnToHistory(state, { text: choiceText || "", hint: choiceHint ?? undefined }, effectiveEffects);
+  pushCurrentTurnToHistory(state, { text: choiceText || "", hint: choiceHint ?? undefined }, guardedEffects);
 
   setState({
     lastChoiceId: choiceId,
@@ -68,13 +71,13 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     currentPhase: "morning", // 保持单一阶段展示
   });
 
-  const coreTurn = processCoreGameplayTurn(getState(), choiceText || "", effectiveEffects, nextYear, nextMonth);
+  const coreTurn = processCoreGameplayTurn(getState(), choiceText || "", guardedEffects, nextYear, nextMonth);
   setState(coreTurn.statePatch);
   if (coreTurn.consequenceEffects) {
     applyEffects(coreTurn.consequenceEffects);
   }
 
-  const hostileTurn = resolveHostileForcesAfterChoice(getState(), choiceText || "", effectiveEffects || {}, nextYear, nextMonth);
+  const hostileTurn = resolveHostileForcesAfterChoice(getState(), choiceText || "", guardedEffects || {}, nextYear, nextMonth);
   if (hostileTurn) {
     setState(hostileTurn.statePatch);
     if (hostileTurn.effectsPatch) {
