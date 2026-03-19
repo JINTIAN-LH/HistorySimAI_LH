@@ -38,6 +38,17 @@ body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 10px 12px 14px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(215, 193, 160, 0.2), transparent 28%),
+    radial-gradient(circle at 82% 24%, rgba(215, 193, 160, 0.16), transparent 32%),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(232, 219, 196, 0.14) 0,
+      rgba(232, 219, 196, 0.14) 3px,
+      transparent 3px,
+      transparent 14px
+    ),
+    #f7f1e6;
 }
 
 #main-view.main-view--edict {
@@ -50,5 +61,11 @@ body {
   }
   #bottombar {
     height: 60px;
+  }
+}
+
+@media (max-width: 375px) {
+  #main-view {
+    padding: 8px 9px 10px;
   }
 }

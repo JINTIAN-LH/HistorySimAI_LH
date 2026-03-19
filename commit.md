@@ -417,3 +417,22 @@
 - 自检结果：
   - Root：cd ChongzhenSim && npm test -- --run 通过（103/103）
   - Server：cd ChongzhenSim/server && npm test -- --runInBand 通过（50/50）
+
+#### 6.1.15 待提交 · feat(court-ui): polish portrait swipe hint lifecycle and extreme-small-screen compact mode
+- 全哈希：待提交后生成
+- 时间：2026-03-19
+- 分支：my-feature-branch
+- 作者：JINTIAN-LIU
+- 类型：feat
+- 变更文件：
+  - ChongzhenSim/js/ui/courtView.js
+  - ChongzhenSim/css/components.css
+  - ChongzhenSim/css/layout.css
+  - commit.md
+- 玩法兼容与冲突取舍：
+  - 朝堂部门支持竖屏单栏折叠与左右滑切，补充“首次出现后自动消失”的顶部微提示条。
+  - 提示条改为 absolute 叠层并采用二段生命周期（淡出后 display:none），减少布局回流与层级残留。
+  - 新增 <=375px 极致小屏模式，压缩边距与字号，降低滚动负担并保留触控可用性。
+- 自检结果：
+  - Root：未执行（本次仅 UI/交互样式迭代，按需可补测）
+  - Server：未执行（本次未改动服务端）
