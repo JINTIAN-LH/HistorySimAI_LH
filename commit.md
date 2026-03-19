@@ -418,8 +418,8 @@
   - Root：cd ChongzhenSim && npm test -- --run 通过（103/103）
   - Server：cd ChongzhenSim/server && npm test -- --runInBand 通过（50/50）
 
-#### 6.1.15 待提交 · feat(court-ui): polish portrait swipe hint lifecycle and extreme-small-screen compact mode
-- 全哈希：待提交后生成
+#### 6.1.15 f7f3e40 · feat(court-ui): polish portrait court interactions and compact mobile layout
+- 全哈希：f7f3e408533a132487d1f5bbfcfd01a87a3c5a9d
 - 时间：2026-03-19
 - 分支：my-feature-branch
 - 作者：JINTIAN-LIU
