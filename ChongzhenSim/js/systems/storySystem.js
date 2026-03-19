@@ -9,6 +9,7 @@ import { computeCustomPolicyQuarterBonus, getPolicyBonusSummary } from "./coreGa
 let storyCache = { key: null, data: null };
 let lastAppliedKey = null;
 let storyHighlightPanelExpanded = false;
+let cachedStoryHighlightRange = null;
 
 const MINISTER_NAME_COLORS = [
   "#8B0000", "#2e7d32", "#1565c0", "#e65100", "#6a1b9a",
@@ -297,6 +298,68 @@ function getCurrentTurnKey(state) {
   return `${year}_${month}_${phase}`;
 }
 
+function normalizeSelectionText(rawText) {
+  return String(rawText || "").replace(/\s+/g, " ").trim();
+}
+
+function getValidSelectionRangeForHighlight(textBlock) {
+  if (!textBlock || typeof window === "undefined") {
+    return { ok: false, message: "当前环境不支持文本标注。" };
+  }
+
+  const selection = window.getSelection();
+  if (selection && selection.rangeCount > 0) {
+    const liveRange = selection.getRangeAt(0);
+    const liveText = normalizeSelectionText(selection.toString());
+    if (
+      !liveRange.collapsed &&
+      liveText &&
+      textBlock.contains(liveRange.startContainer) &&
+      textBlock.contains(liveRange.endContainer)
+    ) {
+      cachedStoryHighlightRange = liveRange.cloneRange();
+      return { ok: true, range: liveRange, selectedText: liveText, usedCached: false };
+    }
+  }
+
+  if (cachedStoryHighlightRange) {
+    const cachedRange = cachedStoryHighlightRange.cloneRange();
+    if (
+      !cachedRange.collapsed &&
+      textBlock.contains(cachedRange.startContainer) &&
+      textBlock.contains(cachedRange.endContainer)
+    ) {
+      const cachedText = normalizeSelectionText(cachedRange.toString());
+      if (cachedText) {
+        return { ok: true, range: cachedRange, selectedText: cachedText, usedCached: true };
+      }
+    }
+  }
+
+  return { ok: false, message: "请先在剧情文本中选中要标注的内容。" };
+}
+
+function updateCachedSelectionFromTextBlock(textBlock) {
+  if (!textBlock || typeof window === "undefined") return;
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+  const range = selection.getRangeAt(0);
+  if (range.collapsed) return;
+  if (!textBlock.contains(range.startContainer) || !textBlock.contains(range.endContainer)) return;
+  const selectedText = normalizeSelectionText(selection.toString());
+  if (!selectedText) return;
+  cachedStoryHighlightRange = range.cloneRange();
+}
+
+function bindStoryHighlightSelectionTracking(textBlock) {
+  if (!textBlock || typeof window === "undefined") return;
+
+  const deferredSync = () => window.setTimeout(() => updateCachedSelectionFromTextBlock(textBlock), 0);
+  textBlock.addEventListener("mouseup", deferredSync);
+  textBlock.addEventListener("keyup", deferredSync);
+  textBlock.addEventListener("touchend", deferredSync, { passive: true });
+}
+
 function formatHighlightTimestamp(isoString) {
   if (!isoString) return "时间未知";
   const dt = new Date(isoString);
@@ -369,28 +432,12 @@ function restoreCurrentTurnHighlights(textBlock, state) {
 }
 
 function addStoryHighlightFromSelection(textBlock, state) {
-  if (!textBlock || typeof window === "undefined") {
-    return { ok: false, message: "当前环境不支持文本标注。" };
+  const selected = getValidSelectionRangeForHighlight(textBlock);
+  if (!selected.ok) {
+    return selected;
   }
 
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) {
-    return { ok: false, message: "请先选中要标注的对话文本。" };
-  }
-
-  const range = selection.getRangeAt(0);
-  if (range.collapsed) {
-    return { ok: false, message: "请先选中要标注的对话文本。" };
-  }
-
-  if (!textBlock.contains(range.startContainer) || !textBlock.contains(range.endContainer)) {
-    return { ok: false, message: "仅可标注当前回合剧情文本。" };
-  }
-
-  const selectedText = selection.toString().replace(/\s+/g, " ").trim();
-  if (!selectedText) {
-    return { ok: false, message: "选中文本为空，无法标注。" };
-  }
+  const { range, selectedText, usedCached } = selected;
 
   const underline = document.createElement("span");
   underline.className = "story-user-highlight";
@@ -399,7 +446,11 @@ function addStoryHighlightFromSelection(textBlock, state) {
     const fragment = range.extractContents();
     underline.appendChild(fragment);
     range.insertNode(underline);
-    selection.removeAllRanges();
+    const selection = typeof window !== "undefined" ? window.getSelection() : null;
+    if (selection && !usedCached) {
+      selection.removeAllRanges();
+    }
+    cachedStoryHighlightRange = null;
   } catch (_error) {
     return { ok: false, message: "当前选择范围不支持标注，请缩小选区后重试。" };
   }
@@ -418,6 +469,130 @@ function addStoryHighlightFromSelection(textBlock, state) {
   const updated = [...existing, highlight].slice(-200);
   setState({ storyHighlights: updated });
   return { ok: true, message: "已加入标注合集。" };
+}
+
+function addCustomStoryHighlight(text, state) {
+  const customText = normalizeSelectionText(text);
+  if (!customText) {
+    return { ok: false, message: "请输入要保存的自定义标注内容。" };
+  }
+
+  const existing = Array.isArray(state.storyHighlights) ? state.storyHighlights : [];
+  const highlight = {
+    id: `hl_custom_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    text: customText,
+    year: state.currentYear || 1,
+    month: state.currentMonth || 1,
+    phase: state.currentPhase || "morning",
+    turnKey: getCurrentTurnKey(state),
+    createdAt: new Date().toISOString(),
+    source: "custom",
+  };
+
+  const updated = [...existing, highlight].slice(-200);
+  setState({ storyHighlights: updated });
+  return { ok: true, message: "已保存自定义标注。" };
+}
+
+function showCustomHighlightInputModal(onSave) {
+  const existing = document.getElementById("story-highlight-custom-overlay");
+  if (existing) existing.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "story-highlight-custom-overlay";
+  overlay.className = "story-highlight-custom-overlay";
+
+  const panel = document.createElement("div");
+  panel.className = "story-highlight-custom-panel";
+
+  const header = document.createElement("div");
+  header.className = "story-highlight-custom-panel__header";
+
+  const title = document.createElement("div");
+  title.className = "story-highlight-custom-panel__title";
+  title.textContent = "新增自定义标注";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "story-highlight-custom-panel__close";
+  closeBtn.textContent = "\u2715";
+
+  const body = document.createElement("div");
+  body.className = "story-highlight-custom-panel__body";
+
+  const textarea = document.createElement("textarea");
+  textarea.className = "story-highlight-custom-panel__textarea";
+  textarea.placeholder = "输入你想记录的内容，例如：某臣建议与我的判断。";
+  textarea.rows = 4;
+
+  const hint = document.createElement("div");
+  hint.className = "story-highlight-custom-panel__hint";
+  hint.textContent = "最多保存 240 字。";
+
+  const footer = document.createElement("div");
+  footer.className = "story-highlight-custom-panel__footer";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "story-highlight-custom-panel__btn story-highlight-custom-panel__btn--cancel";
+  cancelBtn.textContent = "取消";
+
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button";
+  saveBtn.className = "story-highlight-custom-panel__btn story-highlight-custom-panel__btn--save";
+  saveBtn.textContent = "保存标注";
+  saveBtn.disabled = true;
+
+  const closeModal = () => {
+    overlay.remove();
+    document.removeEventListener("keydown", onEscape);
+  };
+
+  function onEscape(event) {
+    if (event.key === "Escape") closeModal();
+  }
+
+  const syncSaveBtnState = () => {
+    const value = textarea.value.slice(0, 240);
+    if (textarea.value !== value) textarea.value = value;
+    saveBtn.disabled = !normalizeSelectionText(value);
+  };
+
+  closeBtn.addEventListener("click", closeModal);
+  cancelBtn.addEventListener("click", closeModal);
+  textarea.addEventListener("input", syncSaveBtnState);
+
+  saveBtn.addEventListener("click", () => {
+    const value = textarea.value.slice(0, 240);
+    if (!normalizeSelectionText(value)) return;
+    const saved = typeof onSave === "function" ? onSave(value) : null;
+    if (saved && saved.ok === false) {
+      hint.textContent = saved.message || "保存失败，请重试。";
+      hint.classList.add("story-highlight-custom-panel__hint--error");
+      return;
+    }
+    closeModal();
+  });
+
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
+  });
+
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  body.appendChild(textarea);
+  body.appendChild(hint);
+  footer.appendChild(cancelBtn);
+  footer.appendChild(saveBtn);
+  panel.appendChild(header);
+  panel.appendChild(body);
+  panel.appendChild(footer);
+  overlay.appendChild(panel);
+
+  const app = document.getElementById("app");
+  (app || document.body).appendChild(overlay);
+  document.addEventListener("keydown", onEscape);
+  window.setTimeout(() => textarea.focus(), 0);
 }
 
 function createStoryHighlightPanel(state, phaseLabels) {
@@ -465,6 +640,23 @@ function createStoryHighlightPanel(state, phaseLabels) {
     title.textContent = `标注内容合集（${highlights.length}）`;
 
     list.innerHTML = "";
+
+    const toolbar = document.createElement("div");
+    toolbar.className = "story-highlight-list__toolbar";
+    const customBtn = document.createElement("button");
+    customBtn.type = "button";
+    customBtn.className = "story-highlight-list__custom-btn";
+    customBtn.textContent = "自定义标注";
+    customBtn.addEventListener("click", () => {
+      showCustomHighlightInputModal((customText) => {
+        const result = addCustomStoryHighlight(customText, getState());
+        if (result.ok) refreshPanel();
+        return result;
+      });
+    });
+    toolbar.appendChild(customBtn);
+    list.appendChild(toolbar);
+
     if (!highlights.length) {
       const empty = document.createElement("div");
       empty.className = "story-highlight-list__empty";
@@ -1033,7 +1225,7 @@ function renderQuarterAgendaPanel(container, state, onChoice, options = {}) {
 
   const subtitle = document.createElement("div");
   subtitle.className = "quarter-agenda-panel__subtitle";
-  subtitle.textContent = `依文档逻辑，本季度必须先浏览 3-5 条时政议题，选定商议派系与观点后再颁布诏书；若存在敌对势力，将出现“军事开拓”议题。`;
+  subtitle.textContent = `本季度必须先浏览 3-5 条时政议题，选定商议派系与观点后再颁布诏书；若存在敌对势力，将出现“军事开拓”议题。`;
   panel.appendChild(subtitle);
 
   const cards = document.createElement("div");
@@ -1155,6 +1347,7 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
   textBlock.className = "edict-block";
   const fullText = buildBlockText(data);
   renderPseudoLines(textBlock, fullText);
+  bindStoryHighlightSelectionTracking(textBlock);
   restoreCurrentTurnHighlights(textBlock, state);
   currentWrap.appendChild(textBlock);
 
