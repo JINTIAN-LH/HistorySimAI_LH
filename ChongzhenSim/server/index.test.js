@@ -145,7 +145,10 @@ describe('buildUserMessage', () => {
     const body = {
       state: {
         currentDay: 1,
+        currentYear: 3,
+        currentMonth: 4,
         currentPhase: 'morning',
+        weather: '晴',
         nation: {
           treasury: 500000,
           grain: 30000,
@@ -158,7 +161,9 @@ describe('buildUserMessage', () => {
       }
     };
     const message = buildUserMessage(body);
-    expect(message).toContain('崇祯三年第 1 天 早朝');
+    expect(message).toContain('崇祯3年4月（第1回合）早朝');
+    expect(message).toContain('季节=春');
+    expect(message).toContain('天气=晴');
     expect(message).toContain('新开档第一回合');
     expect(message).toContain('国库=500,000两');
   });
@@ -168,7 +173,10 @@ describe('buildUserMessage', () => {
     const body = {
       state: {
         currentDay: 2,
+        currentYear: 3,
+        currentMonth: 7,
         currentPhase: 'afternoon',
+        weather: '暴雨',
         nation: {
           treasury: 1000000,
           grain: 50000,
@@ -183,7 +191,9 @@ describe('buildUserMessage', () => {
       lastChoiceText: '加征商税'
     };
     const message = buildUserMessage(body);
-    expect(message).toContain('崇祯三年第 2 天 午后');
+    expect(message).toContain('崇祯3年7月（第2回合）午后');
+    expect(message).toContain('季节=夏');
+    expect(message).toContain('天气=暴雨');
     expect(message).toContain('上一回合陛下选择了');
     expect(message).toContain('increase_tax');
     expect(message).toContain('加征商税');
@@ -218,6 +228,27 @@ describe('buildUserMessage', () => {
     const message = buildUserMessage(body);
     expect(message).toContain('私下议事记录');
     expect(message).toContain('毕自严');
+  });
+
+  it('should include implemented policies context for reasoning', () => {
+    const { buildUserMessage } = createTestApp();
+    const body = {
+      state: {
+        currentDay: 2,
+        currentYear: 3,
+        currentMonth: 4,
+        currentPhase: 'morning',
+        weather: '晴',
+        nation: { treasury: 500000, grain: 30000 }
+      },
+      unlockedPolicies: ['civil_tax_reform', 'military_border_fort'],
+      customPolicies: [{ id: 'cp_1', name: '赈济先行' }],
+    };
+    const message = buildUserMessage(body);
+    expect(message).toContain('已实施国策');
+    expect(message).toContain('civil_tax_reform');
+    expect(message).toContain('赈济先行');
+    expect(message).toContain('纳入全局推理');
   });
 
   it('should format treasury status correctly', () => {

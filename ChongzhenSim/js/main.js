@@ -8,13 +8,17 @@ import { setStartPhase } from "./ui/startView.js";
 import { loadJSON } from "./dataLoader.js";
 import { getState, setState } from "./state.js";
 import { loadGame, applyLoadedGame } from "./storage.js";
+import { initializeCoreGameplayState } from "./systems/coreGameplaySystem.js";
 
 async function preloadBasicData() {
-  const [config, characters, goals, nationInit] = await Promise.all([
+  const [config, balanceConfig, characters, factionsData, goals, nationInit, positionsData] = await Promise.all([
     loadJSON("data/config.json"),
+    loadJSON("data/balanceConfig.json").catch(() => ({})),
     loadJSON("data/characters.json"),
+    loadJSON("data/factions.json").catch(() => ({ factions: [] })),
     loadJSON("data/goals.json").catch(() => []),
     loadJSON("data/nationInit.json").catch(() => ({})),
+    loadJSON("data/positions.json").catch(() => ({ positions: [] })),
   ]);
 
   const ministers = characters.characters || characters.ministers || [];
@@ -30,6 +34,7 @@ async function preloadBasicData() {
     if (typeof v === "number") mergedLoyalty[k] = v;
   }
 
+  const factions = factionsData.factions || [];
   const nation = current.nation && current.nation.treasury !== undefined
     ? current.nation
     : {
@@ -42,6 +47,8 @@ async function preloadBasicData() {
         corruptionLevel: nationInit.corruptionLevel || 80,
       };
 
+  const coreState = initializeCoreGameplayState(current, factions, config, nationInit);
+  const mergedFactions = Array.isArray(current.factions) && current.factions.length ? current.factions : factions;
   const externalPowers = (() => {
     const initMap = {};
     const existing = current.externalPowers || {};
@@ -77,15 +84,34 @@ async function preloadBasicData() {
     return map;
   })();
 
+  const defaultAppointments = (() => {
+    const map = {};
+    const positions = Array.isArray(positionsData?.positions) ? positionsData.positions : [];
+    positions.forEach((pos) => {
+      if (!pos || typeof pos.id !== "string") return;
+      if (typeof pos.defaultHolder === "string" && pos.defaultHolder) {
+        map[pos.id] = pos.defaultHolder;
+      }
+    });
+    return map;
+  })();
+
+  const hasExistingAppointments = current.appointments && Object.keys(current.appointments).length > 0;
+
   setState({
-    config,
+    config: {
+      ...(config || {}),
+      balance: balanceConfig || {},
+    },
     ministers,
+    factions: mergedFactions,
     loyalty: mergedLoyalty,
     goals: Array.isArray(goals) ? goals : [],
     nation,
-    appointments: current.appointments || {},
+    appointments: hasExistingAppointments ? current.appointments : defaultAppointments,
     characterStatus: current.characterStatus || {},
     storyHistory: current.storyHistory || [],
+    ...coreState,
     externalPowers,
     provinceStats,
   });

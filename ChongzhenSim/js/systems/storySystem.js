@@ -2,20 +2,25 @@ import { loadJSON } from "../dataLoader.js";
 import { getState, setState } from "../state.js";
 import { updateMinisterTabBadge } from "../layout.js";
 import { requestStoryTurn } from "../api/llmStory.js";
+import { sanitizeStoryEffects } from "../api/validators.js";
 import { startDanmuForEdict, stopDanmu } from "./danmuSystem.js";
+import { computeCustomPolicyQuarterBonus, getPolicyBonusSummary } from "./coreGameplaySystem.js";
 
 let storyCache = { key: null, data: null };
 let lastAppliedKey = null;
+let storyHighlightPanelExpanded = false;
 
-// 大臣名称高亮相关配置
 const MINISTER_NAME_COLORS = [
   "#8B0000", "#2e7d32", "#1565c0", "#e65100", "#6a1b9a",
   "#00695c", "#ad1457", "#4527a0",
 ];
 
-/**
- * 构建大臣名称到ID的映射
- */
+const AVAILABLE_AVATAR_NAMES = new Set([
+  "黄道周", "韩继思", "陈新甲", "袁崇焕", "范景文", "祖大寿", "王永光", "温体仁", "洪承畴", "毕自严",
+  "梁廷栋", "林钎", "杨嗣昌", "李邦华", "曹文诏", "曹化淳", "张凤翔", "左良玉", "孙承宗", "孙传庭",
+  "周延儒", "周奎", "吴三桂", "史可法", "卢象升", "倪元璐",
+]);
+
 function buildSpeakerMap() {
   const state = getState();
   const map = {};
@@ -25,9 +30,6 @@ function buildSpeakerMap() {
   return map;
 }
 
-/**
- * 构建大臣名称到信息（ID/颜色/角色）的映射
- */
 function buildMinisterNameToInfo() {
   const state = getState();
   const ministers = state.ministers || [];
@@ -44,9 +46,6 @@ function buildMinisterNameToInfo() {
   return map;
 }
 
-/**
- * 按大臣名称拆分文本片段
- */
 function splitTextByNames(text, nameToInfo) {
   const names = Object.keys(nameToInfo || {}).filter(Boolean).sort((a, b) => b.length - a.length);
   if (!names.length) return [{ type: "text", value: text }];
@@ -77,9 +76,6 @@ function splitTextByNames(text, nameToInfo) {
   return segments;
 }
 
-/**
- * 高亮渲染大臣名称
- */
 function highlightMinisterNames(text, nameToInfo) {
   const segments = splitTextByNames(text, nameToInfo || {});
   const frag = document.createDocumentFragment();
@@ -97,11 +93,10 @@ function highlightMinisterNames(text, nameToInfo) {
   return frag;
 }
 
-/**
- * 将当前回合数据推入历史记录
- */
 export function pushCurrentTurnToHistory(state, chosenChoice, effects) {
-  const key = `${state.currentDay}_${state.currentPhase}`;
+  const year = state.currentYear || 1;
+  const month = state.currentMonth || 1;
+  const key = `${year}_${month}_${state.currentPhase}`;
   if (storyCache.key !== key || !storyCache.data) return;
   const history = state.storyHistory || [];
   
@@ -130,10 +125,7 @@ export function pushCurrentTurnToHistory(state, chosenChoice, effects) {
   });
 }
 
-/**
- * 渲染数值变化卡片
- */
-function renderDeltaCard(container, effects, state) {
+function renderDeltaCard(container, effects, state, titleText = "") {
   if (!effects) return;
   const entries = [];
   const labels = {
@@ -141,105 +133,80 @@ function renderDeltaCard(container, effects, state) {
     civilMorale: "民心", borderThreat: "边患", disasterLevel: "天灾",
     corruptionLevel: "贪腐",
   };
-
-  // 国家数值处理
   for (const [key, label] of Object.entries(labels)) {
     if (typeof effects[key] === "number" && effects[key] !== 0) {
-      entries.push({
-        key,
-        label,
-        delta: effects[key],
-        invertColor: ["borderThreat", "disasterLevel", "corruptionLevel"].includes(key),
-        kind: "nation",
-      });
+      entries.push({ label, delta: effects[key], invertColor: ["borderThreat", "disasterLevel", "corruptionLevel"].includes(key) });
     }
   }
-
-  // 大臣忠诚度处理
   if (effects.loyalty && typeof effects.loyalty === "object") {
     const ministers = state.ministers || [];
     const nameById = Object.fromEntries(ministers.map((m) => [m.id, m.name || m.id]));
     for (const [id, delta] of Object.entries(effects.loyalty)) {
       if (typeof delta === "number" && delta !== 0) {
-        entries.push({
-          key: id,
-          label: (nameById[id] || id) + " 忠诚",
-          delta,
-          invertColor: false,
-          kind: "loyalty",
-        });
+        entries.push({ label: (nameById[id] || id) + " 忠诚", delta, invertColor: false });
       }
     }
   }
-
-  // 外部势力数值处理
-  if (effects.external && typeof effects.external === "object") {
-    const externalPowers = state.externalPowers || {};
-    for (const [id, delta] of Object.entries(effects.external)) {
-      if (typeof delta !== "number" || delta === 0) continue;
-      const label = `${id} 势力`;
+  if (effects.appointments && typeof effects.appointments === "object" && !Array.isArray(effects.appointments)) {
+    const ministers = state.ministers || [];
+    const nameById = Object.fromEntries(ministers.map((m) => [m.id, m.name || m.id]));
+    for (const [positionId, characterId] of Object.entries(effects.appointments)) {
+      if (typeof positionId !== "string" || typeof characterId !== "string") continue;
       entries.push({
-        key: id,
-        label,
-        delta,
-        invertColor: true, // 外部势力数值下降是好事
-        kind: "external",
+        label: `任命 ${nameById[characterId] || characterId} → ${positionId}`,
+
+        delta: null,
+        invertColor: false,
+        isAppointment: true,
       });
     }
   }
-
+  if (effects.characterDeath && typeof effects.characterDeath === "object") {
+    const ministers = state.ministers || [];
+    const nameById = Object.fromEntries(ministers.map((m) => [m.id, m.name || m.id]));
+    for (const [characterId, reason] of Object.entries(effects.characterDeath)) {
+      entries.push({
+        label: `处置 ${nameById[characterId] || characterId}`,
+        delta: null,
+        invertColor: false,
+        isAppointment: true,
+        customText: typeof reason === "string" && reason ? reason : "已处置",
+      });
+    }
+  }
   if (entries.length === 0) return;
-
-  const nation = state.nation || {};
-  const loyalty = state.loyalty || {};
-  const externalPowers = state.externalPowers || {};
 
   const card = document.createElement("div");
   card.className = "story-delta-card";
-
-  entries.forEach(({ key, label, delta, invertColor, kind }) => {
+  if (titleText) {
+    const title = document.createElement("div");
+    title.className = "story-history-label";
+    title.textContent = titleText;
+    card.appendChild(title);
+  }
+  entries.forEach(({ label, delta, invertColor, isAppointment, customText }) => {
     const row = document.createElement("div");
     row.className = "story-delta-row";
-
     const lbl = document.createElement("span");
     lbl.className = "story-delta-label";
     lbl.textContent = label;
-
     const val = document.createElement("span");
-    const isPositive = invertColor ? delta < 0 : delta > 0;
-    val.className = "story-delta-value " + (isPositive ? "story-delta-value--positive" : "story-delta-value--negative");
-
-    const sign = delta > 0 ? "+" : "";
-    let current = null;
-    if (kind === "nation") {
-      const v = nation[key];
-      if (typeof v === "number" && Number.isFinite(v)) current = v;
-    } else if (kind === "loyalty") {
-      const v = loyalty[key];
-      if (typeof v === "number" && Number.isFinite(v)) current = v;
-    } else if (kind === "external") {
-      const v = externalPowers[key];
-      if (typeof v === "number" && Number.isFinite(v)) current = v;
-    }
-
-    if (current != null) {
-      const currentStr = current.toLocaleString();
-      val.textContent = `${sign}${delta.toLocaleString()}→${currentStr}`;
+    if (isAppointment) {
+      val.className = "story-delta-value story-delta-value--appointment";
+      val.textContent = customText || "已生效";
     } else {
+      const isPositive = invertColor ? delta < 0 : delta > 0;
+      val.className = "story-delta-value " + (isPositive ? "story-delta-value--positive" : "story-delta-value--negative");
+      const sign = delta > 0 ? "+" : "";
       val.textContent = sign + delta.toLocaleString();
     }
-
     row.appendChild(lbl);
     row.appendChild(val);
     card.appendChild(row);
   });
-
   container.appendChild(card);
 }
 
-/**
- * 渲染伪行文本（支持标题/对话/普通文本，大臣名称高亮+头像）
- */
 function renderPseudoLines(blockEl, text) {
   if (!blockEl) return;
   blockEl.innerHTML = "";
@@ -284,12 +251,16 @@ function renderPseudoLines(blockEl, text) {
           const avatarSpan = document.createElement("span");
           avatarSpan.className = "story-dialog-avatar";
           const _aImg = document.createElement("img");
-          _aImg.src = `assets/${name}.jpg`;
           _aImg.alt = name;
           _aImg.onerror = function () {
             this.style.display = "none";
             this.parentElement.textContent = name.charAt(0);
           };
+          if (AVAILABLE_AVATAR_NAMES.has(name)) {
+            _aImg.src = `assets/${name}.jpg`;
+          } else {
+            queueMicrotask(() => _aImg.onerror());
+          }
           avatarSpan.appendChild(_aImg);
           avatarsWrap.appendChild(avatarSpan);
         });
@@ -319,9 +290,237 @@ function renderPseudoLines(blockEl, text) {
   }
 }
 
-/**
- * 构建剧情文本块
- */
+function getCurrentTurnKey(state) {
+  const year = state.currentYear || 1;
+  const month = state.currentMonth || 1;
+  const phase = state.currentPhase || "morning";
+  return `${year}_${month}_${phase}`;
+}
+
+function formatHighlightTimestamp(isoString) {
+  if (!isoString) return "时间未知";
+  const dt = new Date(isoString);
+  if (Number.isNaN(dt.getTime())) return "时间未知";
+  return dt.toLocaleString("zh-CN", {
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function formatHighlightTurnMeta(item, phaseLabels) {
+  const phaseLabel = phaseLabels[item.phase] || item.phase || "未知时段";
+  return `第${item.year || "?"}年 ${item.month || "?"}月 · ${phaseLabel}`;
+}
+
+function underlineFirstSnippetMatch(rootEl, snippet) {
+  if (!rootEl || !snippet) return false;
+  const textNodes = [];
+  const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT);
+  let current = walker.nextNode();
+  while (current) {
+    if (current.nodeValue && current.nodeValue.trim()) {
+      textNodes.push(current);
+    }
+    current = walker.nextNode();
+  }
+
+  for (const textNode of textNodes) {
+    const parent = textNode.parentElement;
+    if (parent && parent.closest(".story-user-highlight")) continue;
+    const idx = textNode.nodeValue.indexOf(snippet);
+    if (idx === -1) continue;
+
+    const matched = textNode.splitText(idx);
+    const remainder = matched.splitText(snippet.length);
+    const wrap = document.createElement("span");
+    wrap.className = "story-user-highlight";
+    wrap.textContent = matched.nodeValue;
+    matched.parentNode.replaceChild(wrap, matched);
+    if (remainder && remainder.nodeType === Node.TEXT_NODE) {
+      // keep node shape stable after replacement
+    }
+    return true;
+  }
+
+  return false;
+}
+
+function restoreHighlightsForTurn(textBlock, year, month, phase, state) {
+  const turnKey = `${year}_${month}_${phase}`;
+  const highlights = (state.storyHighlights || []).filter(
+    (item) => item && item.turnKey === turnKey && typeof item.text === "string" && item.text.trim()
+  );
+
+  highlights.forEach((item) => {
+    underlineFirstSnippetMatch(textBlock, item.text);
+  });
+}
+
+function restoreCurrentTurnHighlights(textBlock, state) {
+  const year = state.currentYear || 1;
+  const month = state.currentMonth || 1;
+  const phase = state.currentPhase || "morning";
+  restoreHighlightsForTurn(textBlock, year, month, phase, state);
+}
+
+function addStoryHighlightFromSelection(textBlock, state) {
+  if (!textBlock || typeof window === "undefined") {
+    return { ok: false, message: "当前环境不支持文本标注。" };
+  }
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) {
+    return { ok: false, message: "请先选中要标注的对话文本。" };
+  }
+
+  const range = selection.getRangeAt(0);
+  if (range.collapsed) {
+    return { ok: false, message: "请先选中要标注的对话文本。" };
+  }
+
+  if (!textBlock.contains(range.startContainer) || !textBlock.contains(range.endContainer)) {
+    return { ok: false, message: "仅可标注当前回合剧情文本。" };
+  }
+
+  const selectedText = selection.toString().replace(/\s+/g, " ").trim();
+  if (!selectedText) {
+    return { ok: false, message: "选中文本为空，无法标注。" };
+  }
+
+  const underline = document.createElement("span");
+  underline.className = "story-user-highlight";
+
+  try {
+    const fragment = range.extractContents();
+    underline.appendChild(fragment);
+    range.insertNode(underline);
+    selection.removeAllRanges();
+  } catch (_error) {
+    return { ok: false, message: "当前选择范围不支持标注，请缩小选区后重试。" };
+  }
+
+  const existing = Array.isArray(state.storyHighlights) ? state.storyHighlights : [];
+  const highlight = {
+    id: `hl_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    text: selectedText,
+    year: state.currentYear || 1,
+    month: state.currentMonth || 1,
+    phase: state.currentPhase || "morning",
+    turnKey: getCurrentTurnKey(state),
+    createdAt: new Date().toISOString(),
+  };
+
+  const updated = [...existing, highlight].slice(-200);
+  setState({ storyHighlights: updated });
+  return { ok: true, message: "已加入标注合集。" };
+}
+
+function createStoryHighlightPanel(state, phaseLabels) {
+  const panel = document.createElement("section");
+  panel.className = "story-highlight-panel";
+  if (storyHighlightPanelExpanded) panel.classList.add("story-highlight-panel--open");
+
+  const header = document.createElement("button");
+  header.type = "button";
+  header.className = "story-highlight-panel__header";
+
+  const title = document.createElement("span");
+  title.className = "story-highlight-panel__title";
+
+  const arrow = document.createElement("span");
+  arrow.className = "story-highlight-panel__arrow";
+  arrow.textContent = "▶";
+  header.appendChild(title);
+  header.appendChild(arrow);
+
+  const body = document.createElement("div");
+  body.className = "story-highlight-panel__body";
+
+  const list = document.createElement("div");
+  list.className = "story-highlight-list";
+  body.appendChild(list);
+
+  function removeHighlight(highlightId) {
+    const latestState = getState();
+    const updated = (latestState.storyHighlights || []).filter((item) => item.id !== highlightId);
+    setState({ storyHighlights: updated });
+    refreshPanel();
+  }
+
+  function clearAllHighlights() {
+    setState({ storyHighlights: [] });
+    refreshPanel();
+  }
+
+  function refreshPanel() {
+    const latestState = getState();
+    const highlights = Array.isArray(latestState.storyHighlights)
+      ? [...latestState.storyHighlights].reverse()
+      : [];
+    title.textContent = `标注内容合集（${highlights.length}）`;
+
+    list.innerHTML = "";
+    if (!highlights.length) {
+      const empty = document.createElement("div");
+      empty.className = "story-highlight-list__empty";
+      empty.textContent = "尚未记录标注。可先选中文本，再点击“下划线标注”。";
+      list.appendChild(empty);
+      return;
+    }
+
+    highlights.forEach((item) => {
+      const row = document.createElement("article");
+      row.className = "story-highlight-item";
+
+      const text = document.createElement("div");
+      text.className = "story-highlight-item__text";
+      text.textContent = item.text || "（空标注）";
+      row.appendChild(text);
+
+      const meta = document.createElement("div");
+      meta.className = "story-highlight-item__meta";
+      meta.textContent = `${formatHighlightTurnMeta(item, phaseLabels)} · ${formatHighlightTimestamp(item.createdAt)}`;
+      row.appendChild(meta);
+
+      const actions = document.createElement("div");
+      actions.className = "story-highlight-item__actions";
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "story-highlight-item__delete-btn";
+      deleteBtn.textContent = "删除";
+      deleteBtn.addEventListener("click", () => removeHighlight(item.id));
+      actions.appendChild(deleteBtn);
+      row.appendChild(actions);
+
+      list.appendChild(row);
+    });
+
+    if (highlights.length > 0) {
+      const clearAllBtn = document.createElement("button");
+      clearAllBtn.type = "button";
+      clearAllBtn.className = "story-highlight-list__clear-all-btn";
+      clearAllBtn.textContent = "清空全部标注";
+      clearAllBtn.addEventListener("click", () => clearAllHighlights());
+      list.appendChild(clearAllBtn);
+    }
+  }
+
+  header.addEventListener("click", () => {
+    storyHighlightPanelExpanded = !storyHighlightPanelExpanded;
+    panel.classList.toggle("story-highlight-panel--open", storyHighlightPanelExpanded);
+  });
+
+  refreshPanel();
+  panel.appendChild(header);
+  panel.appendChild(body);
+  return { panel, refreshPanel };
+}
+
 function buildBlockText(data) {
   const header = data.header || {};
   const storyParagraphs = data.storyParagraphs || [];
@@ -339,17 +538,31 @@ function buildBlockText(data) {
   return text.trimEnd();
 }
 
-/**
- * 应用数值变化（兼容旧版本的任命/角色死亡 + 新版本的外部势力）
- */
+function buildMinisterStorylineTag(characterId, characterName) {
+  const normalizedName = String(characterName || "").replace(/\s+/g, "");
+  const normalizedId = String(characterId || "").replace(/\s+/g, "");
+  return `${normalizedName || normalizedId || "未知臣工"}_线`;
+}
+
+function mergeUniqueStrings(base, extra) {
+  const out = Array.isArray(base) ? [...base] : [];
+  (Array.isArray(extra) ? extra : []).forEach((item) => {
+    if (!item || typeof item !== "string") return;
+    if (!out.includes(item)) out.push(item);
+  });
+  return out;
+}
+
 function applyEffects(effects) {
   if (!effects) return;
   const s = getState();
   const nation = { ...(s.nation || {}) };
+  const ministers = Array.isArray(s.ministers) ? s.ministers : [];
+  const ministerNameById = Object.fromEntries(ministers.map((m) => [m.id, m.name || m.id]));
+  const storylineTagsToClose = [];
   
   const PERCENT_KEYS = ["militaryStrength", "civilMorale", "borderThreat", "disasterLevel", "corruptionLevel"];
   
-  // 国家基础数值处理
   Object.entries(effects).forEach(([key, value]) => {
     if (typeof value !== "number") return;
     
@@ -362,7 +575,6 @@ function applyEffects(effects) {
   });
   setState({ nation });
 
-  // 大臣忠诚度处理
   if (effects.loyalty && typeof effects.loyalty === "object") {
     const loyalty = { ...(s.loyalty || {}) };
     for (const [id, delta] of Object.entries(effects.loyalty)) {
@@ -373,22 +585,10 @@ function applyEffects(effects) {
     setState({ loyalty });
   }
 
-  // 新增：外部势力数值处理
-  if (effects.external && typeof effects.external === "object") {
-    const externalPowers = { ...(s.externalPowers || {}) };
-    for (const [id, delta] of Object.entries(effects.external)) {
-      if (typeof delta !== "number") continue;
-      const current = externalPowers[id] || 0;
-      const next = Math.max(0, Math.min(100, current + delta));
-      externalPowers[id] = next;
-    }
-    setState({ externalPowers });
-  }
-
-  // 保留旧版本：任命处理
-  if (effects.appointments && typeof effects.appointments === "object") {
+  if (effects.appointments && typeof effects.appointments === "object" && !Array.isArray(effects.appointments)) {
     const currentState = getState();
-    const appointments = { ...(currentState.appointments || {}) };
+    const beforeAppointments = { ...(currentState.appointments || {}) };
+    const appointments = { ...beforeAppointments };
     for (const [positionId, characterId] of Object.entries(effects.appointments)) {
       if (typeof positionId !== "string" || typeof characterId !== "string") continue;
       for (const [posId, charId] of Object.entries(appointments)) {
@@ -398,10 +598,18 @@ function applyEffects(effects) {
       }
       appointments[positionId] = characterId;
     }
+
+    const beforeHolders = new Set(Object.values(beforeAppointments).filter((id) => typeof id === "string"));
+    const afterHolders = new Set(Object.values(appointments).filter((id) => typeof id === "string"));
+    for (const holderId of beforeHolders) {
+      if (!afterHolders.has(holderId)) {
+        storylineTagsToClose.push(buildMinisterStorylineTag(holderId, ministerNameById[holderId]));
+      }
+    }
+
     setState({ appointments });
   }
 
-  // 保留旧版本：角色死亡处理
   if (effects.characterDeath && typeof effects.characterDeath === "object") {
     const currentState = getState();
     const characterStatus = { ...(currentState.characterStatus || {}) };
@@ -410,8 +618,9 @@ function applyEffects(effects) {
       characterStatus[characterId] = {
         isAlive: false,
         deathReason: typeof reason === "string" ? reason : "处死",
-        deathDay: currentState.currentDay || 1
+        deathDay: currentState.currentMonth || 1,
       };
+      storylineTagsToClose.push(buildMinisterStorylineTag(characterId, ministerNameById[characterId]));
     }
     const appointments = { ...(currentState.appointments || {}) };
     for (const characterId of Object.keys(effects.characterDeath)) {
@@ -422,12 +631,179 @@ function applyEffects(effects) {
       }
     }
     setState({ characterStatus, appointments });
+    updateMinisterTabBadge(getState());
+  }
+
+  if (storylineTagsToClose.length) {
+    const latest = getState();
+    const mergedClosed = mergeUniqueStrings(latest.closedStorylines, storylineTagsToClose);
+    if (mergedClosed.length !== (latest.closedStorylines || []).length) {
+      setState({ closedStorylines: mergedClosed });
+    }
   }
 }
 
-/**
- * 渲染加载中状态
- */
+function computeQuarterlyEffects(state, currentMonth) {
+  if (typeof currentMonth !== "number") return null;
+  if (currentMonth % 3 !== 0) return null;
+
+  const nation = state.nation || {};
+  const policy = (state.config && state.config.economicPolicy) || {};
+  const abilities = state.playerAbilities || {};
+  const unlocked = state.unlockedPolicies || [];
+  const policyBonus = getPolicyBonusSummary(unlocked, state.config?.balance);
+  const customBonus = computeCustomPolicyQuarterBonus(state);
+
+  const baseTreasury = policy.baseTreasury || 100000;
+  const baseGrain = policy.baseGrain || 20000;
+
+  const efficiency = Math.max(0.2, Math.min(1.5, 1 - (nation.corruptionLevel || 0) / 200));
+  const moraleBonus = 1 + ((nation.civilMorale || 50) - 50) / 200;
+
+  const managementBonus = 1 + (abilities.management || 0) * 0.08;
+  const scholarshipBonus = 1 + (abilities.scholarship || 0) * 0.05;
+  const treasuryPolicyBonus = policyBonus.quarterlyTreasuryRatio;
+  const grainPolicyBonus = policyBonus.quarterlyGrainRatio;
+
+  const treasuryGain = Math.round(baseTreasury * efficiency * moraleBonus * managementBonus * treasuryPolicyBonus * customBonus.treasuryRatio);
+  const grainGain = Math.round(baseGrain * efficiency * moraleBonus * scholarshipBonus * grainPolicyBonus * customBonus.grainRatio);
+
+  return {
+    treasury: treasuryGain,
+    grain: grainGain,
+    militaryStrength: customBonus.militaryDelta + (policyBonus.quarterlyMilitaryDelta || 0),
+    corruptionLevel: customBonus.corruptionDelta + (policyBonus.quarterlyCorruptionDelta || 0),
+    _customPolicyBonus: customBonus,
+  };
+}
+
+function mergeEffects(a = {}, b = {}) {
+  const merged = { ...a };
+  for (const [key, value] of Object.entries(b)) {
+    if (key === "loyalty" && typeof value === "object") {
+      merged.loyalty = { ...(merged.loyalty || {}) };
+      for (const [id, delta] of Object.entries(value)) {
+        if (typeof delta !== "number") continue;
+        merged.loyalty[id] = (merged.loyalty[id] || 0) + delta;
+      }
+    } else if (typeof value === "number") {
+      merged[key] = (merged[key] || 0) + value;
+    }
+  }
+  return merged;
+}
+
+function estimateEffectsFromEdict(edictText) {
+  if (!edictText || typeof edictText !== "string") return null;
+  const text = edictText.toLowerCase();
+  const effects = {};
+
+  const add = (key, value) => {
+    if (typeof value !== "number" || value === 0) return;
+    effects[key] = (effects[key] || 0) + value;
+  };
+
+  const matches = (patterns) => patterns.some((p) => text.includes(p));
+
+  // 常见词条推理
+  if (matches(["抄家", "抄家得", "抄了", "没收", "抄" ])) {
+    add("treasury", 300000);
+    add("corruptionLevel", -5);
+  }
+  if (matches(["发军饷", "军饷", "军费"])) {
+    add("treasury", -200000);
+    add("militaryStrength", 8);
+    add("civilMorale", 3);
+  }
+  if (matches(["增兵", "募兵", "扩军", "调兵"])) {
+    add("treasury", -150000);
+    add("militaryStrength", 10);
+  }
+  if (matches(["开仓", "赈灾", "赈济", "赈恤", "发粮"])) {
+    add("grain", -20000);
+    add("civilMorale", 6);
+  }
+  if (matches(["减免赋税", "减税", "免税", "免除赋税"])) {
+    add("treasury", -150000);
+    add("civilMorale", 8);
+  }
+  if (matches(["征税", "加税", "税收" ]) && !matches(["减税", "减免", "免税"])) {
+    add("treasury", 200000);
+    add("civilMorale", -6);
+  }
+  if (matches(["整顿吏治", "肃贪", "清吏", "惩治贪腐"])) {
+    add("corruptionLevel", -10);
+    add("civilMorale", 4);
+  }
+  if (matches(["招安", "招抚", "招降"])) {
+    add("borderThreat", -8);
+    add("civilMorale", 4);
+  }
+  if (matches(["祭天", "祈福", "祭祀"])) {
+    add("treasury", -50000);
+    add("civilMorale", 3);
+  }
+  if (matches(["下罪己诏", "罪己", "谢罪"])) {
+    add("corruptionLevel", -5);
+    add("civilMorale", 3);
+  }
+
+  // 如果没有检测到任何关键词，则不估算效果
+  return Object.keys(effects).length ? sanitizeStoryEffects(effects) : null;
+}
+
+function auditCustomEdictCorrection(prevEffects, nextEffects, deltaEffects) {
+  if (!prevEffects || !nextEffects || !deltaEffects) return;
+  const keys = ["treasury", "grain", "militaryStrength", "civilMorale", "borderThreat", "disasterLevel", "corruptionLevel"];
+  const issues = [];
+  for (const key of keys) {
+    const prevVal = typeof prevEffects[key] === "number" ? prevEffects[key] : 0;
+    const nextVal = typeof nextEffects[key] === "number" ? nextEffects[key] : 0;
+    const deltaVal = typeof deltaEffects[key] === "number" ? deltaEffects[key] : 0;
+    if (!prevVal || !nextVal || !deltaVal) continue;
+    if ((prevVal > 0 && nextVal < 0) || (prevVal < 0 && nextVal > 0)) {
+      issues.push({ key, prevVal, nextVal, deltaVal });
+    }
+  }
+  if (issues.length) {
+    console.warn("[story-self-check] custom_edict effect sign flip detected", issues);
+  }
+}
+
+function computeEffectDelta(prevEffects, nextEffects) {
+  if (!nextEffects) return null;
+  const delta = {};
+
+  const addDelta = (key, value) => {
+    if (typeof value !== "number" || value === 0) return;
+    delta[key] = (delta[key] || 0) + value;
+  };
+
+  const allKeys = new Set([...(prevEffects ? Object.keys(prevEffects) : []), ...Object.keys(nextEffects)]);
+  for (const key of allKeys) {
+    if (key === "loyalty") continue;
+    const prevVal = prevEffects && typeof prevEffects[key] === "number" ? prevEffects[key] : 0;
+    const nextVal = typeof nextEffects[key] === "number" ? nextEffects[key] : 0;
+    const diff = nextVal - prevVal;
+    if (diff !== 0) addDelta(key, diff);
+  }
+
+  if (nextEffects.loyalty && typeof nextEffects.loyalty === "object") {
+    const prevLoyalty = (prevEffects && prevEffects.loyalty) || {};
+    const userIds = new Set([...Object.keys(prevLoyalty), ...Object.keys(nextEffects.loyalty)]);
+    const loyaltyDelta = {};
+    for (const id of userIds) {
+      const prevVal = typeof prevLoyalty[id] === "number" ? prevLoyalty[id] : 0;
+      const nextVal = typeof nextEffects.loyalty[id] === "number" ? nextEffects.loyalty[id] : 0;
+      const diff = nextVal - prevVal;
+      if (diff !== 0) loyaltyDelta[id] = diff;
+    }
+    if (Object.keys(loyaltyDelta).length) delta.loyalty = loyaltyDelta;
+  }
+
+  return Object.keys(delta).length ? delta : null;
+}
+
 function renderStoryLoading(container) {
   const block = document.createElement("div");
   block.className = "edict-block story-loading";
@@ -436,9 +812,6 @@ function renderStoryLoading(container) {
   return block;
 }
 
-/**
- * 清理弹幕层（防止内存泄漏）
- */
 function cleanupDanmuLayer(container) {
   if (container._edictDanmuLayer) {
     stopDanmu(container._edictDanmuLayer);
@@ -447,9 +820,6 @@ function cleanupDanmuLayer(container) {
   }
 }
 
-/**
- * 设置弹幕层（先清理旧层，再创建新层）
- */
 function setupDanmuLayer(container) {
   cleanupDanmuLayer(container);
   const danmuLayer = document.createElement("div");
@@ -459,18 +829,12 @@ function setupDanmuLayer(container) {
   return danmuLayer;
 }
 
-/**
- * 启动弹幕
- */
 function startDanmu(container) {
   if (container._edictDanmuLayer) {
     startDanmuForEdict(container._edictDanmuLayer);
   }
 }
 
-/**
- * 渲染已选择的选项
- */
 function renderChosenChoice(container, chosenChoice) {
   const choiceWrap = document.createElement("div");
   choiceWrap.className = "story-choice-history";
@@ -494,9 +858,42 @@ function renderChosenChoice(container, chosenChoice) {
   container.appendChild(choiceWrap);
 }
 
-/**
- * 渲染剧情错误提示
- */
+function renderStoryHistory(container, history, phaseLabels, state, renderId) {
+  for (const entry of history) {
+    if (renderId != null && container._storyRenderId !== renderId) return false;
+    
+    const data = entry.data;
+    const keyParts = String(entry.key || "").split("_");
+    let year = String(state.currentYear || 1);
+    let month = String(state.currentMonth || 1);
+    let phase = state.currentPhase || "morning";
+    if (keyParts.length >= 3) {
+      [year, month, phase] = keyParts;
+    } else if (keyParts.length === 2) {
+      [month, phase] = keyParts;
+    }
+    const phaseLabel = phaseLabels[phase] || phase;
+    
+    const label = document.createElement("div");
+    label.className = "story-history-label";
+    label.textContent = `第${year}年 ${month}月 · ${phaseLabel}`;
+    container.appendChild(label);
+    
+    const block = document.createElement("div");
+    block.className = "edict-block story-history-block";
+    const historyText = buildBlockText(data);
+    renderPseudoLines(block, historyText);
+    restoreHighlightsForTurn(block, parseInt(year, 10), parseInt(month, 10), phase, state);
+    container.appendChild(block);
+    
+    if (entry.chosenChoice && entry.chosenChoice.text) {
+      renderChosenChoice(container, entry.chosenChoice);
+      renderDeltaCard(container, entry.effects, state, "本轮推演数值变动");
+    }
+  }
+  return true;
+}
+
 function renderStoryError(container, errorMessage, retryCallback) {
   const block = document.createElement("div");
   block.className = "edict-block";
@@ -511,55 +908,26 @@ function renderStoryError(container, errorMessage, retryCallback) {
   container.appendChild(block);
 }
 
-/**
- * 渲染剧情历史记录
- */
-async function renderStoryHistory(container, history, phaseLabels, state, renderId) {
-  for (const entry of history) {
-    if (renderId != null && container._storyRenderId !== renderId) return false;
-    
-    const data = entry.data;
-    const [day, phase] = entry.key.split("_");
-    const phaseLabel = phaseLabels[phase] || phase;
-    
-    const label = document.createElement("div");
-    label.className = "story-history-label";
-    label.textContent = `第${day}天 · ${phaseLabel}`;
-    container.appendChild(label);
-    
-    const block = document.createElement("div");
-    block.className = "edict-block story-history-block";
-    const historyText = buildBlockText(data);
-    renderPseudoLines(block, historyText);
-    container.appendChild(block);
-    
-    if (entry.chosenChoice && entry.chosenChoice.text) {
-      renderChosenChoice(container, entry.chosenChoice);
-      if (entry.effects) {
-        applyEffects(entry.effects);
-      }
-      await renderDeltaCard(container, entry.effects, state);
-    }
-  }
-  return true;
-}
-
-/**
- * 加载剧情数据（兼容LLM和本地JSON）
- */
 async function loadStoryData(state, container, renderId, onChoice, options) {
+  const year = state.currentYear || 1;
+  const month = state.currentMonth || 1;
   const phaseKey = state.currentPhase || "morning";
-  const path = `data/story/day${state.currentDay}_${phaseKey}.json`;
-  const cacheKey = `${state.currentDay}_${phaseKey}`;
+  const path = `data/story/year${year}_month${month}_${phaseKey}.json`;
+  const templateFallbackPath = `data/story/day1_${phaseKey}.json`;
+  const cacheKey = `${year}_${month}_${phaseKey}`;
   const config = state.config || {};
+  const isFirstTurn = (state.lastChoiceId == null) && (!Array.isArray(state.storyHistory) || state.storyHistory.length === 0);
+
+  if (state.currentStoryTurn && state.currentStoryTurn.key === cacheKey && state.currentStoryTurn.data) {
+    storyCache = { key: cacheKey, data: state.currentStoryTurn.data };
+    return state.currentStoryTurn.data;
+  }
 
   if (storyCache.key === cacheKey && storyCache.data) {
     return storyCache.data;
   }
 
-  const apiBase = (config.apiBase || "").trim();
-  const isCustomEdict = state.lastChoiceId === "custom_edict";
-  const useLLM = (config.storyMode === "llm" || isCustomEdict) && apiBase.length > 0;
+  const useLLM = !isFirstTurn && config.storyMode === "llm" && (config.apiBase || "").trim().length > 0;
   let data = null;
 
   if (useLLM) {
@@ -574,13 +942,27 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
     if (renderId != null && container._storyRenderId !== renderId) return null;
   }
 
-  if (!data) {
+  if (useLLM && data == null) {
+    if (renderId != null && container._storyRenderId !== renderId) return null;
+    renderStoryError(container, "剧情返回格式异常（JSON 解析失败）。请点击重新生成，或检查后端模型配置。", () => {
+      storyCache = { key: null, data: null };
+      container.innerHTML = "";
+      renderStoryTurn(getState(), container, onChoice, options);
+    });
+    return null;
+  }
+
+  if (data == null) {
     try {
-      data = await loadJSON(path);
+      // Template mode uses a curated baseline script by phase to avoid missing-file noise.
+      const templatePath = (config.storyMode === "llm" && !isFirstTurn) ? path : templateFallbackPath;
+      data = await loadJSON(templatePath);
     } catch (e) {
-      const errorMessage = config.storyMode === "llm" && apiBase.length > 0
-        ? "LLM 生成失败，已切换到本地模板。本地模板不适用于自拟诏书场景。"
-        : "剧情文件加载失败";
+      if (renderId != null && container._storyRenderId !== renderId) return null;
+      
+      const errorMessage = useLLM 
+        ? "本回合剧情生成失败，请检查网络或后端配置。"
+        : "本回合剧情尚未准备好，请稍后再试。";
       
       renderStoryError(container, errorMessage, () => {
         storyCache = { key: null, data: null };
@@ -592,98 +974,299 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
   }
 
   storyCache = { key: cacheKey, data };
+  setState({ currentStoryTurn: { key: cacheKey, data } });
   return data;
 }
 
-/**
- * 更新剧情状态（新闻、舆情、天气）
- */
 function updateStoryState(data) {
-  if (data.news) {
-    setState({ newsToday: data.news });
+  const state = getState();
+  const systemNews = Array.isArray(state.systemNewsToday) ? state.systemNewsToday : [];
+  const systemPublicOpinion = Array.isArray(state.systemPublicOpinion) ? state.systemPublicOpinion : [];
+  if (data.news || systemNews.length) {
+    setState({ newsToday: [...systemNews, ...(Array.isArray(data.news) ? data.news : [])] });
   }
-  if (data.publicOpinion) {
-    setState({ publicOpinion: data.publicOpinion });
+  if (data.publicOpinion || systemPublicOpinion.length) {
+    setState({ publicOpinion: [...systemPublicOpinion, ...(Array.isArray(data.publicOpinion) ? data.publicOpinion : [])] });
   }
   if (data.header && data.header.weather) {
     setState({ weather: data.header.weather });
   }
 }
 
-/**
- * 创建选项按钮
- */
-function createChoiceButton(choice, onChoice) {
+function createChoiceButton(choice, onChoice, disabled = false) {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "story-action-btn";
+  if (disabled) btn.classList.add("story-action-btn--disabled");
+  btn.disabled = disabled;
   btn.innerHTML = `<div>${choice.text}</div>${choice.hint ? `<span>${choice.hint}</span>` : ""}`;
   btn.addEventListener("click", () => {
+    if (disabled) return;
     onChoice(choice.id, choice.text, choice.hint, choice.effects);
   });
   return btn;
 }
 
-/**
- * 渲染当前回合剧情
- */
-function renderCurrentTurn(container, data, state, phaseLabels, onChoice) {
-  const header = data.header || {};
-  const phase = state.currentPhase || "morning";
-  const phaseLabel = phaseLabels[phase] || phase;
+function renderQuarterAgendaPanel(container, state, onChoice, options = {}) {
+  const agenda = Array.isArray(state.currentQuarterAgenda) ? state.currentQuarterAgenda : [];
+  if (!agenda.length) return;
 
-  // 保留旧版本的头部信息 + 新版本的样式优化
-  const headerEl = document.createElement("div");
-  headerEl.className = "story-header";
-  headerEl.innerHTML = `
-    <span class="story-header__time">${header.time || ""}</span>
-    <span class="story-header__info">${header.season || ""} · ${header.weather || ""} · ${header.location || ""}</span>
-  `;
-  container.appendChild(headerEl);
+  const resolveSeverity = (value) => {
+    if (value === "急") return { label: "急", cls: "urgent" };
+    if (value === "缓") return { label: "缓", cls: "normal" };
+    return { label: "重", cls: "important" };
+  };
 
+  const focus = state.currentQuarterFocus || {};
+  const rerender = () => {
+    container.innerHTML = "";
+    renderStoryTurn(getState(), container, onChoice, options);
+  };
+
+  const panel = document.createElement("div");
+  panel.className = "quarter-agenda-panel";
+
+  const title = document.createElement("div");
+  title.className = "quarter-agenda-panel__title";
+  title.textContent = `季度奏折 · 本季需先选定议题与立场`; 
+  panel.appendChild(title);
+
+  const subtitle = document.createElement("div");
+  subtitle.className = "quarter-agenda-panel__subtitle";
+  subtitle.textContent = `依文档逻辑，本季度必须先浏览 3-5 条时政议题，选定商议派系与观点后再颁布诏书；若存在敌对势力，将出现“军事开拓”议题。`;
+  panel.appendChild(subtitle);
+
+  const cards = document.createElement("div");
+  cards.className = "quarter-agenda-grid";
+  agenda.forEach((item) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "quarter-agenda-card" + (focus.agendaId === item.id ? " quarter-agenda-card--active" : "");
+    const severity = resolveSeverity(item.severity);
+    card.innerHTML = `<div class="quarter-agenda-card__title-row"><div class="quarter-agenda-card__title">${item.title}</div><span class="quarter-agenda-card__badge quarter-agenda-card__badge--${severity.cls}">${severity.label}</span></div><div class="quarter-agenda-card__summary">${item.summary}</div><div class="quarter-agenda-card__meta">关联：${(item.impacts || []).join("、")}</div>`;
+    card.addEventListener("click", () => {
+      setState({
+        currentQuarterFocus: {
+          agendaId: item.id,
+          stance: focus.agendaId === item.id ? focus.stance || null : null,
+          factionId: focus.agendaId === item.id ? focus.factionId || null : null,
+        },
+      });
+      rerender();
+    });
+    cards.appendChild(card);
+  });
+  panel.appendChild(cards);
+
+  const selectedAgenda = agenda.find((item) => item.id === focus.agendaId) || null;
+  if (selectedAgenda) {
+    const stanceWrap = document.createElement("div");
+    stanceWrap.className = "quarter-agenda-control";
+    stanceWrap.innerHTML = `<div class="quarter-agenda-control__label">选择观点</div>`;
+    const stances = [
+      ["support", "支持"],
+      ["compromise", "折中"],
+      ["oppose", "反对"],
+      ["suppress", "压下党争"],
+    ];
+    const stanceButtons = document.createElement("div");
+    stanceButtons.className = "quarter-agenda-chip-row";
+    stances.forEach(([value, label]) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "quarter-agenda-chip" + (focus.stance === value ? " quarter-agenda-chip--active" : "");
+      chip.textContent = label;
+      chip.addEventListener("click", () => {
+        setState({ currentQuarterFocus: { ...focus, agendaId: selectedAgenda.id, stance: value } });
+        rerender();
+      });
+      stanceButtons.appendChild(chip);
+    });
+    stanceWrap.appendChild(stanceButtons);
+    panel.appendChild(stanceWrap);
+
+    const factionWrap = document.createElement("div");
+    factionWrap.className = "quarter-agenda-control";
+    factionWrap.innerHTML = `<div class="quarter-agenda-control__label">选择商议派系</div>`;
+    const factionButtons = document.createElement("div");
+    factionButtons.className = "quarter-agenda-chip-row";
+    (state.factions || []).forEach((faction) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "quarter-agenda-chip" + (focus.factionId === faction.id ? " quarter-agenda-chip--active" : "");
+      chip.textContent = faction.name;
+      chip.addEventListener("click", () => {
+        setState({ currentQuarterFocus: { ...focus, agendaId: selectedAgenda.id, factionId: faction.id } });
+        rerender();
+      });
+      factionButtons.appendChild(chip);
+    });
+    factionWrap.appendChild(factionButtons);
+    panel.appendChild(factionWrap);
+  }
+
+  const ready = !!(focus.agendaId && focus.stance && focus.factionId);
+  const footer = document.createElement("div");
+  footer.className = "quarter-agenda-panel__footer";
+  footer.textContent = ready
+    ? "季度议题已锁定，现可继续选择系统选项或撰写诏书。"
+    : "需先选定议题、立场和商议派系，季度诏书流程才会解锁。";
+  panel.appendChild(footer);
+  return panel;
+}
+
+function renderCurrentTurn(container, data, state, phaseLabels, onChoice, options = {}) {
+  const phaseKey = state.currentPhase || "morning";
+  const currentPhaseLabel = phaseLabels[phaseKey] || phaseKey;
+  
   const currentLabel = document.createElement("div");
   currentLabel.className = "story-history-label story-current-label";
-  currentLabel.textContent = `当前 · 第${state.currentDay}天 · ${phaseLabel}`;
+  currentLabel.textContent = `当前 · 第${state.currentYear}年 ${state.currentMonth}月 · ${currentPhaseLabel}`;
   container.appendChild(currentLabel);
   
   const currentWrap = document.createElement("div");
   currentWrap.className = "edict-current-wrap";
   container.appendChild(currentWrap);
+
+  const settlement = state.lastQuarterSettlement;
+  if (
+    settlement &&
+    settlement.year === state.currentYear &&
+    settlement.month === state.currentMonth
+  ) {
+    const quarterNote = document.createElement("div");
+    quarterNote.className = "story-history-label";
+    quarterNote.textContent = `季末结算 · 崇祯${settlement.year}年${settlement.month}月：国库 +${(settlement.effects?.treasury || 0).toLocaleString()} 两，粮储 +${(settlement.effects?.grain || 0).toLocaleString()} 石`;
+    currentWrap.appendChild(quarterNote);
+
+    const settlementDisplayEffects = {
+      treasury: settlement.effects?.treasury || 0,
+      grain: settlement.effects?.grain || 0,
+      militaryStrength: settlement.effects?.militaryStrength || 0,
+      corruptionLevel: settlement.effects?.corruptionLevel || 0,
+    };
+    renderDeltaCard(currentWrap, settlementDisplayEffects, state, "季度结算数值变动");
+  }
+
+  const quarterPanel = renderQuarterAgendaPanel(container, state, onChoice, options);
+  if (quarterPanel) currentWrap.appendChild(quarterPanel);
+
+  const textBlock = document.createElement("div");
+  textBlock.className = "edict-block";
+  const fullText = buildBlockText(data);
+  renderPseudoLines(textBlock, fullText);
+  restoreCurrentTurnHighlights(textBlock, state);
+  currentWrap.appendChild(textBlock);
+
+  const highlightToolbar = document.createElement("div");
+  highlightToolbar.className = "story-highlight-toolbar";
+
+  const annotateBtn = document.createElement("button");
+  annotateBtn.type = "button";
+  annotateBtn.className = "story-highlight-toolbar__btn";
+  annotateBtn.textContent = "下划线标注选中文本";
+  highlightToolbar.appendChild(annotateBtn);
+
+  const annotateHint = document.createElement("span");
+  annotateHint.className = "story-highlight-toolbar__hint";
+  annotateHint.textContent = "先在上方剧情中拖选文字，再点击按钮。";
+  highlightToolbar.appendChild(annotateHint);
+
+  currentWrap.appendChild(highlightToolbar);
+
+  const { panel: highlightPanel, refreshPanel } = createStoryHighlightPanel(state, phaseLabels);
+  currentWrap.appendChild(highlightPanel);
+
+  annotateBtn.addEventListener("click", () => {
+    const latest = getState();
+    const result = addStoryHighlightFromSelection(textBlock, latest);
+    annotateHint.textContent = result.message;
+    annotateHint.classList.toggle("story-highlight-toolbar__hint--error", !result.ok);
+    if (result.ok) {
+      refreshPanel();
+    }
+  });
   
-  const block = document.createElement("div");
-  block.className = "edict-block story-current-block";
-  const storyText = Array.isArray(data.storyParagraphs) ? data.storyParagraphs.join("\n") : data.storyParagraphs || "";
-  renderPseudoLines(block, storyText);
-  currentWrap.appendChild(block);
-
   const actionsWrap = document.createElement("div");
-  actionsWrap.className = "story-choices story-actions";
-
-  // 保留旧版本：最多显示3个选项（可根据需求移除.slice(0,3)）
-  const choices = data.choices || [];
-  const validChoices = choices.slice(0, 3);
-
-  validChoices.forEach(choice => {
-    const btn = createChoiceButton(choice, onChoice);
+  actionsWrap.className = "story-actions";
+  const requiresQuarterFocus = Array.isArray(state.currentQuarterAgenda) && state.currentQuarterAgenda.length > 0;
+  const quarterReady = !!(state.currentQuarterFocus && state.currentQuarterFocus.agendaId && state.currentQuarterFocus.stance && state.currentQuarterFocus.factionId);
+  const disableActions = requiresQuarterFocus && !quarterReady;
+  
+  (data.choices || []).forEach((choice) => {
+    const btn = createChoiceButton(choice, onChoice, disableActions);
     actionsWrap.appendChild(btn);
   });
-
+  
   const customBtn = document.createElement("button");
   customBtn.type = "button";
   customBtn.className = "story-action-btn story-action-btn--custom";
-  customBtn.innerHTML = `<div>✍️ 自拟诏书</div><span>亲笔拟定旨意，由朝臣代为施行</span>`;
+  if (disableActions) {
+    customBtn.disabled = true;
+    customBtn.classList.add("story-action-btn--disabled");
+  }
+  customBtn.innerHTML = `<div>自拟诏书</div><span>亲笔拟定旨意，由朝臣代为施行</span>`;
   customBtn.addEventListener("click", () => {
-    showCustomEdictPanel(onChoice);
+    if (disableActions) return;
+    showCustomEdictPanel(onChoice, state);
   });
   actionsWrap.appendChild(customBtn);
   
   currentWrap.appendChild(actionsWrap);
 }
 
-/**
- * 自拟诏书面板（内置完整逻辑）
- */
-function showCustomEdictPanel(onChoice) {
+export async function renderStoryTurn(state, container, onChoice, options = {}) {
+  const renderId = options && options.renderId;
+  if (renderId != null && container._storyRenderId !== renderId) return;
+
+  setupDanmuLayer(container);
+
+  const config = state.config || {};
+  const phaseLabels = config.phaseLabels || { morning: "早朝", afternoon: "午后", evening: "夜间" };
+  const history = state.storyHistory || [];
+  
+  if (!renderStoryHistory(container, history, phaseLabels, state, renderId)) return;
+
+  const data = await loadStoryData(state, container, renderId, onChoice, options);
+  if (data == null) return;
+
+  if (data.lastChoiceEffects && state.lastChoiceId === "custom_edict") {
+    const lastEntry = history[history.length - 1];
+    if (lastEntry && lastEntry.chosenChoice) {
+      const prevEffects = sanitizeStoryEffects(lastEntry.effects || null);
+      const nextEffects = sanitizeStoryEffects(data.lastChoiceEffects);
+      const deltaEffects = computeEffectDelta(prevEffects, nextEffects);
+      auditCustomEdictCorrection(prevEffects, nextEffects, deltaEffects);
+
+      // 如果 LLM 给出了更精准的数值变化，则使用差值进行调整
+      if (deltaEffects) {
+        applyEffects(deltaEffects);
+      }
+
+      // 保持历史记录中的 effects 为 LLM 最终输出
+      lastEntry.effects = nextEffects;
+      const updatedHistory = [...history];
+      updatedHistory[updatedHistory.length - 1] = lastEntry;
+      setState({ storyHistory: updatedHistory });
+
+      const historyContainer = container.querySelector('.story-history-container') || container;
+      const deltaCards = historyContainer.querySelectorAll('.story-delta-card');
+      const lastDeltaCard = deltaCards[deltaCards.length - 1];
+      if (lastDeltaCard) lastDeltaCard.remove();
+      renderDeltaCard(historyContainer, deltaEffects || data.lastChoiceEffects, state, "本轮推演数值变动");
+    }
+  }
+
+  updateStoryState(data);
+
+  if (renderId != null && container._storyRenderId !== renderId) return;
+
+  renderCurrentTurn(container, data, state, phaseLabels, onChoice, options);
+
+  startDanmu(container);
+}
+
+function showCustomEdictPanel(onChoice, state) {
   const existing = document.getElementById("custom-edict-overlay");
   if (existing) existing.remove();
 
@@ -707,6 +1290,17 @@ function showCustomEdictPanel(onChoice) {
   header.appendChild(title);
   header.appendChild(closeBtn);
   panel.appendChild(header);
+
+  const focus = state && state.currentQuarterFocus;
+  const agenda = (state?.currentQuarterAgenda || []).find((item) => item.id === focus?.agendaId);
+  const faction = (state?.factions || []).find((item) => item.id === focus?.factionId);
+  if (agenda && focus && faction) {
+    const info = document.createElement("div");
+    info.className = "custom-edict-panel__context";
+    const stanceMap = { support: "支持", compromise: "折中", oppose: "反对", suppress: "压下党争" };
+    info.textContent = `本季度议题：${agenda.title} · 观点：${stanceMap[focus.stance] || focus.stance} · 商议派系：${faction.name}`;
+    panel.appendChild(info);
+  }
 
   const fields = [
     { id: "ce-neizhi", label: "内政", placeholder: "如：减免赋税、整顿吏治..." },
@@ -752,7 +1346,11 @@ function showCustomEdictPanel(onChoice) {
       if (val) parts.push(`【${t.key}】${val}`);
     });
     if (parts.length === 0) return;
-    const combinedText = parts.join(" ");
+    let combinedText = parts.join(" ");
+    if (agenda && focus && faction) {
+      const stanceMap = { support: "支持", compromise: "折中", oppose: "反对", suppress: "压下党争" };
+      combinedText = `【季度议题】${agenda.title}【商议派系】${faction.name}【立场】${stanceMap[focus.stance] || focus.stance} ${combinedText}`;
+    }
     overlay.remove();
     onChoice("custom_edict", combinedText, "自拟诏书", null);
   });
@@ -768,47 +1366,4 @@ function showCustomEdictPanel(onChoice) {
   (app || document.body).appendChild(overlay);
 }
 
-/**
- * 核心渲染函数（整合新旧版本逻辑）
- */
-export async function renderStoryTurn(state, container, onChoice, options = {}) {
-  const renderId = options && options.renderId;
-  if (renderId != null && container._storyRenderId !== renderId) return;
-
-  setupDanmuLayer(container);
-
-  const config = state.config || {};
-  const phaseLabels = config.phaseLabels || { morning: "早朝", afternoon: "午后", evening: "夜间" };
-  const currentState = getState();
-  const history = currentState.storyHistory || [];
-  
-  if (!await renderStoryHistory(container, history, phaseLabels, currentState, renderId)) return;
-
-  const data = await loadStoryData(currentState, container, renderId, onChoice, options);
-  if (data == null) return;
-
-  if (data.lastChoiceEffects && currentState.lastChoiceId === "custom_edict") {
-    const lastEntry = history[history.length - 1];
-    if (lastEntry && lastEntry.chosenChoice && !lastEntry.effects) {
-      lastEntry.effects = data.lastChoiceEffects;
-      applyEffects(data.lastChoiceEffects);
-      const updatedHistory = [...history];
-      updatedHistory[updatedHistory.length - 1] = lastEntry;
-      setState({ storyHistory: updatedHistory });
-      
-      const historyContainer = container.querySelector('.story-history-container') || container;
-      await renderDeltaCard(historyContainer, data.lastChoiceEffects, getState());
-    }
-  }
-
-  updateStoryState(data);
-
-  if (renderId != null && container._storyRenderId !== renderId) return;
-
-  renderCurrentTurn(container, data, currentState, phaseLabels, onChoice);
-
-  startDanmu(container);
-}
-
-// 导出核心函数，保持与旧版本兼容
-export { applyEffects, renderDeltaCard, showCustomEdictPanel };
+export { applyEffects, renderDeltaCard, estimateEffectsFromEdict, computeEffectDelta, computeQuarterlyEffects, mergeEffects };

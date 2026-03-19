@@ -1,9 +1,100 @@
 import { router } from "../router.js";
-import { getState } from "../state.js";
+import { getState, setState } from "../state.js";
 import { loadJSON } from "../dataLoader.js";
 import { getStatBarClass, formatTreasury, formatGrain } from "../systems/nationSystem.js";
+import { PLAYER_ABILITY_KEYS, getPolicyCatalog, spendAbilityPoint, unlockPolicy } from "../systems/coreGameplaySystem.js";
 
 let nationInitCache = null;
+let provinceRulesCache = null;
+
+const DEFAULT_PROVINCE_RULES = {
+  regionRules: [
+    {
+      namePattern: "辽东",
+      default: { threat: "critical", status: "后金压力犹存，关宁防线需持续戒备。" },
+      states: [
+        {
+          whenAny: [
+            { metric: "borderThreat", op: ">=", value: 75 },
+            { metric: "militaryStrength", op: "<=", value: 45 },
+          ],
+          threat: "critical",
+          status: "关宁防线告急，敌情频仍，需尽快补饷增援。",
+        },
+        {
+          whenAll: [
+            { metric: "borderThreat", op: "<=", value: 45 },
+            { metric: "militaryStrength", op: ">=", value: 65 },
+          ],
+          threat: "medium",
+          status: "边防暂稳，但仍需持续警戒后金动向。",
+        },
+      ],
+    },
+    {
+      namePattern: "陕西|河南",
+      default: { threat: "high", status: "灾情与流民问题仍需持续处置。" },
+      states: [
+        {
+          whenAny: [
+            { metric: "disasterLevel", op: ">=", value: 70 },
+            { metric: "civilMorale", op: "<=", value: 40 },
+            { metric: "unrest", op: ">=", value: 30 },
+          ],
+          threat: "high",
+          status: "灾情与流民压力并存，若赈济不足将迅速恶化。",
+        },
+        {
+          whenAll: [
+            { metric: "disasterLevel", op: "<=", value: 45 },
+            { metric: "civilMorale", op: ">=", value: 55 },
+          ],
+          threat: "medium",
+          status: "灾情有所缓解，地方秩序逐步恢复。",
+        },
+      ],
+    },
+    {
+      namePattern: "山东",
+      default: { threat: "medium", status: "军务可控，但需防局部哗变反复。" },
+      states: [
+        {
+          whenAny: [
+            { metric: "militaryStrength", op: "<=", value: 50 },
+            { metric: "unrest", op: ">=", value: 28 },
+          ],
+          threat: "high",
+          status: "军纪与饷银压力偏高，兵变隐患仍在。",
+        },
+      ],
+    },
+    {
+      namePattern: "江南|湖广",
+      default: { threat: "low", status: "税粮产出稳定，仍是朝廷主要财赋支撑。" },
+      states: [
+        {
+          whenAny: [
+            { metric: "treasury", op: "<=", value: 250000 },
+            { metric: "corruptionLevel", op: ">=", value: 70 },
+          ],
+          threat: "medium",
+          status: "赋税与漕运承压，财政回流效率下降。",
+        },
+      ],
+    },
+    {
+      namePattern: "四川",
+      default: { threat: "low", status: "整体安稳，可作为战略后方调度区域。" },
+      states: [
+        {
+          whenAny: [{ metric: "unrest", op: ">=", value: 35 }],
+          threat: "medium",
+          status: "地方治安波动，需要提前防范土司与流民联动。",
+        },
+      ],
+    },
+  ],
+};
 
 function createFoldSection(title, renderBody) {
   const section = document.createElement("div");
@@ -33,9 +124,92 @@ function createFoldSection(title, renderBody) {
   return section;
 }
 
+function getProvinceRuntimeMetrics(state) {
+  const nation = state.nation || {};
+  return {
+    unrest: state.unrest || 0,
+    civilMorale: nation.civilMorale || 50,
+    disasterLevel: nation.disasterLevel || 50,
+    borderThreat: nation.borderThreat || 50,
+    militaryStrength: nation.militaryStrength || 50,
+    treasury: nation.treasury || 0,
+    corruptionLevel: nation.corruptionLevel || 50,
+  };
+}
+
+function evaluateProvinceCondition(condition, metrics) {
+  if (!condition || typeof condition !== "object") return false;
+  const { metric, op, value } = condition;
+  if (!metric || typeof op !== "string") return false;
+  const actual = metrics[metric];
+  if (typeof actual !== "number" || typeof value !== "number") return false;
+
+  if (op === ">") return actual > value;
+  if (op === ">=") return actual >= value;
+  if (op === "<") return actual < value;
+  if (op === "<=") return actual <= value;
+  if (op === "==") return actual === value;
+  if (op === "!=") return actual !== value;
+  return false;
+}
+
+function evaluateProvinceStateRule(stateRule, metrics) {
+  if (!stateRule || typeof stateRule !== "object") return false;
+  const whenAll = Array.isArray(stateRule.whenAll) ? stateRule.whenAll : [];
+  const whenAny = Array.isArray(stateRule.whenAny) ? stateRule.whenAny : [];
+  if (!whenAll.length && !whenAny.length) return true;
+  const allPass = whenAll.every((c) => evaluateProvinceCondition(c, metrics));
+  const anyPass = whenAny.length ? whenAny.some((c) => evaluateProvinceCondition(c, metrics)) : true;
+  return allPass && anyPass;
+}
+
+function matchProvinceRegionRule(provinceName, regionRule) {
+  if (!regionRule || typeof regionRule !== "object") return false;
+  const pattern = regionRule.namePattern;
+  if (typeof pattern !== "string" || !pattern.trim()) return false;
+  try {
+    const regexp = new RegExp(pattern);
+    return regexp.test(provinceName || "");
+  } catch {
+    return false;
+  }
+}
+
+function deriveProvinceRuntimeState(province, state) {
+  const metrics = getProvinceRuntimeMetrics(state);
+  const rulesSource = provinceRulesCache && Array.isArray(provinceRulesCache.regionRules)
+    ? provinceRulesCache
+    : DEFAULT_PROVINCE_RULES;
+  const regionRules = Array.isArray(rulesSource.regionRules) ? rulesSource.regionRules : [];
+
+  const matchedRegionRule = regionRules.find((rule) => matchProvinceRegionRule(province.name || "", rule));
+  if (!matchedRegionRule) {
+    return {
+      threat: province.threat || "medium",
+      status: province.status || "暂无情报",
+    };
+  }
+
+  const states = Array.isArray(matchedRegionRule.states) ? matchedRegionRule.states : [];
+  const matchedState = states.find((rule) => evaluateProvinceStateRule(rule, metrics));
+  if (matchedState) {
+    return {
+      threat: matchedState.threat || matchedRegionRule.default?.threat || province.threat || "medium",
+      status: matchedState.status || matchedRegionRule.default?.status || province.status || "暂无情报",
+    };
+  }
+
+  return {
+    threat: matchedRegionRule.default?.threat || province.threat || "medium",
+    status: matchedRegionRule.default?.status || province.status || "暂无情报",
+  };
+}
+
 function renderNationView(container) {
   const state = getState();
   const nation = state.nation || {};
+  const factionSupport = state.factionSupport || {};
+  const quarterAgenda = state.currentQuarterAgenda || [];
   const provinceStats = state.provinceStats || {};
   const externalPowers = state.externalPowers || {};
 
@@ -92,10 +266,225 @@ function renderNationView(container) {
   overview.appendChild(statsGrid);
   root.appendChild(overview);
 
+  const governance = document.createElement("div");
+  governance.className = "nation-overview";
+  const governanceTitle = document.createElement("div");
+  governanceTitle.className = "nation-overview-title";
+  governanceTitle.textContent = "朝局总览";
+  governance.appendChild(governanceTitle);
+
+  const governanceGrid = document.createElement("div");
+  governanceGrid.className = "nation-stats-grid";
+  [
+    { label: "威望", icon: "👑", value: (state.prestige || 0) + "/100", barValue: state.prestige || 0, invert: false },
+    { label: "执行率", icon: "📘", value: (state.executionRate || 0) + "%", barValue: state.executionRate || 0, invert: false },
+    { label: "党争", icon: "⚖️", value: (state.partyStrife || 0) + "/100", barValue: state.partyStrife || 0, invert: true },
+    { label: "动乱", icon: "🔥", value: (state.unrest || 0) + "/100", barValue: state.unrest || 0, invert: true },
+    { label: "税压", icon: "🧾", value: (state.taxPressure || 0) + "/100", barValue: state.taxPressure || 0, invert: true },
+  ].forEach((s) => {
+    const item = document.createElement("div");
+    item.className = "nation-stat-item";
+    const label = document.createElement("div");
+    label.className = "nation-stat-label";
+    label.textContent = `${s.icon} ${s.label}`;
+    const value = document.createElement("div");
+    value.className = "nation-stat-value";
+    value.textContent = s.value;
+    const bar = document.createElement("div");
+    bar.className = "nation-stat-bar";
+    const barInner = document.createElement("div");
+    barInner.className = "nation-stat-bar-inner " + getStatBarClass(s.barValue, s.invert);
+    barInner.style.width = Math.min(100, s.barValue) + "%";
+    bar.appendChild(barInner);
+    item.appendChild(label);
+    item.appendChild(value);
+    item.appendChild(bar);
+    governanceGrid.appendChild(item);
+  });
+  governance.appendChild(governanceGrid);
+  root.appendChild(governance);
+
+  const factionSection = createFoldSection("派系支持度", (body) => {
+    (state.factions || []).forEach((faction) => {
+      const card = document.createElement("div");
+      card.className = "nation-card";
+      const icon = document.createElement("div");
+      icon.className = "nation-card-icon";
+      icon.textContent = "🏛️";
+      const cardBody = document.createElement("div");
+      cardBody.className = "nation-card-body";
+      const titleEl = document.createElement("div");
+      titleEl.className = "nation-card-title";
+      titleEl.textContent = `${faction.name} · ${factionSupport[faction.id] || 0}/100`;
+      const summaryEl = document.createElement("div");
+      summaryEl.className = "nation-card-summary";
+      summaryEl.textContent = faction.stance || faction.description || "";
+      cardBody.appendChild(titleEl);
+      cardBody.appendChild(summaryEl);
+      card.appendChild(icon);
+      card.appendChild(cardBody);
+      body.appendChild(card);
+    });
+  });
+  root.appendChild(factionSection);
+
+  const agendaSection = createFoldSection("季度奏折", (body) => {
+    if (!quarterAgenda.length) {
+      const empty = document.createElement("div");
+      empty.className = "nation-feed-empty";
+      empty.textContent = "当前无季度核心议题，推进至季度月后将生成 3-5 条时政议题。";
+      body.appendChild(empty);
+      return;
+    }
+    quarterAgenda.forEach((item) => {
+      const card = document.createElement("div");
+      card.className = "nation-card";
+      const icon = document.createElement("div");
+      icon.className = "nation-card-icon";
+      icon.textContent = "📜";
+      const cardBody = document.createElement("div");
+      cardBody.className = "nation-card-body";
+      const titleEl = document.createElement("div");
+      titleEl.className = "nation-card-title";
+      titleEl.textContent = item.title;
+      const summaryEl = document.createElement("div");
+      summaryEl.className = "nation-card-summary";
+      summaryEl.textContent = `${item.summary} 关联：${(item.impacts || []).join("、")}`;
+      cardBody.appendChild(titleEl);
+      cardBody.appendChild(summaryEl);
+      card.appendChild(icon);
+      card.appendChild(cardBody);
+      body.appendChild(card);
+    });
+  });
+  root.appendChild(agendaSection);
+
+  const abilitySection = createFoldSection(`皇帝能力（可用点数 ${state.abilityPoints || 0}）`, (body) => {
+    const abilityMeta = {
+      management: { label: "管理", desc: "提升季度财政与粮储效率。" },
+      military: { label: "军事", desc: "强化军事类诏书收益。" },
+      scholarship: { label: "学识", desc: "提高改革与农政收益。" },
+      politics: { label: "政治", desc: "提高执行率并缓和党争。" },
+    };
+    PLAYER_ABILITY_KEYS.forEach((key) => {
+      const card = document.createElement("div");
+      card.className = "nation-card";
+      const cardBody = document.createElement("div");
+      cardBody.className = "nation-card-body";
+      const titleEl = document.createElement("div");
+      titleEl.className = "nation-card-title";
+      titleEl.textContent = `${abilityMeta[key].label} · Lv.${state.playerAbilities?.[key] || 0}`;
+      const summaryEl = document.createElement("div");
+      summaryEl.className = "nation-card-summary";
+      summaryEl.textContent = abilityMeta[key].desc;
+      cardBody.appendChild(titleEl);
+      cardBody.appendChild(summaryEl);
+      card.appendChild(cardBody);
+      if ((state.abilityPoints || 0) > 0) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "nation-mini-btn";
+        btn.textContent = "加点";
+        btn.addEventListener("click", () => {
+          const patch = spendAbilityPoint(getState(), key);
+          if (!patch) return;
+          setState(patch);
+          container.innerHTML = "";
+          renderNationView(container);
+        });
+        card.appendChild(btn);
+      }
+      body.appendChild(card);
+    });
+  });
+  root.appendChild(abilitySection);
+
+  const policies = getPolicyCatalog();
+  const policyTitleMap = Object.fromEntries(policies.map((item) => [item.id, item.title]));
+  const policySection = createFoldSection(`国策树（可用点数 ${state.policyPoints || 0}）`, (body) => {
+    policies.forEach((policy) => {
+      const unlocked = (state.unlockedPolicies || []).includes(policy.id);
+      const canUnlock = !unlocked && (state.policyPoints || 0) >= policy.cost && (policy.requires || []).every((id) => (state.unlockedPolicies || []).includes(id));
+      const card = document.createElement("div");
+      card.className = "nation-card";
+      const cardBody = document.createElement("div");
+      cardBody.className = "nation-card-body";
+      const titleEl = document.createElement("div");
+      titleEl.className = "nation-card-title";
+      titleEl.textContent = `${policy.branch} · ${policy.title}${unlocked ? "（已实施）" : ""}`;
+      const summaryEl = document.createElement("div");
+      summaryEl.className = "nation-card-summary";
+      const requiresText = (policy.requires || []).length
+        ? ` 前置：${(policy.requires || []).map((id) => policyTitleMap[id] || id).join("、")}`
+        : "";
+      summaryEl.textContent = `${policy.description} 消耗 ${policy.cost} 点。${requiresText}`;
+      cardBody.appendChild(titleEl);
+      cardBody.appendChild(summaryEl);
+      card.appendChild(cardBody);
+      if (!unlocked) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "nation-mini-btn" + (canUnlock ? "" : " nation-mini-btn--disabled");
+        btn.textContent = canUnlock ? "实施" : "未满足";
+        btn.disabled = !canUnlock;
+        btn.addEventListener("click", () => {
+          const patch = unlockPolicy(getState(), policy.id);
+          if (!patch) return;
+          setState(patch);
+          container.innerHTML = "";
+          renderNationView(container);
+        });
+        card.appendChild(btn);
+      }
+      body.appendChild(card);
+    });
+  });
+  root.appendChild(policySection);
+
+  const customPolicySection = createFoldSection(`自定义国策（${Array.isArray(state.customPolicies) ? state.customPolicies.length : 0}）`, (body) => {
+    const customPolicies = Array.isArray(state.customPolicies) ? state.customPolicies : [];
+    if (!customPolicies.length) {
+      const empty = document.createElement("div");
+      empty.className = "nation-feed-empty";
+      empty.textContent = "尚未设立自定义国策。可在自拟诏书中写入“设立某机构定为国策”自动收录。";
+      body.appendChild(empty);
+      return;
+    }
+    const categoryText = {
+      fiscal: "季度财政加成",
+      agri: "季度粮储加成",
+      military: "季度军务加成",
+      governance: "执行与监察加成",
+      general: "综合微幅加成",
+    };
+    customPolicies.forEach((policy) => {
+      const card = document.createElement("div");
+      card.className = "nation-card";
+      const icon = document.createElement("div");
+      icon.className = "nation-card-icon";
+      icon.textContent = "🏛️";
+      const cardBody = document.createElement("div");
+      cardBody.className = "nation-card-body";
+      const titleEl = document.createElement("div");
+      titleEl.className = "nation-card-title";
+      titleEl.textContent = policy.name;
+      const summaryEl = document.createElement("div");
+      summaryEl.className = "nation-card-summary";
+      summaryEl.textContent = `${categoryText[policy.category] || categoryText.general} · 设立于崇祯${policy.createdYear || "?"}年${policy.createdMonth || "?"}月`;
+      cardBody.appendChild(titleEl);
+      cardBody.appendChild(summaryEl);
+      card.appendChild(icon);
+      card.appendChild(cardBody);
+      body.appendChild(card);
+    });
+  });
+  root.appendChild(customPolicySection);
+
   // ── 各省情况(折叠) ──
   if (nationInitCache && nationInitCache.provinces) {
     const provinceSection = createFoldSection("各省概况", (body) => {
       nationInitCache.provinces.forEach((p) => {
+        const runtime = deriveProvinceRuntimeState(p, state);
         const card = document.createElement("div");
         card.className = "nation-card";
         card.style.padding = "8px";
@@ -107,14 +496,14 @@ function renderNationView(container) {
         titleEl.textContent = p.name;
         const summaryEl = document.createElement("div");
         summaryEl.className = "nation-card-summary";
-        summaryEl.textContent = p.status;
+        summaryEl.textContent = runtime.status;
 
         const threatTag = document.createElement("span");
         threatTag.className = "nation-card-tag";
         const threatMap = { critical: "nation-card-tag--urgent", high: "nation-card-tag--important", medium: "nation-card-tag--normal", low: "nation-card-tag--normal" };
         const threatLabelMap = { critical: "危", high: "警", medium: "稳", low: "安" };
-        threatTag.classList.add(threatMap[p.threat] || "nation-card-tag--normal");
-        threatTag.textContent = threatLabelMap[p.threat] || "稳";
+        threatTag.classList.add(threatMap[runtime.threat] || "nation-card-tag--normal");
+        threatTag.textContent = threatLabelMap[runtime.threat] || "稳";
 
         cardBody.appendChild(titleEl);
         cardBody.appendChild(summaryEl);
@@ -176,18 +565,19 @@ function renderNationView(container) {
     root.appendChild(provinceSection);
   }
 
-  // ── 外部势力(折叠) ──
-  if (nationInitCache && nationInitCache.externalThreats) {
-    const threatSection = createFoldSection("外部势力", (body) => {
-      nationInitCache.externalThreats.forEach((t) => {
+  // ── 敌对/外部势力(折叠) ──
+  const hostileForces = Array.isArray(state.hostileForces) && state.hostileForces.length
+    ? state.hostileForces
+    : (nationInitCache && Array.isArray(nationInitCache.externalThreats) ? nationInitCache.externalThreats : []);
+  if (hostileForces.length) {
+    const threatSection = createFoldSection("敌对势力", (body) => {
+      hostileForces.forEach((t) => {
         const id = t.id || t.name;
-        const powerValue = id ? externalPowers[id] : undefined;
-        const power = typeof powerValue === "number" ? Math.max(0, Math.min(100, powerValue)) : 100;
+        const runtimePower = id && typeof externalPowers[id] === "number" ? externalPowers[id] : t.power;
+        const power = typeof runtimePower === "number" ? Math.max(0, Math.min(100, runtimePower)) : 100;
         if (power <= 0) {
-          // 势力条清零视为势力消失，不再展示
           return;
         }
-
         const card = document.createElement("div");
         card.className = "nation-card";
 
@@ -199,10 +589,12 @@ function renderNationView(container) {
         cardBody.className = "nation-card-body";
         const titleEl = document.createElement("div");
         titleEl.className = "nation-card-title";
-        titleEl.textContent = `${t.name}（${t.leader}）`;
+        const defeatedText = t.isDefeated ? "（已灭亡）" : "";
+        titleEl.textContent = `${t.name}（${t.leader || "未知"}）${defeatedText}`;
         const summaryEl = document.createElement("div");
         summaryEl.className = "nation-card-summary";
-        summaryEl.textContent = t.status;
+        const powerSummary = typeof power === "number" ? `势力值 ${power}/100` : "势力值未知";
+        summaryEl.textContent = `${t.status || "暂无情报"} · ${powerSummary}`;
         cardBody.appendChild(titleEl);
         cardBody.appendChild(summaryEl);
 
@@ -213,11 +605,11 @@ function renderNationView(container) {
         barInner.style.width = power + "%";
         barWrap.appendChild(barInner);
 
-        const powerText = document.createElement("div");
-        powerText.className = "nation-stat-value";
-        powerText.textContent = `势力：${power}/100`;
+        const powerValueText = document.createElement("div");
+        powerValueText.className = "nation-stat-value";
+        powerValueText.textContent = `势力：${power}/100`;
 
-        cardBody.appendChild(powerText);
+        cardBody.appendChild(powerValueText);
         cardBody.appendChild(barWrap);
 
         card.appendChild(icon);
@@ -333,6 +725,13 @@ export function registerNationView() {
         nationInitCache = await loadJSON("data/nationInit.json");
       } catch (e) {
         nationInitCache = {};
+      }
+    }
+    if (!provinceRulesCache) {
+      try {
+        provinceRulesCache = await loadJSON("data/provinceRules.json");
+      } catch (e) {
+        provinceRulesCache = null;
       }
     }
     renderNationView(container);

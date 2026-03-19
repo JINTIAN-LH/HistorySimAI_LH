@@ -12,5 +12,12 @@
     "evening": "夜间"
   },
   "loyaltyMax": 100,
-  "autoSave": true
+  "autoSave": true,
+  "coreGameplay": {
+    "initialPrestige": 58
+  },
+  "economicPolicy": {
+    "baseTreasury": 100000,
+    "baseGrain": 20000
+  }
 }
