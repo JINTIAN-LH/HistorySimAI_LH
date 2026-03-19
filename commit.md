@@ -436,3 +436,20 @@
 - 自检结果：
   - Root：未执行（本次仅 UI/交互样式迭代，按需可补测）
   - Server：未执行（本次未改动服务端）
+
+#### 6.1.16 9b821d3 · fix(story): support mobile highlight selection and custom annotation input
+- 全哈希：9b821d39206be6e5d552fa26bb7a515eba28558a
+- 时间：2026-03-19
+- 分支：my-feature-branch
+- 作者：JINTIAN-LIU
+- 类型：fix
+- 变更文件：
+  - ChongzhenSim/js/systems/storySystem.js
+  - ChongzhenSim/css/modules/edict.css
+- 玩法兼容与冲突取舍：
+  - 标注逻辑增加“最近有效选区缓存”，修复手机端点按按钮后选区丢失导致无法标注的问题。
+  - 标注合集新增“自定义标注”入口，支持弹窗输入并保存到既有 `storyHighlights` 状态链路。
+  - 样式改动遵循 CSS 重构后的模块结构，仅在 `modules/edict.css` 内补充剧情标注相关规则，避免跨模块耦合。
+- 自检结果：
+  - Root：cd ChongzhenSim && npm test 通过（103/103）
+  - Server：未单独执行（本次未改动服务端逻辑）
