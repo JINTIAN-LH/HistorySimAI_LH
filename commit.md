@@ -453,3 +453,20 @@
 - 自检结果：
   - Root：cd ChongzhenSim && npm test 通过（103/103）
   - Server：未单独执行（本次未改动服务端逻辑）
+
+#### 6.1.17 f2f2409 · fix(goal): ensure goal panel opens and align styles with modular css
+- 全哈希：`f2f240926365f0b9496ab6e35ddb35bc103ee27b`
+- 时间：2026-03-19
+- 分支：my-feature-branch
+- 作者：JINTIAN-LIU
+- 类型：fix
+- 变更文件：
+  - ChongzhenSim/js/ui/goalPanel.js
+  - ChongzhenSim/css/components/common.css
+- 玩法兼容与冲突取舍：
+  - 目标入口点击后统一打开目标面板，空目标场景改为可见空态提示，避免“点击无反馈”。
+  - 目标面板样式收敛到 `components/common.css`，保持现有模块化 CSS 结构一致性。
+  - 不改动既有目标追踪/完成判定逻辑，仅修复可达性与展示层。
+- 自检结果：
+  - Root：cd ChongzhenSim && npm test 通过（103/103）
+  - Server：未单独执行（本次未改动服务端逻辑）
