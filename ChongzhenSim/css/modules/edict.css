@@ -281,6 +281,13 @@
   border-radius: 2px;
 }
 
+/* 允许移动端在剧情区长按选择文本用于标注 */
+.edict-block,
+.edict-block * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .story-highlight-toolbar {
   display: flex;
   align-items: center;
@@ -357,6 +364,26 @@
   gap: 6px;
 }
 
+.story-highlight-list__toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.story-highlight-list__custom-btn {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-main);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.story-highlight-list__custom-btn:active {
+  transform: translateY(1px);
+}
+
 .story-highlight-list__empty {
   font-size: 11px;
   color: var(--color-text-sub);
@@ -423,6 +450,117 @@
   margin-top: 8px;
   cursor: pointer;
   transition: background 0.15s;
+}
+
+.story-highlight-custom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: rgba(0, 0, 0, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.story-highlight-custom-panel {
+  width: 100%;
+  max-width: 360px;
+  background: var(--color-block-bg);
+  border-radius: 12px;
+  border: 1px solid var(--color-border-soft);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.story-highlight-custom-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.story-highlight-custom-panel__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.story-highlight-custom-panel__close {
+  border: none;
+  background: transparent;
+  color: var(--color-text-sub);
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 6px;
+}
+
+.story-highlight-custom-panel__body {
+  padding: 12px 14px;
+}
+
+.story-highlight-custom-panel__textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  background: var(--color-bg-main);
+  color: var(--color-text-main);
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 8px 10px;
+  font-family: inherit;
+}
+
+.story-highlight-custom-panel__textarea:focus {
+  outline: none;
+  border-color: var(--color-gold);
+}
+
+.story-highlight-custom-panel__hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--color-text-sub);
+}
+
+.story-highlight-custom-panel__hint--error {
+  color: var(--color-danger);
+}
+
+.story-highlight-custom-panel__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.story-highlight-custom-panel__btn {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+
+.story-highlight-custom-panel__btn--cancel {
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-main);
+}
+
+.story-highlight-custom-panel__btn--save {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-gold);
+}
+
+.story-highlight-custom-panel__btn--save:disabled {
+  opacity: 0.45;
 }
 
 /* 季度议程 */
