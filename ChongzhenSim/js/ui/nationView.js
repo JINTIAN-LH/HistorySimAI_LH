@@ -211,7 +211,6 @@ function renderNationView(container) {
   const factionSupport = state.factionSupport || {};
   const quarterAgenda = state.currentQuarterAgenda || [];
   const provinceStats = state.provinceStats || {};
-  const externalPowers = state.externalPowers || {};
 
   const root = document.createElement("div");
   root.className = "nation-root";
@@ -572,14 +571,13 @@ function renderNationView(container) {
   if (hostileForces.length) {
     const threatSection = createFoldSection("敌对势力", (body) => {
       hostileForces.forEach((t) => {
-        const id = t.id || t.name;
-        const runtimePower = id && typeof externalPowers[id] === "number" ? externalPowers[id] : t.power;
-        const power = typeof runtimePower === "number" ? Math.max(0, Math.min(100, runtimePower)) : 100;
-        if (power <= 0) {
-          return;
-        }
+        const power = typeof t.power === "number" ? Math.max(0, Math.min(100, t.power)) : 100;
         const card = document.createElement("div");
         card.className = "nation-card";
+        if (t.isDefeated) {
+          card.style.opacity = "0.82";
+          card.style.borderStyle = "dashed";
+        }
 
         const icon = document.createElement("div");
         icon.className = "nation-card-icon";
@@ -594,7 +592,8 @@ function renderNationView(container) {
         const summaryEl = document.createElement("div");
         summaryEl.className = "nation-card-summary";
         const powerSummary = typeof power === "number" ? `势力值 ${power}/100` : "势力值未知";
-        summaryEl.textContent = `${t.status || "暂无情报"} · ${powerSummary}`;
+        const closureHint = t.isDefeated ? " · 相关故事线已闭锁" : "";
+        summaryEl.textContent = `${t.status || "暂无情报"} · ${powerSummary}${closureHint}`;
         cardBody.appendChild(titleEl);
         cardBody.appendChild(summaryEl);
 

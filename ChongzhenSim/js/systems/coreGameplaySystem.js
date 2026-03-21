@@ -571,6 +571,42 @@ export function initializeHostileForces(currentState, nationInit) {
   }));
 }
 
+function applyLegacyExternalPowersCompat(currentState, hostileForces, closedStorylines) {
+  const external = currentState?.externalPowers;
+  if (!external || typeof external !== "object") {
+    return {
+      hostileForces,
+      closedStorylines: Array.isArray(closedStorylines) ? closedStorylines : [],
+    };
+  }
+
+  const nextHostiles = (Array.isArray(hostileForces) ? hostileForces : []).map((item) => {
+    const id = item?.id;
+    if (!id || typeof external[id] !== "number") {
+      return { ...item };
+    }
+    const mappedPower = clamp(Math.round(external[id]), 0, 100);
+    const defeated = mappedPower <= 0;
+    return {
+      ...item,
+      power: mappedPower,
+      isDefeated: item.isDefeated || defeated,
+      status: defeated
+        ? "已被朝廷彻底剿灭，余部星散。"
+        : (item.status || `遭受朝廷打击，势力值降至 ${mappedPower}/100。`),
+    };
+  });
+
+  const defeatedTags = nextHostiles
+    .filter((item) => item.isDefeated)
+    .map((item) => item.storylineTag || buildStorylineTag(item.name));
+
+  return {
+    hostileForces: nextHostiles,
+    closedStorylines: mergeUniqueStrings(closedStorylines, defeatedTags),
+  };
+}
+
 function defaultFactionSupport(factionId) {
   const defaults = {
     donglin: 48,
@@ -901,6 +937,13 @@ export function initializeCoreGameplayState(currentState, factions, config, nati
     ? currentState.prestige
     : ((config.coreGameplay && config.coreGameplay.initialPrestige) || 58);
 
+  const initializedHostiles = initializeHostileForces(currentState, nationInit);
+  const compatResult = applyLegacyExternalPowersCompat(
+    currentState,
+    initializedHostiles,
+    Array.isArray(currentState.closedStorylines) ? currentState.closedStorylines : []
+  );
+
   const nextState = {
     prestige,
     executionRate: computeExecutionRate(prestige, balance.executionRate),
@@ -923,8 +966,8 @@ export function initializeCoreGameplayState(currentState, factions, config, nati
     },
     unlockedPolicies: normalizeUnlockedPolicies(currentState.unlockedPolicies),
     customPolicies: Array.isArray(currentState.customPolicies) ? currentState.customPolicies : [],
-    hostileForces: initializeHostileForces(currentState, nationInit),
-    closedStorylines: Array.isArray(currentState.closedStorylines) ? currentState.closedStorylines : [],
+    hostileForces: compatResult.hostileForces,
+    closedStorylines: compatResult.closedStorylines,
   };
 
   const isQuarterMonth = ((currentState.currentMonth || config.startMonth || 1) % 3) === 0;
