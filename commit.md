@@ -470,3 +470,20 @@
 - 自检结果：
   - Root：cd ChongzhenSim && npm test 通过（103/103）
   - Server：未单独执行（本次未改动服务端逻辑）
+
+#### 6.1.18 770fc05 · fix(hostile): preserve defeated forces visibility and enforce storyline closure
+- 全哈希：770fc05f5b7778263c0fcb812aaf55d3c193f211
+- 时间：2026-03-21
+- 分支：my-feature-branch
+- 作者：JINTIAN-LIU
+- 类型：fix
+- 变更文件：
+  - ChongzhenSim/js/systems/coreGameplaySystem.js
+  - ChongzhenSim/js/ui/nationView.js
+- 玩法兼容与冲突取舍：
+  - 修复国家面板敌对势力显示旧字段抢权问题，统一以 hostileForces 为单一事实来源。
+  - 敌对势力灭亡后保留“已灭亡”可见卡片，并显式提示“相关故事线已闭锁”。
+  - 增加 externalPowers 旧存档兼容桥接：初始化阶段自动映射势力值并补齐 closedStorylines，避免历史存档闭锁失效。
+- 自检结果：
+  - Root：cd ChongzhenSim && npm test -- --run 通过（103/103）
+  - Server：未单独执行（本次未改动服务端逻辑）
