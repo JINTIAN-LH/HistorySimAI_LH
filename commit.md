@@ -504,3 +504,21 @@
 - 自检结果：
   - Root：cd ChongzhenSim && npm test -- --run 通过（103/103）
   - Server：未单独执行（本次未改动服务端逻辑）
+
+#### 6.1.20 25d4910 · feat(court): switch to year-end vacancy reminder and mark deceased ministers
+- 全哈希：25d4910d35818afd3e33ab45ed4f634a4d05165b
+- 时间：2026-03-21
+- 分支：my-feature-branch
+- 作者：JINTIAN-LIU
+- 类型：feat
+- 变更文件：
+  - ChongzhenSim/js/systems/turnSystem.js
+  - ChongzhenSim/js/ui/courtView.js
+  - ChongzhenSim/css/modules/court.css
+- 玩法兼容与冲突取舍：
+  - 将季度自动补官改为年末提醒补官，保留空缺治理权给玩家，不再由系统自动任命。
+  - 任命候选与按人调岗入口统一增加生死校验，已故人物不可授官，避免状态冲突。
+  - 群臣列表新增已故标签与死亡态样式，同时延后自然死亡推进节奏以降低早期角色流失。
+- 自检结果：
+  - Root：cd ChongzhenSim && npm test -- --run 通过（103/103）
+  - Server：未单独执行（本次未改动服务端逻辑）
