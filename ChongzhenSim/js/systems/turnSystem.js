@@ -5,6 +5,7 @@ import { updateTopbarByState } from "../layout.js";
 import { applyProgressionToChoiceEffects, extractCustomPoliciesFromEdict, mergeCustomPolicies, processCoreGameplayTurn, refreshQuarterAgendaByState, resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
 import { sanitizeStoryEffects } from "../api/validators.js";
 import { loadJSON } from "../dataLoader.js";
+import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot } from "../utils/displayStateMetrics.js";
 
 let positionsMetaCache = null;
 const CHONGZHEN_BASE_YEAR = 1627;
@@ -117,6 +118,7 @@ export function runCurrentTurn(container, options = {}) {
 
 async function handleChoice(choiceId, choiceText, choiceHint, effects) {
   const state = getState();
+  const beforeTurnSnapshot = captureDisplayStateSnapshot(state);
 
   if (choiceId === "custom_edict") {
     const newlyFound = extractCustomPoliciesFromEdict(choiceText || "", state.currentYear, state.currentMonth);
@@ -232,6 +234,18 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
   // 用本回合全部结算后的最新状态重算季度议题，避免议题落后于实时局势
   const agendaPatch = refreshQuarterAgendaByState(getState());
   setState(agendaPatch);
+
+  const stateAfterTurn = getState();
+  const displayEffects = buildOutcomeDisplayDelta(beforeTurnSnapshot, captureDisplayStateSnapshot(stateAfterTurn));
+  const historyAfterTurn = Array.isArray(stateAfterTurn.storyHistory) ? [...stateAfterTurn.storyHistory] : [];
+  if (historyAfterTurn.length > 0) {
+    const lastIndex = historyAfterTurn.length - 1;
+    historyAfterTurn[lastIndex] = {
+      ...historyAfterTurn[lastIndex],
+      displayEffects,
+    };
+    setState({ storyHistory: historyAfterTurn });
+  }
 
   autoSaveIfEnabled();
   updateTopbarByState(getState());

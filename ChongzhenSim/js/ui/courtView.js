@@ -5,9 +5,10 @@ import { loadJSON } from "../dataLoader.js";
 import { getLoyaltyTags, getLoyaltyStage, getLoyaltyColor, getFactionClass } from "../systems/courtSystem.js";
 import { requestMinisterReply } from "../api/ministerChat.js";
 import { getApiBase } from "../api/httpClient.js";
-import { AVAILABLE_AVATAR_NAMES, NATION_LABELS, INVERT_COLOR_KEYS, buildNameById } from "../utils/sharedConstants.js";
+import { AVAILABLE_AVATAR_NAMES, buildNameById } from "../utils/sharedConstants.js";
 import { showError, showSuccess } from "../utils/toast.js";
 import { applyEffects as applyEffectsModule } from "../utils/effectsProcessor.js";
+import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot, hasOutcomeDisplayDelta, renderOutcomeDisplayCard } from "../utils/displayStateMetrics.js";
 
 let currentMinisterChatId = null;
 let tagsConfigCache = null;
@@ -578,142 +579,6 @@ function applyLocalAppointmentEffects(appointmentsMap) {
     setState({ appointments: nextAppointments });
   }
   return changed;
-}
-
-function isValueChanged(key, delta) {
-  if (typeof delta !== "number" || delta === 0) return false;
-  return true;
-}
-
-function buildDialogueDeltaFromState(beforeState, afterState, effects, ministerId) {
-  const delta = {};
-  const beforeNation = beforeState?.nation || {};
-  const afterNation = afterState?.nation || {};
-
-  Object.keys(NATION_LABELS).forEach((key) => {
-    const beforeVal = Number(beforeNation[key] || 0);
-    const afterVal = Number(afterNation[key] || 0);
-    const diff = afterVal - beforeVal;
-    if (isValueChanged(key, diff)) {
-      delta[key] = diff;
-    }
-  });
-
-  const loyaltyDelta = {};
-  const beforeLoyalty = beforeState?.loyalty || {};
-  const afterLoyalty = afterState?.loyalty || {};
-
-  if (ministerId) {
-    const diff = Number(afterLoyalty[ministerId] || 0) - Number(beforeLoyalty[ministerId] || 0);
-    if (diff !== 0) loyaltyDelta[ministerId] = diff;
-  }
-
-  if (effects?.loyalty && typeof effects.loyalty === "object") {
-    Object.keys(effects.loyalty).forEach((id) => {
-      if (id === ministerId) return;
-      const diff = Number(afterLoyalty[id] || 0) - Number(beforeLoyalty[id] || 0);
-      if (diff !== 0) loyaltyDelta[id] = diff;
-    });
-  }
-
-  if (Object.keys(loyaltyDelta).length) {
-    delta.loyalty = loyaltyDelta;
-  }
-
-  if (effects?.appointments && typeof effects.appointments === "object" && !Array.isArray(effects.appointments)) {
-    delta.appointments = { ...effects.appointments };
-  }
-
-  if (effects?.characterDeath && typeof effects.characterDeath === "object" && !Array.isArray(effects.characterDeath)) {
-    delta.characterDeath = { ...effects.characterDeath };
-  }
-
-  return delta;
-}
-
-function hasDialogueDelta(delta) {
-  if (!delta || typeof delta !== "object") return false;
-  if (Object.keys(NATION_LABELS).some((key) => typeof delta[key] === "number" && delta[key] !== 0)) return true;
-  if (delta.loyalty && Object.keys(delta.loyalty).length > 0) return true;
-  if (delta.appointments && Object.keys(delta.appointments).length > 0) return true;
-  if (delta.characterDeath && Object.keys(delta.characterDeath).length > 0) return true;
-  return false;
-}
-
-function renderDialogueDeltaCard(container, delta, state) {
-  if (!container) return;
-  container.innerHTML = "";
-  if (!hasDialogueDelta(delta)) return;
-
-  const entries = [];
-  for (const [key, label] of Object.entries(NATION_LABELS)) {
-    if (typeof delta[key] === "number" && delta[key] !== 0) {
-      entries.push({ label, value: delta[key], invertColor: INVERT_COLOR_KEYS.includes(key), type: "number" });
-    }
-  }
-
-  if (delta.loyalty && typeof delta.loyalty === "object") {
-    const nameById = buildNameById(state.ministers || []);
-    for (const [id, diff] of Object.entries(delta.loyalty)) {
-      if (typeof diff !== "number" || diff === 0) continue;
-      entries.push({ label: `${nameById[id] || id} 忠诚`, value: diff, invertColor: false, type: "number" });
-    }
-  }
-
-  if (delta.appointments && typeof delta.appointments === "object") {
-    const nameById = buildNameById(state.ministers || []);
-    for (const [positionId, characterId] of Object.entries(delta.appointments)) {
-      entries.push({
-        label: `任命 ${nameById[characterId] || characterId} → ${positionId}`,
-        value: "已生效",
-        type: "text",
-      });
-    }
-  }
-
-  if (delta.characterDeath && typeof delta.characterDeath === "object") {
-    const nameById = buildNameById(state.ministers || []);
-    for (const [characterId, reason] of Object.entries(delta.characterDeath)) {
-      entries.push({
-        label: `处置 ${nameById[characterId] || characterId}`,
-        value: typeof reason === "string" && reason ? reason : "已处置",
-        type: "text",
-      });
-    }
-  }
-
-  if (!entries.length) return;
-
-  const card = document.createElement("div");
-  card.className = "story-delta-card";
-  const title = document.createElement("div");
-  title.className = "story-history-label";
-  title.textContent = "本轮对话数值变化";
-  card.appendChild(title);
-
-  entries.forEach((entry) => {
-    const row = document.createElement("div");
-    row.className = "story-delta-row";
-    const label = document.createElement("span");
-    label.className = "story-delta-label";
-    label.textContent = entry.label;
-    const value = document.createElement("span");
-
-    if (entry.type === "number") {
-      const isPositive = entry.invertColor ? entry.value < 0 : entry.value > 0;
-      value.className = "story-delta-value " + (isPositive ? "story-delta-value--positive" : "story-delta-value--negative");
-      value.textContent = `${entry.value > 0 ? "+" : ""}${entry.value}`;
-    } else {
-      value.className = "story-delta-value story-delta-value--appointment";
-      value.textContent = String(entry.value);
-    }
-
-    row.appendChild(label);
-    row.appendChild(value);
-    card.appendChild(row);
-  });
-
-  container.appendChild(card);
 }
 
 function triggerTapFeedback() {
@@ -1838,6 +1703,7 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
 
   const applyDialogueEffects = (result) => {
     const before = getState();
+    const beforeSnapshot = captureDisplayStateSnapshot(before);
     const sourceEffects = result?.effects && typeof result.effects === "object" ? { ...result.effects } : {};
 
     if (typeof result?.loyaltyDelta === "number" && result.loyaltyDelta !== 0) {
@@ -1850,9 +1716,9 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
       sourceEffects.appointments = { ...result.appointments };
     }
 
-    const hasEffects = hasDialogueDelta(sourceEffects) || Object.keys(sourceEffects).length > 0;
+    const hasEffects = hasOutcomeDisplayDelta(sourceEffects) || Object.keys(sourceEffects).length > 0;
     if (!hasEffects) {
-      renderDialogueDeltaCard(deltaPanel, null, getState());
+      deltaPanel.innerHTML = "";
       return;
     }
 
@@ -1861,8 +1727,10 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
 
     const appointmentsChanged = applyLocalAppointmentEffects(sourceEffects.appointments);
     const after = getState();
-    const delta = buildDialogueDeltaFromState(before, after, sourceEffects, ministerId);
-    renderDialogueDeltaCard(deltaPanel, delta, after);
+    const afterSnapshot = captureDisplayStateSnapshot(after);
+    const delta = buildOutcomeDisplayDelta(beforeSnapshot, afterSnapshot);
+    deltaPanel.innerHTML = "";
+    renderOutcomeDisplayCard(deltaPanel, delta, after, "本轮对话数值变化");
 
     updateTopbarByState(after);
     if (appointmentsChanged) {
@@ -1903,7 +1771,7 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
       } else {
         const fallback = getAutoReplies(minister, content);
         appendMessage("minister", fallback);
-        renderDialogueDeltaCard(deltaPanel, null, getState());
+        deltaPanel.innerHTML = "";
       }
       rerenderThread();
     } else {

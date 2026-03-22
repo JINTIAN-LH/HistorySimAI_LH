@@ -5,8 +5,9 @@ import { requestStoryTurn } from "../api/llmStory.js";
 import { sanitizeStoryEffects } from "../api/validators.js";
 import { startDanmuForEdict, stopDanmu } from "./danmuSystem.js";
 import { computeCustomPolicyQuarterBonus, getPolicyBonusSummary } from "./coreGameplaySystem.js";
-import { AVAILABLE_AVATAR_NAMES, buildNameById, NATION_LABELS, INVERT_COLOR_KEYS, PERCENT_KEYS } from "../utils/sharedConstants.js";
+import { AVAILABLE_AVATAR_NAMES, buildNameById } from "../utils/sharedConstants.js";
 import { applyEffects as applyEffectsModule } from "../utils/effectsProcessor.js";
+import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot, hasOutcomeDisplayDelta, mergeOutcomeDisplayDelta, renderOutcomeDisplayCard } from "../utils/displayStateMetrics.js";
 
 let storyCache = { key: null, data: null };
 let lastAppliedKey = null;
@@ -123,80 +124,7 @@ export function pushCurrentTurnToHistory(state, chosenChoice, effects) {
 }
 
 function renderDeltaCard(container, effects, state, titleText = "") {
-  if (!effects) return;
-  const entries = [];
-  for (const [key, label] of Object.entries(NATION_LABELS)) {
-    if (typeof effects[key] === "number" && effects[key] !== 0) {
-      entries.push({ label, delta: effects[key], invertColor: INVERT_COLOR_KEYS.includes(key) });
-    }
-  }
-  if (effects.loyalty && typeof effects.loyalty === "object") {
-    const ministers = state.ministers || [];
-    const nameById = buildNameById(ministers);
-    for (const [id, delta] of Object.entries(effects.loyalty)) {
-      if (typeof delta === "number" && delta !== 0) {
-        entries.push({ label: (nameById[id] || id) + " 忠诚", delta, invertColor: false });
-      }
-    }
-  }
-  if (effects.appointments && typeof effects.appointments === "object" && !Array.isArray(effects.appointments)) {
-    const ministers = state.ministers || [];
-    const nameById = buildNameById(ministers);
-    for (const [positionId, characterId] of Object.entries(effects.appointments)) {
-      if (typeof positionId !== "string" || typeof characterId !== "string") continue;
-      entries.push({
-        label: `任命 ${nameById[characterId] || characterId} → ${positionId}`,
-
-        delta: null,
-        invertColor: false,
-        isAppointment: true,
-      });
-    }
-  }
-  if (effects.characterDeath && typeof effects.characterDeath === "object") {
-    const ministers = state.ministers || [];
-    const nameById = buildNameById(ministers);
-    for (const [characterId, reason] of Object.entries(effects.characterDeath)) {
-      entries.push({
-        label: `处置 ${nameById[characterId] || characterId}`,
-        delta: null,
-        invertColor: false,
-        isAppointment: true,
-        customText: typeof reason === "string" && reason ? reason : "已处置",
-      });
-    }
-  }
-  if (entries.length === 0) return;
-
-  const card = document.createElement("div");
-  card.className = "story-delta-card";
-  if (titleText) {
-    const title = document.createElement("div");
-    title.className = "story-history-label";
-    title.textContent = titleText;
-    card.appendChild(title);
-  }
-  entries.forEach(({ label, delta, invertColor, isAppointment, customText }) => {
-    const row = document.createElement("div");
-    row.className = "story-delta-row";
-    const lbl = document.createElement("span");
-    lbl.className = "story-delta-label";
-    lbl.textContent = label;
-    const val = document.createElement("span");
-    if (isAppointment) {
-      val.className = "story-delta-value story-delta-value--appointment";
-      val.textContent = customText || "已生效";
-    } else {
-      const isPositive = invertColor ? delta < 0 : delta > 0;
-      val.className = "story-delta-value " + (isPositive ? "story-delta-value--positive" : "story-delta-value--negative");
-      const sign = delta > 0 ? "+" : "";
-      val.textContent = sign + delta.toLocaleString();
-    }
-    row.appendChild(lbl);
-    row.appendChild(val);
-    card.appendChild(row);
-  });
-  container.appendChild(card);
+  renderOutcomeDisplayCard(container, effects, state, titleText);
 }
 
 function renderPseudoLines(blockEl, text) {
@@ -1050,7 +978,7 @@ function renderStoryHistory(container, history, phaseLabels, state, renderId) {
     
     if (entry.chosenChoice && entry.chosenChoice.text) {
       renderChosenChoice(container, entry.chosenChoice);
-      renderDeltaCard(container, entry.effects, state, "本轮推演数值变动");
+      renderDeltaCard(container, entry.displayEffects || entry.effects, state, "本轮推演数值变动");
     }
   }
   return true;
@@ -1403,11 +1331,18 @@ export async function renderStoryTurn(state, container, onChoice, options = {}) 
         auditCustomEdictCorrection(prevEffects, nextEffects, deltaEffects);
       }
 
+      const beforeCorrectionSnapshot = captureDisplayStateSnapshot(getState());
       if (deltaEffects) {
         applyEffects(deltaEffects);
       }
+      const afterCorrectionSnapshot = captureDisplayStateSnapshot(getState());
+      const correctionDisplayEffects = buildOutcomeDisplayDelta(beforeCorrectionSnapshot, afterCorrectionSnapshot);
 
       lastEntry.effects = nextEffects;
+      const mergedDisplayEffects = hasOutcomeDisplayDelta(correctionDisplayEffects)
+        ? mergeOutcomeDisplayDelta(lastEntry.displayEffects || lastEntry.effects || {}, correctionDisplayEffects)
+        : (lastEntry.displayEffects || nextEffects);
+      lastEntry.displayEffects = mergedDisplayEffects;
       const updatedHistory = [...history];
       updatedHistory[updatedHistory.length - 1] = lastEntry;
       setState({ storyHistory: updatedHistory });
@@ -1416,7 +1351,7 @@ export async function renderStoryTurn(state, container, onChoice, options = {}) 
       const deltaCards = historyContainer.querySelectorAll('.story-delta-card');
       const lastDeltaCard = deltaCards[deltaCards.length - 1];
       if (lastDeltaCard) lastDeltaCard.remove();
-      renderDeltaCard(historyContainer, deltaEffects || nextEffects, getState(), "本轮推演数值变动");
+      renderDeltaCard(historyContainer, mergedDisplayEffects, getState(), "本轮推演数值变动");
     }
   }
 

@@ -19,7 +19,8 @@ const RATE_LIMIT_MAX_REQUESTS = 200;
 const SYSTEM_PROMPT = `你是《崇祯皇帝模拟器》游戏的剧情写手。
 每回合你必须只输出一个合法 JSON 对象，且结构中包含 header、storyParagraphs、choices。
 若涉及任命或处置，请写入 lastChoiceEffects.appointments / lastChoiceEffects.characterDeath。
-必须严格遵循传入的朝堂快照：已故角色不得复活、任职或作为在任官员出现；未在任角色不得被称作在任。`;
+必须严格遵循传入的朝堂快照：已故角色不得复活、任职或作为在任官员出现；未在任角色不得被称作在任。
+剧情、旁白、选项文案、提示必须使用中文，不得出现英文国策ID（如 civil_tax_reform）或英文句子。`;
 
 function readJsonSafely(filePath) {
   try {
@@ -104,6 +105,71 @@ function createApp(options = {}) {
     });
 
     return output;
+  }
+
+  function escapeRegExp(text) {
+    return String(text || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function buildUnlockedPolicyLabelMap(body) {
+    const ids = Array.isArray(body?.unlockedPolicies)
+      ? body.unlockedPolicies.filter((id) => typeof id === "string" && id.trim())
+      : [];
+    const titleMap = body?.unlockedPolicyTitleMap && typeof body.unlockedPolicyTitleMap === "object"
+      ? body.unlockedPolicyTitleMap
+      : {};
+    const titles = Array.isArray(body?.unlockedPolicyTitles)
+      ? body.unlockedPolicyTitles.map((item) => String(item || "").trim())
+      : [];
+
+    const map = {};
+    ids.forEach((id, index) => {
+      const mapped = typeof titleMap[id] === "string" && titleMap[id].trim()
+        ? titleMap[id].trim()
+        : (titles[index] || "");
+      map[id] = mapped || id;
+    });
+    return map;
+  }
+
+  function replacePolicyIdsInText(text, policyLabelMap) {
+    if (typeof text !== "string" || !text) return text;
+    let output = text;
+    const entries = Object.entries(policyLabelMap || {})
+      .filter(([id, label]) => typeof id === "string" && id && typeof label === "string" && label)
+      .sort((a, b) => b[0].length - a[0].length);
+
+    entries.forEach(([id, label]) => {
+      const pattern = new RegExp(`\\b${escapeRegExp(id)}\\b`, "g");
+      output = output.replace(pattern, label);
+    });
+    return output;
+  }
+
+  function sanitizeStoryPayloadLanguage(payload, policyLabelMap) {
+    if (!payload || typeof payload !== "object") return payload;
+    const next = { ...payload };
+
+    if (Array.isArray(next.storyParagraphs)) {
+      next.storyParagraphs = next.storyParagraphs.map((line) => replacePolicyIdsInText(line, policyLabelMap));
+    }
+
+    if (Array.isArray(next.choices)) {
+      next.choices = next.choices.map((choice) => {
+        if (!choice || typeof choice !== "object") return choice;
+        const updated = { ...choice };
+        ["text", "hint", "title", "description"].forEach((key) => {
+          if (typeof updated[key] === "string") {
+            updated[key] = replacePolicyIdsInText(updated[key], policyLabelMap);
+          }
+        });
+        return updated;
+      });
+    }
+
+    if (typeof next.news === "string") next.news = replacePolicyIdsInText(next.news, policyLabelMap);
+    if (typeof next.publicOpinion === "string") next.publicOpinion = replacePolicyIdsInText(next.publicOpinion, policyLabelMap);
+    return next;
   }
 
   function getSeasonByMonth(month) {
@@ -194,15 +260,17 @@ function createApp(options = {}) {
     base += `\n\n朝堂任职快照（推理硬约束）：在任且在世=${JSON.stringify(activeAppointments)}；在世未任=${JSON.stringify(aliveNotInOffice)}；已故=${JSON.stringify(deceasedMinisters)}。请保持称谓与任职状态一致。`;
 
     const unlocked = Array.isArray(unlockedPolicies) ? unlockedPolicies.filter((id) => typeof id === "string" && id.trim()) : [];
+    const unlockedPolicyLabelMap = buildUnlockedPolicyLabelMap(body);
+    const unlockedDisplay = unlocked.map((id) => unlockedPolicyLabelMap[id] || id);
     const custom = Array.isArray(customPolicies)
       ? customPolicies
         .map((item) => (item && typeof item === "object" ? String(item.name || item.title || item.id || "").trim() : ""))
         .filter(Boolean)
       : [];
-    if (unlocked.length || custom.length) {
-      const unlockedText = unlocked.length ? unlocked.join("、") : "无";
+    if (unlockedDisplay.length || custom.length) {
+      const unlockedText = unlockedDisplay.length ? unlockedDisplay.join("、") : "无";
       const customText = custom.length ? custom.join("、") : "无";
-      base += `\n\n已实施国策（纳入全局推理）：国策树=${unlockedText}；自定义国策=${customText}。请在剧情、选项和数值推演中综合考虑其持续影响。`;
+      base += `\n\n已实施国策（纳入全局推理）：国策树=${unlockedText}；自定义国策=${customText}。请在剧情、选项和数值推演中综合考虑其持续影响，并且所有输出文案必须为中文。`;
     }
 
     if (courtChatSummary && typeof courtChatSummary === "string" && courtChatSummary.trim()) {
@@ -255,6 +323,17 @@ function createApp(options = {}) {
       const content = data?.choices?.[0]?.message?.content;
       if (content == null) {
         return res.status(502).json({ error: "No content in LLM response" });
+      }
+
+      const policyLabelMap = buildUnlockedPolicyLabelMap(body);
+      if (Object.keys(policyLabelMap).length) {
+        try {
+          const parsed = JSON.parse(content);
+          const sanitized = sanitizeStoryPayloadLanguage(parsed, policyLabelMap);
+          return res.json(sanitized);
+        } catch (_e) {
+          // If model returns non-JSON text unexpectedly, keep original passthrough behavior.
+        }
       }
 
       res.set("Content-Type", "application/json; charset=utf-8");
@@ -604,6 +683,8 @@ function createApp(options = {}) {
     app,
     buildUserMessage,
     sanitizeMinisterReplyText,
+    buildUnlockedPolicyLabelMap,
+    sanitizeStoryPayloadLanguage,
     getCharacters,
     getPositions,
   };

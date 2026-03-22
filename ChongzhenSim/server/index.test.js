@@ -264,13 +264,19 @@ describe('buildUserMessage', () => {
         nation: { treasury: 500000, grain: 30000 }
       },
       unlockedPolicies: ['civil_tax_reform', 'military_border_fort'],
+      unlockedPolicyTitleMap: {
+        civil_tax_reform: '税制改革',
+      },
       customPolicies: [{ id: 'cp_1', name: '赈济先行' }],
     };
     const message = buildUserMessage(body);
     expect(message).toContain('已实施国策');
-    expect(message).toContain('civil_tax_reform');
+    expect(message).toContain('税制改革');
+    expect(message).not.toContain('civil_tax_reform');
+    expect(message).toContain('military_border_fort');
     expect(message).toContain('赈济先行');
     expect(message).toContain('纳入全局推理');
+    expect(message).toContain('所有输出文案必须为中文');
   });
 
   it('should format treasury status correctly', () => {
@@ -370,6 +376,48 @@ describe('sanitizeMinisterReplyText', () => {
     const input = '毕自严已奉诏办理户部钱粮。';
     const out = sanitizeMinisterReplyText(input, []);
     expect(out).toBe(input);
+  });
+});
+
+describe('sanitizeStoryPayloadLanguage', () => {
+  const createTestApp = () => createApp({
+    config: {},
+    charactersData: mockCharactersData,
+    allowMissingConfig: true
+  });
+
+  it('should replace policy IDs in visible story fields', () => {
+    const { sanitizeStoryPayloadLanguage } = createTestApp();
+    const payload = {
+      storyParagraphs: ['已推行 civil_tax_reform，百官议论纷纷。'],
+      choices: [
+        { id: 'choice_1', text: '继续推进 civil_tax_reform', hint: '配套 military_border_defense' }
+      ],
+      news: 'civil_tax_reform 引发户部震动',
+    };
+    const map = {
+      civil_tax_reform: '税制改革',
+      military_border_defense: '守边固防',
+    };
+
+    const out = sanitizeStoryPayloadLanguage(payload, map);
+    expect(out.storyParagraphs[0]).toContain('税制改革');
+    expect(out.storyParagraphs[0]).not.toContain('civil_tax_reform');
+    expect(out.choices[0].text).toContain('税制改革');
+    expect(out.choices[0].hint).toContain('守边固防');
+    expect(out.news).toContain('税制改革');
+  });
+
+  it('should keep choice id unchanged while sanitizing text', () => {
+    const { sanitizeStoryPayloadLanguage } = createTestApp();
+    const payload = {
+      choices: [
+        { id: 'civil_tax_reform_plan', text: '颁行 civil_tax_reform' }
+      ],
+    };
+    const out = sanitizeStoryPayloadLanguage(payload, { civil_tax_reform: '税制改革' });
+    expect(out.choices[0].id).toBe('civil_tax_reform_plan');
+    expect(out.choices[0].text).toBe('颁行 税制改革');
   });
 });
 

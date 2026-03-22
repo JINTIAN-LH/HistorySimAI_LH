@@ -1,8 +1,9 @@
 import { router } from "../router.js";
 import { getState, setState } from "../state.js";
 import { loadJSON } from "../dataLoader.js";
-import { getStatBarClass, formatTreasury, formatGrain } from "../systems/nationSystem.js";
+import { getStatBarClass } from "../systems/nationSystem.js";
 import { PLAYER_ABILITY_KEYS, getPolicyCatalog, spendAbilityPoint, unlockPolicy } from "../systems/coreGameplaySystem.js";
+import { formatDisplayMetricValue, getDisplayMetricBarValue, getDisplayMetricsBySection } from "../utils/displayStateMetrics.js";
 
 let nationInitCache = null;
 let provinceRulesCache = null;
@@ -207,7 +208,6 @@ function deriveProvinceRuntimeState(province, state) {
 
 function renderNationView(container) {
   const state = getState();
-  const nation = state.nation || {};
   const factionSupport = state.factionSupport || {};
   const quarterAgenda = state.currentQuarterAgenda || [];
   const provinceStats = state.provinceStats || {};
@@ -227,15 +227,13 @@ function renderNationView(container) {
   const statsGrid = document.createElement("div");
   statsGrid.className = "nation-stats-grid";
 
-  const stats = [
-    { label: "国库", icon: "💰", value: formatTreasury(nation.treasury || 0), barValue: Math.min(100, (nation.treasury || 0) / 10000), invert: false },
-    { label: "粮储", icon: "🌾", value: formatGrain(nation.grain || 0), barValue: Math.min(100, (nation.grain || 0) / 500), invert: false },
-    { label: "军力", icon: "⚔️", value: (nation.militaryStrength || 0) + "/100", barValue: nation.militaryStrength || 0, invert: false },
-    { label: "民心", icon: "👥", value: (nation.civilMorale || 0) + "/100", barValue: nation.civilMorale || 0, invert: false },
-    { label: "边患", icon: "🏴", value: (nation.borderThreat || 0) + "/100", barValue: nation.borderThreat || 0, invert: true },
-    { label: "天灾", icon: "🌪️", value: (nation.disasterLevel || 0) + "/100", barValue: nation.disasterLevel || 0, invert: true },
-    { label: "贪腐", icon: "🔗", value: (nation.corruptionLevel || 0) + "/100", barValue: nation.corruptionLevel || 0, invert: true },
-  ];
+  const stats = getDisplayMetricsBySection("nation").map((metric) => ({
+    label: metric.label,
+    icon: metric.icon,
+    value: formatDisplayMetricValue(state, metric.key),
+    barValue: getDisplayMetricBarValue(state, metric.key),
+    invert: metric.invert,
+  }));
 
   stats.forEach((s) => {
     const item = document.createElement("div");
@@ -274,13 +272,13 @@ function renderNationView(container) {
 
   const governanceGrid = document.createElement("div");
   governanceGrid.className = "nation-stats-grid";
-  [
-    { label: "威望", icon: "👑", value: (state.prestige || 0) + "/100", barValue: state.prestige || 0, invert: false },
-    { label: "执行率", icon: "📘", value: (state.executionRate || 0) + "%", barValue: state.executionRate || 0, invert: false },
-    { label: "党争", icon: "⚖️", value: (state.partyStrife || 0) + "/100", barValue: state.partyStrife || 0, invert: true },
-    { label: "动乱", icon: "🔥", value: (state.unrest || 0) + "/100", barValue: state.unrest || 0, invert: true },
-    { label: "税压", icon: "🧾", value: (state.taxPressure || 0) + "/100", barValue: state.taxPressure || 0, invert: true },
-  ].forEach((s) => {
+  getDisplayMetricsBySection("governance").map((metric) => ({
+    label: metric.label,
+    icon: metric.icon,
+    value: formatDisplayMetricValue(state, metric.key),
+    barValue: getDisplayMetricBarValue(state, metric.key),
+    invert: metric.invert,
+  })).forEach((s) => {
     const item = document.createElement("div");
     item.className = "nation-stat-item";
     const label = document.createElement("div");
