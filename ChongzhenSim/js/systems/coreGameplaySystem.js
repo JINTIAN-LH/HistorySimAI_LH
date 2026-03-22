@@ -1077,6 +1077,9 @@ function evolveProvinceStats(state) {
 
 function extractHostileTargetsFromText(choiceText, hostileForces) {
   const text = String(choiceText || "");
+  const hasMilitaryIntent = /征讨|北伐|平叛|开拓|讨伐|灭|剿|出师|围剿|进兵|用兵|突击|攻城/.test(text);
+  if (!hasMilitaryIntent) return [];
+
   const active = (hostileForces || []).filter((item) => !item.isDefeated);
   const targets = [];
   active.forEach((item) => {
@@ -1086,7 +1089,6 @@ function extractHostileTargetsFromText(choiceText, hostileForces) {
     }
   });
   if (targets.length) return targets;
-  if (!/征讨|北伐|平叛|开拓|讨伐|灭|剿|出师|围剿/.test(text)) return [];
   const sorted = active.slice().sort((a, b) => (b.power || 0) - (a.power || 0));
   return sorted.slice(0, 1).map((item) => item.id);
 }

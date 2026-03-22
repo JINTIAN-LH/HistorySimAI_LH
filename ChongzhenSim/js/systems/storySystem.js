@@ -949,7 +949,14 @@ function renderChosenChoice(container, chosenChoice) {
 }
 
 function renderStoryHistory(container, history, phaseLabels, state, renderId) {
-  for (const entry of history) {
+  const isQuarterSettlementMonth = !!(
+    state.lastQuarterSettlement &&
+    state.lastQuarterSettlement.year === state.currentYear &&
+    state.lastQuarterSettlement.month === state.currentMonth
+  );
+
+  for (let index = 0; index < history.length; index += 1) {
+    const entry = history[index];
     if (renderId != null && container._storyRenderId !== renderId) return false;
     
     const data = entry.data;
@@ -978,10 +985,28 @@ function renderStoryHistory(container, history, phaseLabels, state, renderId) {
     
     if (entry.chosenChoice && entry.chosenChoice.text) {
       renderChosenChoice(container, entry.chosenChoice);
-      renderDeltaCard(container, entry.displayEffects || entry.effects, state, "本轮推演数值变动");
+      const isLatestHistoryEntry = index === history.length - 1;
+      const shouldSkipLatestDeltaInQuarter = isQuarterSettlementMonth && isLatestHistoryEntry;
+      if (!shouldSkipLatestDeltaInQuarter) {
+        renderDeltaCard(container, entry.displayEffects || entry.effects, state, "本轮推演数值变动");
+      }
     }
   }
   return true;
+}
+
+function mergeQuarterDisplayEffectsDedup(baseEffects, quarterEffects) {
+  const merged = { ...(baseEffects && typeof baseEffects === "object" ? baseEffects : {}) };
+
+  DISPLAY_STATE_METRICS.forEach(({ key }) => {
+    const quarterValue = quarterEffects?.[key];
+    if (typeof quarterValue !== "number" || quarterValue === 0) return;
+    if (typeof merged[key] !== "number") {
+      merged[key] = quarterValue;
+    }
+  });
+
+  return merged;
 }
 
 function renderStoryError(container, errorMessage, retryCallback) {
@@ -1235,7 +1260,13 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
       militaryStrength: settlement.effects?.militaryStrength || 0,
       corruptionLevel: settlement.effects?.corruptionLevel || 0,
     };
-    renderDeltaCard(currentWrap, settlementDisplayEffects, state, "季度结算数值变动");
+
+    const history = Array.isArray(state.storyHistory) ? state.storyHistory : [];
+    const latestHistoryEntry = history.length ? history[history.length - 1] : null;
+    const latestDisplayEffects = latestHistoryEntry?.displayEffects || latestHistoryEntry?.effects || null;
+    const mergedQuarterDisplayEffects = mergeQuarterDisplayEffectsDedup(latestDisplayEffects, settlementDisplayEffects);
+
+    renderDeltaCard(currentWrap, mergedQuarterDisplayEffects, state, "季度结算数值变动");
   }
 
   const quarterPanel = renderQuarterAgendaPanel(container, state, onChoice, options);
