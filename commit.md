@@ -649,3 +649,25 @@
   - 支持免职落地：storySystem applyEffects 新增 appointmentDismissals 处理，免去官职将正确清空对应任命。
 - 自检结果：
   - Root：`cd ChongzhenSim && npm run test -- js/utils/appointmentEffects.test.js js/systems/coreGameplaySystem.test.js server/index.test.js js/api/validators.test.js js/utils/displayStateMetrics.test.js js/utils/effectsProcessor.test.js` 通过（86/86）
+
+#### 6.1.26 5b4206e · fix(edict): normalize appointment effects to canonical ids
+- 全哈希：`5b4206e05b88623d38a5642d631698def9867057`
+- 时间：2026-03-22
+- 分支：my-feature-branch
+- 作者：JINTIAN-LIU
+- 类型：fix
+- 变更文件：
+  - ChongzhenSim/js/main.js
+  - ChongzhenSim/js/systems/turnSystem.js
+  - ChongzhenSim/js/systems/storySystem.js
+  - ChongzhenSim/js/utils/appointmentEffects.js
+  - ChongzhenSim/js/utils/appointmentEffects.test.js
+- 玩法兼容与修复说明：
+  - 修复诏书任命“已有官职但不生效”：新增任免效果标准化流程，将职位名/人名统一映射为职位ID/角色ID后再落地，避免 LLM 返回中文名称时写入无效映射。
+  - turnSystem 在应用效果前统一调用 normalizeAppointmentEffects，确保本轮诏书任免始终按 canonical id 生效。
+  - storySystem 在 applyEffects 链路补充同样的标准化兜底，覆盖回填修正与历史推演分支。
+  - 初始化状态新增 positionsMeta 挂载，保证前端任免标准化逻辑可稳定访问职位元数据。
+- 追加测试：
+  - appointmentEffects.test 新增标准化测试：职位名/人名映射、免职列表映射。
+- 自检结果：
+  - Root：`cd ChongzhenSim && npm run test -- js/utils/appointmentEffects.test.js server/index.test.js js/api/validators.test.js js/utils/displayStateMetrics.test.js js/utils/effectsProcessor.test.js js/systems/coreGameplaySystem.test.js` 通过（88/88）
