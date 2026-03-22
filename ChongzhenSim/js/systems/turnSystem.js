@@ -6,6 +6,7 @@ import { applyProgressionToChoiceEffects, extractCustomPoliciesFromEdict, mergeC
 import { sanitizeStoryEffects } from "../api/validators.js";
 import { loadJSON } from "../dataLoader.js";
 import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot } from "../utils/displayStateMetrics.js";
+import { deriveAppointmentEffectsFromText } from "../utils/appointmentEffects.js";
 
 let positionsMetaCache = null;
 const CHONGZHEN_BASE_YEAR = 1627;
@@ -119,6 +120,7 @@ export function runCurrentTurn(container, options = {}) {
 async function handleChoice(choiceId, choiceText, choiceHint, effects) {
   const state = getState();
   const beforeTurnSnapshot = captureDisplayStateSnapshot(state);
+  const positionsMeta = await getPositionsMeta();
 
   if (choiceId === "custom_edict") {
     const newlyFound = extractCustomPoliciesFromEdict(choiceText || "", state.currentYear, state.currentMonth);
@@ -147,6 +149,29 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     if (est) {
       appliedEffects = est;
     }
+  }
+
+  const derivedAppointmentEffects = deriveAppointmentEffectsFromText(choiceText || "", {
+    positions: positionsMeta?.positions || [],
+    ministers: state.ministers || [],
+    currentAppointments: state.appointments || {},
+  });
+
+  if (derivedAppointmentEffects) {
+    const base = appliedEffects && typeof appliedEffects === "object" ? { ...appliedEffects } : {};
+    if (derivedAppointmentEffects.appointments) {
+      base.appointments = {
+        ...(base.appointments && typeof base.appointments === "object" ? base.appointments : {}),
+        ...derivedAppointmentEffects.appointments,
+      };
+    }
+    if (Array.isArray(derivedAppointmentEffects.appointmentDismissals)) {
+      const currentDismissals = Array.isArray(base.appointmentDismissals) ? base.appointmentDismissals : [];
+      base.appointmentDismissals = Array.from(
+        new Set([...currentDismissals, ...derivedAppointmentEffects.appointmentDismissals])
+      );
+    }
+    appliedEffects = base;
   }
 
   const progressedEffects = appliedEffects ? applyProgressionToChoiceEffects(appliedEffects, state, choiceText || "") : appliedEffects;

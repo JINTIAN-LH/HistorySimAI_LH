@@ -354,6 +354,24 @@ describe('buildUserMessage', () => {
     expect(message).toContain('在世未任');
     expect(message).toContain('已故');
   });
+
+  it('should reflect manual court appointments in next-turn minister role context', () => {
+    const { buildUserMessage } = createTestApp();
+    const body = {
+      state: {
+        currentDay: 5,
+        currentYear: 3,
+        currentMonth: 6,
+        currentPhase: 'morning',
+        nation: { treasury: 500000, grain: 30000 },
+        appointments: { hubu_shangshu: 'wen_tiren' },
+      },
+      lastChoiceId: 'choice_1',
+      lastChoiceText: '整顿户部'
+    };
+    const message = buildUserMessage(body);
+    expect(message).toContain('wen_tiren（温体仁，户部尚书）');
+  });
 });
 
 describe('sanitizeMinisterReplyText', () => {

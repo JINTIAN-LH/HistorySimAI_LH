@@ -217,15 +217,26 @@ function createApp(options = {}) {
     }
 
     const ministers = getCharacters();
-    if (Array.isArray(ministers) && ministers.length) {
-      const ministerList = ministers.map((m) => `${m.id}（${m.name}，${m.role || ""}）`).join("、");
-      base += `\n\n当前大臣 id 与名字对应：${ministerList}`;
-    }
-
     const positions = getPositions();
     const positionById = new Map((Array.isArray(positions) ? positions : []).map((p) => [String(p.id || ""), p]));
     const ministerById = new Map((Array.isArray(ministers) ? ministers : []).map((m) => [String(m.id || ""), m]));
     const appointments = state.appointments && typeof state.appointments === "object" ? state.appointments : {};
+
+    if (Array.isArray(ministers) && ministers.length) {
+      const positionNameByHolder = {};
+      Object.entries(appointments).forEach(([positionId, characterId]) => {
+        if (typeof characterId !== "string" || !characterId.trim()) return;
+        const position = positionById.get(String(positionId || ""));
+        if (!position?.name) return;
+        if (!getAliveStatus(state, characterId)) return;
+        positionNameByHolder[characterId] = position.name;
+      });
+      const ministerList = ministers.map((m) => {
+        const dynamicRole = positionNameByHolder[m.id] || m.role || "未任官职";
+        return `${m.id}（${m.name}，${dynamicRole}）`;
+      }).join("、");
+      base += `\n\n当前大臣 id 与名字对应：${ministerList}`;
+    }
 
     const activeAppointments = Object.entries(appointments)
       .filter(([positionId, characterId]) => {

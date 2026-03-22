@@ -7,7 +7,7 @@ import { startDanmuForEdict, stopDanmu } from "./danmuSystem.js";
 import { computeCustomPolicyQuarterBonus, getPolicyBonusSummary } from "./coreGameplaySystem.js";
 import { AVAILABLE_AVATAR_NAMES, buildNameById } from "../utils/sharedConstants.js";
 import { applyEffects as applyEffectsModule } from "../utils/effectsProcessor.js";
-import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot, hasOutcomeDisplayDelta, mergeOutcomeDisplayDelta, renderOutcomeDisplayCard } from "../utils/displayStateMetrics.js";
+import { DISPLAY_STATE_METRICS, buildOutcomeDisplayDelta, captureDisplayStateSnapshot, hasOutcomeDisplayDelta, mergeOutcomeDisplayDelta, renderOutcomeDisplayCard } from "../utils/displayStateMetrics.js";
 
 let storyCache = { key: null, data: null };
 let lastAppliedKey = null;
@@ -698,6 +698,27 @@ function applyEffects(effects) {
     }
 
     setState({ appointments });
+  }
+
+  if (Array.isArray(effects.appointmentDismissals) && effects.appointmentDismissals.length) {
+    const currentState = getState();
+    const appointments = { ...(currentState.appointments || {}) };
+    const dismissSet = new Set(
+      effects.appointmentDismissals
+        .filter((id) => typeof id === "string" && id.trim())
+        .map((id) => id.trim())
+    );
+
+    if (dismissSet.size) {
+      for (const positionId of dismissSet) {
+        const removedHolder = appointments[positionId];
+        if (removedHolder) {
+          storylineTagsToClose.push(buildMinisterStorylineTag(removedHolder, ministerNameById[removedHolder]));
+          delete appointments[positionId];
+        }
+      }
+      setState({ appointments });
+    }
   }
 
   if (effects.characterDeath && typeof effects.characterDeath === "object") {
