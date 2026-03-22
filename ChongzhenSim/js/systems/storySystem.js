@@ -8,6 +8,7 @@ import { computeCustomPolicyQuarterBonus, getPolicyBonusSummary } from "./coreGa
 import { AVAILABLE_AVATAR_NAMES, buildNameById } from "../utils/sharedConstants.js";
 import { applyEffects as applyEffectsModule } from "../utils/effectsProcessor.js";
 import { DISPLAY_STATE_METRICS, buildOutcomeDisplayDelta, captureDisplayStateSnapshot, hasOutcomeDisplayDelta, mergeOutcomeDisplayDelta, renderOutcomeDisplayCard } from "../utils/displayStateMetrics.js";
+import { normalizeAppointmentEffects } from "../utils/appointmentEffects.js";
 
 let storyCache = { key: null, data: null };
 let lastAppliedKey = null;
@@ -667,18 +668,22 @@ function mergeUniqueStrings(base, extra) {
 function applyEffects(effects) {
   if (!effects) return;
   const s = getState();
+  const normalizedEffects = normalizeAppointmentEffects(effects, {
+    positions: s.positionsMeta?.positions || [],
+    ministers: s.ministers || [],
+  }) || effects;
   const ministers = Array.isArray(s.ministers) ? s.ministers : [];
   const ministerNameById = buildNameById(ministers);
   const storylineTagsToClose = [];
   
-  const { nation: newNation, loyalty: newLoyalty } = applyEffectsModule(s.nation || {}, effects, s.loyalty || {});
+  const { nation: newNation, loyalty: newLoyalty } = applyEffectsModule(s.nation || {}, normalizedEffects, s.loyalty || {});
   setState({ nation: newNation, loyalty: newLoyalty });
 
-  if (effects.appointments && typeof effects.appointments === "object" && !Array.isArray(effects.appointments)) {
+  if (normalizedEffects.appointments && typeof normalizedEffects.appointments === "object" && !Array.isArray(normalizedEffects.appointments)) {
     const currentState = getState();
     const beforeAppointments = { ...(currentState.appointments || {}) };
     const appointments = { ...beforeAppointments };
-    for (const [positionId, characterId] of Object.entries(effects.appointments)) {
+    for (const [positionId, characterId] of Object.entries(normalizedEffects.appointments)) {
       if (typeof positionId !== "string" || typeof characterId !== "string") continue;
       if (currentState.characterStatus?.[characterId]?.isAlive === false) continue;
       for (const [posId, charId] of Object.entries(appointments)) {
@@ -700,11 +705,11 @@ function applyEffects(effects) {
     setState({ appointments });
   }
 
-  if (Array.isArray(effects.appointmentDismissals) && effects.appointmentDismissals.length) {
+  if (Array.isArray(normalizedEffects.appointmentDismissals) && normalizedEffects.appointmentDismissals.length) {
     const currentState = getState();
     const appointments = { ...(currentState.appointments || {}) };
     const dismissSet = new Set(
-      effects.appointmentDismissals
+      normalizedEffects.appointmentDismissals
         .filter((id) => typeof id === "string" && id.trim())
         .map((id) => id.trim())
     );
@@ -721,10 +726,10 @@ function applyEffects(effects) {
     }
   }
 
-  if (effects.characterDeath && typeof effects.characterDeath === "object") {
+  if (normalizedEffects.characterDeath && typeof normalizedEffects.characterDeath === "object") {
     const currentState = getState();
     const characterStatus = { ...(currentState.characterStatus || {}) };
-    for (const [characterId, reason] of Object.entries(effects.characterDeath)) {
+    for (const [characterId, reason] of Object.entries(normalizedEffects.characterDeath)) {
       if (typeof characterId !== "string") continue;
       characterStatus[characterId] = {
         isAlive: false,
@@ -734,7 +739,7 @@ function applyEffects(effects) {
       storylineTagsToClose.push(buildMinisterStorylineTag(characterId, ministerNameById[characterId]));
     }
     const appointments = { ...(currentState.appointments || {}) };
-    for (const characterId of Object.keys(effects.characterDeath)) {
+    for (const characterId of Object.keys(normalizedEffects.characterDeath)) {
       for (const [posId, charId] of Object.entries(appointments)) {
         if (charId === characterId) {
           delete appointments[posId];
@@ -969,12 +974,16 @@ function renderChosenChoice(container, chosenChoice) {
   container.appendChild(choiceWrap);
 }
 
-function renderStoryHistory(container, history, phaseLabels, state, renderId) {
-  const isQuarterSettlementMonth = !!(
-    state.lastQuarterSettlement &&
+function isQuarterSettlementMonth(state) {
+  return !!(
+    state?.lastQuarterSettlement &&
     state.lastQuarterSettlement.year === state.currentYear &&
     state.lastQuarterSettlement.month === state.currentMonth
   );
+}
+
+function renderStoryHistory(container, history, phaseLabels, state, renderId) {
+  const quarterSettlementMonth = isQuarterSettlementMonth(state);
 
   for (let index = 0; index < history.length; index += 1) {
     const entry = history[index];
@@ -1007,7 +1016,7 @@ function renderStoryHistory(container, history, phaseLabels, state, renderId) {
     if (entry.chosenChoice && entry.chosenChoice.text) {
       renderChosenChoice(container, entry.chosenChoice);
       const isLatestHistoryEntry = index === history.length - 1;
-      const shouldSkipLatestDeltaInQuarter = isQuarterSettlementMonth && isLatestHistoryEntry;
+      const shouldSkipLatestDeltaInQuarter = quarterSettlementMonth && isLatestHistoryEntry;
       if (!shouldSkipLatestDeltaInQuarter) {
         renderDeltaCard(container, entry.displayEffects || entry.effects, state, "本轮推演数值变动");
       }
@@ -1403,7 +1412,10 @@ export async function renderStoryTurn(state, container, onChoice, options = {}) 
       const deltaCards = historyContainer.querySelectorAll('.story-delta-card');
       const lastDeltaCard = deltaCards[deltaCards.length - 1];
       if (lastDeltaCard) lastDeltaCard.remove();
-      renderDeltaCard(historyContainer, mergedDisplayEffects, getState(), "本轮推演数值变动");
+      const latestState = getState();
+      if (!isQuarterSettlementMonth(latestState)) {
+        renderDeltaCard(historyContainer, mergedDisplayEffects, latestState, "本轮推演数值变动");
+      }
     }
   }
 

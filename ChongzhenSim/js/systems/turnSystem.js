@@ -6,7 +6,7 @@ import { applyProgressionToChoiceEffects, extractCustomPoliciesFromEdict, mergeC
 import { sanitizeStoryEffects } from "../api/validators.js";
 import { loadJSON } from "../dataLoader.js";
 import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot } from "../utils/displayStateMetrics.js";
-import { deriveAppointmentEffectsFromText } from "../utils/appointmentEffects.js";
+import { deriveAppointmentEffectsFromText, normalizeAppointmentEffects } from "../utils/appointmentEffects.js";
 
 let positionsMetaCache = null;
 const CHONGZHEN_BASE_YEAR = 1627;
@@ -174,7 +174,16 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     appliedEffects = base;
   }
 
-  const progressedEffects = appliedEffects ? applyProgressionToChoiceEffects(appliedEffects, state, choiceText || "") : appliedEffects;
+  const normalizedAppointmentEffects = appliedEffects
+    ? normalizeAppointmentEffects(appliedEffects, {
+      positions: positionsMeta?.positions || state.positionsMeta?.positions || [],
+      ministers: state.ministers || [],
+    })
+    : appliedEffects;
+
+  const progressedEffects = normalizedAppointmentEffects
+    ? applyProgressionToChoiceEffects(normalizedAppointmentEffects, state, choiceText || "")
+    : normalizedAppointmentEffects;
   const effectiveEffects = progressedEffects ? scaleEffectsByExecution(progressedEffects, state) : progressedEffects;
   const guardedEffects = effectiveEffects ? sanitizeStoryEffects(effectiveEffects) : effectiveEffects;
   if (guardedEffects) {

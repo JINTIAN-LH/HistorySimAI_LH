@@ -30,6 +30,87 @@ function buildCurrentPositionByCharacter(currentAppointments) {
   return map;
 }
 
+function normalizeString(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function buildPositionResolvers(positions) {
+  const byId = new Map();
+  const byName = new Map();
+  (Array.isArray(positions) ? positions : []).forEach((position) => {
+    const id = normalizeString(position?.id);
+    const name = normalizeString(position?.name);
+    if (id) byId.set(id, id);
+    if (name) byName.set(name, id || name);
+  });
+
+  return {
+    resolvePositionId(raw) {
+      const text = normalizeString(raw);
+      if (!text) return "";
+      if (byId.has(text)) return byId.get(text);
+      if (byName.has(text)) return byName.get(text);
+      return "";
+    },
+  };
+}
+
+function buildMinisterResolvers(ministers) {
+  const byId = new Map();
+  const byName = new Map();
+  (Array.isArray(ministers) ? ministers : []).forEach((minister) => {
+    const id = normalizeString(minister?.id);
+    const name = normalizeString(minister?.name);
+    if (id) byId.set(id, id);
+    if (name) byName.set(name, id || name);
+  });
+
+  return {
+    resolveMinisterId(raw) {
+      const text = normalizeString(raw);
+      if (!text) return "";
+      if (byId.has(text)) return byId.get(text);
+      if (byName.has(text)) return byName.get(text);
+      return "";
+    },
+  };
+}
+
+export function normalizeAppointmentEffects(effects, context = {}) {
+  if (!effects || typeof effects !== "object" || Array.isArray(effects)) return effects;
+
+  const { resolvePositionId } = buildPositionResolvers(context.positions || []);
+  const { resolveMinisterId } = buildMinisterResolvers(context.ministers || []);
+
+  const next = { ...effects };
+
+  if (next.appointments && typeof next.appointments === "object" && !Array.isArray(next.appointments)) {
+    const normalizedAppointments = {};
+    Object.entries(next.appointments).forEach(([rawPosition, rawMinister]) => {
+      const positionId = resolvePositionId(rawPosition);
+      const ministerId = resolveMinisterId(rawMinister);
+      if (!positionId || !ministerId) return;
+      normalizedAppointments[positionId] = ministerId;
+    });
+    if (Object.keys(normalizedAppointments).length) next.appointments = normalizedAppointments;
+    else delete next.appointments;
+  }
+
+  if (Array.isArray(next.appointmentDismissals)) {
+    const normalizedDismissals = Array.from(
+      new Set(
+        next.appointmentDismissals
+          .map((raw) => resolvePositionId(raw))
+          .filter(Boolean)
+      )
+    );
+    if (normalizedDismissals.length) next.appointmentDismissals = normalizedDismissals;
+    else delete next.appointmentDismissals;
+  }
+
+  return next;
+}
+
 export function deriveAppointmentEffectsFromText(edictText, context = {}) {
   const text = compactText(edictText);
   if (!text) return null;

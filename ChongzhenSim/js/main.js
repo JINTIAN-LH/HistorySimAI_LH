@@ -142,6 +142,7 @@ async function preloadBasicData() {
     ...coreState,
     externalPowers,
     provinceStats,
+    positionsMeta: positionsData || { positions: [], departments: [] },
   });
 }
 

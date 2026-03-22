@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveAppointmentEffectsFromText } from "./appointmentEffects.js";
+import { deriveAppointmentEffectsFromText, normalizeAppointmentEffects } from "./appointmentEffects.js";
 
 const context = {
   positions: [
@@ -34,5 +34,39 @@ describe("deriveAppointmentEffectsFromText", () => {
   it("should return null for non-appointment semantic text", () => {
     const out = deriveAppointmentEffectsFromText("命工部核查仓储账册，不涉任免", context);
     expect(out).toBeNull();
+  });
+});
+
+describe("normalizeAppointmentEffects", () => {
+  it("should normalize appointments from names to canonical ids", () => {
+    const out = normalizeAppointmentEffects(
+      {
+        appointments: {
+          "户部尚书": "温体仁",
+          neige_shoufu: "毕自严",
+        },
+      },
+      context
+    );
+
+    expect(out).toEqual({
+      appointments: {
+        hubu_shangshu: "wen_tiren",
+        neige_shoufu: "bi_ziyan",
+      },
+    });
+  });
+
+  it("should normalize dismissal names to canonical position ids", () => {
+    const out = normalizeAppointmentEffects(
+      {
+        appointmentDismissals: ["户部尚书", "neige_shoufu", "不存在官职"],
+      },
+      context
+    );
+
+    expect(out).toEqual({
+      appointmentDismissals: ["hubu_shangshu", "neige_shoufu"],
+    });
   });
 });
