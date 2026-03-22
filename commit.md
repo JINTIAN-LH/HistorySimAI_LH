@@ -628,3 +628,24 @@
 - 自检结果：
   - Root：`cd ChongzhenSim && npm run test -- js/systems/coreGameplaySystem.test.js js/api/validators.test.js js/utils/effectsProcessor.test.js` 通过（37/37）
   - Root：`cd ChongzhenSim && npm run test -- server/index.test.js js/api/validators.test.js js/utils/displayStateMetrics.test.js js/utils/effectsProcessor.test.js` 通过（80/80）
+
+#### 6.1.25 109230b · fix(edict): repair panel runtime and apply appointment semantics
+- 全哈希：`109230b32aca3c31206c23eff461a303de561c50`
+- 时间：2026-03-22
+- 分支：my-feature-branch
+- 作者：JINTIAN-LIU
+- 类型：fix
+- 变更文件：
+  - ChongzhenSim/js/systems/storySystem.js
+  - ChongzhenSim/js/systems/turnSystem.js
+  - ChongzhenSim/js/utils/appointmentEffects.js
+  - ChongzhenSim/js/utils/appointmentEffects.test.js
+  - ChongzhenSim/server/index.js
+  - ChongzhenSim/server/index.test.js
+- 玩法兼容与修复说明：
+  - 修复季度月面板报错：补齐 DISPLAY_STATE_METRICS 导入，消除 storySystem.js:1001 运行时异常。
+  - 诏书任免语义生效：新增 appointmentEffects 语义解析器，识别“任命/擢升/免去/罢免”等文本并转为结构化任免效果在回合中即时落地。
+  - 诏书对话同步手动任免：buildUserMessage 的大臣官职列表改为按当前 appointments 动态生成，朝堂手动任免将在下一轮诏书推理上下文中准确体现。
+  - 支持免职落地：storySystem applyEffects 新增 appointmentDismissals 处理，免去官职将正确清空对应任命。
+- 自检结果：
+  - Root：`cd ChongzhenSim && npm run test -- js/utils/appointmentEffects.test.js js/systems/coreGameplaySystem.test.js server/index.test.js js/api/validators.test.js js/utils/displayStateMetrics.test.js js/utils/effectsProcessor.test.js` 通过（86/86）
