@@ -671,3 +671,20 @@
   - appointmentEffects.test 新增标准化测试：职位名/人名映射、免职列表映射。
 - 自检结果：
   - Root：`cd ChongzhenSim && npm run test -- js/utils/appointmentEffects.test.js server/index.test.js js/api/validators.test.js js/utils/displayStateMetrics.test.js js/utils/effectsProcessor.test.js js/systems/coreGameplaySystem.test.js` 通过（88/88）
+
+#### 6.1.27 c4ea069 · fix(edict): preserve appointment effects through execution scaling
+- 全哈希：`c4ea0696ba1243a47b96370e03ef98848c2145bf`
+- 时间：2026-03-23
+- 分支：my-feature-branch
+- 作者：JINTIAN-LIU
+- 类型：fix
+- 变更文件：
+  - ChongzhenSim/js/systems/coreGameplaySystem.js
+  - ChongzhenSim/js/systems/coreGameplaySystem.test.js
+- 玩法兼容与修复说明：
+  - 修复诏书任命不生效的关键链路：executionRate 缩放阶段此前会丢弃 appointments/appointmentDismissals/characterDeath 等非数值效果字段，导致任免在缩放后被吞掉。
+  - 现已在 scaleEffectsByExecution 中显式保留任免/处置类字段，并继续仅对数值字段执行缩放，保证诏书任免可稳定落地到朝堂职位状态。
+- 追加测试：
+  - coreGameplaySystem.test 新增用例，验证 execution 缩放会保留 appointments/appointmentDismissals/characterDeath，且仍正常缩放数值字段。
+- 自检结果：
+  - Root：`cd ChongzhenSim && npm run test -- js/systems/coreGameplaySystem.test.js js/utils/appointmentEffects.test.js server/index.test.js js/api/validators.test.js js/utils/displayStateMetrics.test.js js/utils/effectsProcessor.test.js` 通过（90/90）
