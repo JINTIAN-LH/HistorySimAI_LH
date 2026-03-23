@@ -699,3 +699,21 @@
   - 逻辑隔离不变：不推进月份、不触发诏书推演、季度结算、敌对势力处理链。
 - 自检结果：
   - Root：`cd ChongzhenSim && npm run test -- js/systems/kejuSystem.test.js js/state.test.js js/utils/displayStateMetrics.test.js js/systems/coreGameplaySystem.test.js` 通过（38/38）
+
+#### 6.1.30 2072039 · fix(court): align keju button style and clear reserve on reassignment
+- 全哈希：`2072039a23a928721f9d40eb86a914a9a53bb172`
+- 时间：2026-03-23
+- 分支：my-feature-branch
+- 作者：JINTIAN-LIU
+- 类型：fix
+- 变更文件：
+  - ChongzhenSim/js/ui/courtView.js
+  - ChongzhenSim/css/modules/court.css
+  - ChongzhenSim/data/characters.json
+- 玩法兼容与修复说明：
+  - 朝堂顶部“科举”入口按钮样式与“派系”按钮统一，移除专用样式差异，避免视觉不一致。
+  - 科举“调岗推荐”路径下，人物任命成功后会同步从 `keju.talentReserve` 待录用名单移除，避免已上任仍残留在名单中。
+  - 调岗成功后的科举说明文案同步更新，便于确认该条推荐已消耗。
+  - 本次按要求一并纳入 `characters.json` 的当前工作区变更。
+- 自检结果：
+  - Root：`cd ChongzhenSim && npm run test -- js/systems/kejuSystem.test.js js/state.test.js js/systems/coreGameplaySystem.test.js` 通过（33/33）
