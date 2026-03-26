@@ -40,6 +40,17 @@ describe("sanitizeStoryEffects", () => {
     expect(out.loyalty.b).toBe(-2);
     expect(out.hostileDamage.h1).toBe(9);
   });
+
+  it("should drop invalid characterDeath entries with numeric keys", () => {
+    const out = sanitizeStoryEffects({
+      characterDeath: {
+        0: "处死",
+        wen_tiren: "赐死",
+      },
+    });
+
+    expect(out.characterDeath).toEqual({ wen_tiren: "赐死" });
+  });
 });
 
 describe("normalizeStoryPayload", () => {

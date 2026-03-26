@@ -9,6 +9,26 @@ import { loadJSON } from "./dataLoader.js";
 import { getState, setState } from "./state.js";
 import { loadGame, applyLoadedGame } from "./storage.js";
 import { initializeCoreGameplayState } from "./systems/coreGameplaySystem.js";
+import { buildStoryFactsFromState } from "./utils/storyFacts.js";
+
+function normalizeCharacterId(rawId, aliasToCanonical) {
+  if (typeof rawId !== "string") return "";
+  const id = rawId.trim();
+  if (!id) return "";
+  return aliasToCanonical.get(id) || aliasToCanonical.get(id.replace(/_/g, "")) || id;
+}
+
+function normalizeAppointmentsMap(appointments, aliasToCanonical) {
+  const source = appointments && typeof appointments === "object" ? appointments : {};
+  const out = {};
+  Object.entries(source).forEach(([positionId, holderId]) => {
+    if (typeof positionId !== "string" || typeof holderId !== "string") return;
+    const normalizedHolder = normalizeCharacterId(holderId, aliasToCanonical);
+    if (!normalizedHolder) return;
+    out[positionId] = normalizedHolder;
+  });
+  return out;
+}
 
 async function preloadBasicData() {
   const [config, balanceConfig, characters, factionsData, goals, nationInit, positionsData] = await Promise.all([
@@ -21,9 +41,20 @@ async function preloadBasicData() {
     loadJSON("data/positions.json").catch(() => ({ positions: [] })),
   ]);
 
-  const ministers = characters.characters || characters.ministers || [];
+  const allCharacters = characters.characters || characters.ministers || [];
+  const aliasToCanonical = (() => {
+    const map = new Map();
+    allCharacters.forEach((m) => {
+      if (!m || typeof m.id !== "string") return;
+      const id = m.id.trim();
+      if (!id) return;
+      map.set(id, id);
+      map.set(id.replace(/_/g, ""), id);
+    });
+    return map;
+  })();
   const loyalty = {};
-  ministers.forEach((m) => {
+  allCharacters.forEach((m) => {
     loyalty[m.id] = m.loyalty || 50;
   });
 
@@ -118,25 +149,27 @@ async function preloadBasicData() {
     positions.forEach((pos) => {
       if (!pos || typeof pos.id !== "string") return;
       if (typeof pos.defaultHolder === "string" && pos.defaultHolder) {
-        map[pos.id] = pos.defaultHolder;
+        map[pos.id] = normalizeCharacterId(pos.defaultHolder, aliasToCanonical);
       }
     });
     return map;
   })();
 
   const hasExistingAppointments = current.appointments && Object.keys(current.appointments).length > 0;
+  const normalizedExistingAppointments = normalizeAppointmentsMap(current.appointments, aliasToCanonical);
+  const normalizedDefaultAppointments = normalizeAppointmentsMap(defaultAppointments, aliasToCanonical);
 
   setState({
     config: {
       ...(config || {}),
       balance: balanceConfig || {},
     },
-    ministers,
+    allCharacters,
     factions: mergedFactions,
     loyalty: mergedLoyalty,
     goals: Array.isArray(goals) ? goals : [],
     nation,
-    appointments: hasExistingAppointments ? current.appointments : defaultAppointments,
+    appointments: hasExistingAppointments ? normalizedExistingAppointments : normalizedDefaultAppointments,
     characterStatus: current.characterStatus || {},
     storyHistory: current.storyHistory || [],
     ...coreState,
@@ -144,6 +177,8 @@ async function preloadBasicData() {
     provinceStats,
     positionsMeta: positionsData || { positions: [], departments: [] },
   });
+
+  setState({ storyFacts: buildStoryFactsFromState(getState()) });
 }
 
 function shouldShowStartView() {

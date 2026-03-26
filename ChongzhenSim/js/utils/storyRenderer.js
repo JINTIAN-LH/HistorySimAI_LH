@@ -4,6 +4,12 @@ import { AVAILABLE_AVATAR_NAMES, buildNameById, NATION_LABELS, INVERT_COLOR_KEYS
 
 let positionsCache = null;
 
+function getRosterCharacters(state) {
+  return Array.isArray(state?.allCharacters) && state.allCharacters.length
+    ? state.allCharacters
+    : (state.ministers || []);
+}
+
 export async function renderDeltaCard(container, effects, state) {
   if (!effects) return;
   const entries = [];
@@ -13,7 +19,7 @@ export async function renderDeltaCard(container, effects, state) {
     }
   }
   if (effects.loyalty && typeof effects.loyalty === "object") {
-    const ministers = state.ministers || [];
+    const ministers = getRosterCharacters(state);
     const nameById = buildNameById(ministers);
     for (const [id, delta] of Object.entries(effects.loyalty)) {
       if (typeof delta === "number" && delta !== 0) {
@@ -31,7 +37,7 @@ export async function renderDeltaCard(container, effects, state) {
     }
     const positions = positionsCache?.positions || [];
     const positionMap = Object.fromEntries(positions.map((p) => [p.id, p.name]));
-    const ministers = state.ministers || [];
+    const ministers = getRosterCharacters(state);
     const nameById = buildNameById(ministers);
     for (const [positionId, characterId] of Object.entries(effects.appointments)) {
       const posName = positionMap[positionId] || positionId;

@@ -7,6 +7,8 @@ import { sanitizeStoryEffects } from "../api/validators.js";
 import { loadJSON } from "../dataLoader.js";
 import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot } from "../utils/displayStateMetrics.js";
 import { deriveAppointmentEffectsFromText, normalizeAppointmentEffects } from "../utils/appointmentEffects.js";
+import { advanceKejuSession, advanceWujuSession, getKejuStateSnapshot, getWujuStateSnapshot, resetKejuForNextCycle, resetWujuForNextCycle } from "./kejuSystem.js";
+import { buildStoryFactsFromState } from "../utils/storyFacts.js";
 
 let positionsMetaCache = null;
 const CHONGZHEN_BASE_YEAR = 1627;
@@ -25,6 +27,14 @@ function isAliveCharacter(state, id) {
   return state.characterStatus?.[id]?.isAlive !== false;
 }
 
+function getAllCharacters(state) {
+  return Array.isArray(state?.allCharacters) && state.allCharacters.length
+    ? state.allCharacters
+    : Array.isArray(state?.ministers)
+      ? state.ministers
+      : [];
+}
+
 async function remindVacantCourtPositionsYearEnd() {
   const state = getState();
   const meta = await getPositionsMeta();
@@ -32,9 +42,8 @@ async function remindVacantCourtPositionsYearEnd() {
   if (!positions.length) return;
 
   const appointments = { ...(state.appointments || {}) };
-
   const vacancies = positions
-    .filter((p) => p && p.id && !appointments[p.id])
+    .filter((position) => position && position.id && !appointments[position.id])
     .sort((a, b) => {
       const rankA = typeof a.rank === "number" ? a.rank : 99;
       const rankB = typeof b.rank === "number" ? b.rank : 99;
@@ -42,7 +51,7 @@ async function remindVacantCourtPositionsYearEnd() {
     });
 
   if (!vacancies.length) return;
-  const summary = vacancies.slice(0, 5).map((pos) => pos.name || pos.id).join("、");
+  const summary = vacancies.slice(0, 5).map((position) => position.name || position.id).join("、");
 
   setState({
     systemNewsToday: [
@@ -50,8 +59,8 @@ async function remindVacantCourtPositionsYearEnd() {
       {
         title: "岁末吏部提醒补官",
         summary: `当前有 ${vacancies.length} 个官职空缺（如：${summary}${vacancies.length > 5 ? "等" : ""}），请于年终自行任命以稳朝局。`,
-        tag: "重",
-        icon: "📝",
+        tag: "重要",
+        icon: "📑",
       },
     ],
   });
@@ -59,56 +68,119 @@ async function remindVacantCourtPositionsYearEnd() {
 
 function progressNaturalMinisterDeaths(nextYear, nextMonth) {
   const state = getState();
-  const ministers = Array.isArray(state.ministers) ? state.ministers : [];
-  if (!ministers.length) return;
+  const allCharacters = getAllCharacters(state);
+  if (!allCharacters.length) return;
 
   const absoluteYear = CHONGZHEN_BASE_YEAR + (nextYear || 1);
   const characterStatus = { ...(state.characterStatus || {}) };
   const appointments = { ...(state.appointments || {}) };
   const deathList = [];
 
-  ministers.forEach((m) => {
-    if (!m || !m.id) return;
-    if (!isAliveCharacter(state, m.id)) return;
-    if (typeof m.deathYear !== "number") return;
+  allCharacters.forEach((character) => {
+    if (!character?.id) return;
+    if (!isAliveCharacter(state, character.id)) return;
+    if (typeof character.deathYear !== "number") return;
 
-    // 延缓自然死亡：默认在史实卒年后增加 2 年缓冲，再进入缓慢概率触发。
-    const delayedStartYear = m.deathYear + 2;
+    const currentStatus = characterStatus[character.id] || {};
+    const maxDeathYear = typeof character.birthYear === "number"
+      ? Math.min(1700, character.birthYear + 110)
+      : 1700;
+
+    let lifespanPatchYears = Number.isInteger(currentStatus.lifespanPatchYears)
+      ? currentStatus.lifespanPatchYears
+      : null;
+    if (lifespanPatchYears === null) {
+      const baseRoll = 6 + Math.floor(Math.random() * 44); // 6..49
+      const maxAllowedPatch = Math.max(0, maxDeathYear - character.deathYear);
+      lifespanPatchYears = Math.min(baseRoll, maxAllowedPatch);
+      characterStatus[character.id] = {
+        ...currentStatus,
+        lifespanPatchYears,
+      };
+    }
+    const delayedStartYear = Math.min(character.deathYear + lifespanPatchYears, maxDeathYear);
     if (absoluteYear < delayedStartYear) return;
 
     const yearsPast = absoluteYear - delayedStartYear;
     const monthlyChance = Math.min(0.03 + yearsPast * 0.02, 0.25);
     if (Math.random() >= monthlyChance) return;
 
-    const current = characterStatus[m.id] || {};
-    characterStatus[m.id] = {
+    const current = characterStatus[character.id] || {};
+    characterStatus[character.id] = {
       ...current,
+      lifespanPatchYears,
       isAlive: false,
       deathReason: current.deathReason || "寿终病逝",
       deathDay: nextMonth || 1,
       deathYear: nextYear || 1,
     };
-    for (const [posId, holderId] of Object.entries(appointments)) {
-      if (holderId === m.id) {
-        delete appointments[posId];
-      }
+
+    for (const [positionId, holderId] of Object.entries(appointments)) {
+      if (holderId === character.id) delete appointments[positionId];
     }
-    deathList.push(m.name || m.id);
+    deathList.push(character.name || character.id);
   });
 
   if (!deathList.length) return;
 
-  const news = {
-    title: "群臣讣告",
-    summary: `${deathList.join("、")} 因年老病逝，相关官职已出缺。`,
-    tag: "重",
-    icon: "⚱️",
-  };
-
   setState({
     characterStatus,
     appointments,
-    systemNewsToday: [...(state.systemNewsToday || []), news],
+    systemNewsToday: [
+      ...(state.systemNewsToday || []),
+      {
+        title: "群臣讣告",
+        summary: `${deathList.join("、")} 因年老病逝，相关官职已出缺。`,
+        tag: "重要",
+        icon: "⚰️",
+      },
+    ],
+  });
+}
+
+async function progressKejuByMonth(nextYear, nextMonth) {
+  const state = getState();
+  const snapshot = getKejuStateSnapshot(state);
+
+  if (snapshot.stage === "published") {
+    setState({
+      keju: {
+        ...resetKejuForNextCycle(snapshot),
+        talentReserve: [],
+        note: "上一届待录用名单已归档，新一届科举重新筹备。",
+      },
+    });
+    return;
+  }
+
+  setState({
+    keju: advanceKejuSession(snapshot, {
+      state,
+      characters: getAllCharacters(state),
+    }, { enableGeneratedCandidates: true }),
+  });
+}
+
+async function progressWujuByMonth(nextYear, nextMonth) {
+  const state = getState();
+  const snapshot = getWujuStateSnapshot(state);
+
+  if (snapshot.stage === "published") {
+    setState({
+      wuju: {
+        ...resetWujuForNextCycle(snapshot),
+        talentReserve: [],
+        note: "上一届武举待录用名单已归档，新一届武举重新筹备。",
+      },
+    });
+    return;
+  }
+
+  setState({
+    wuju: advanceWujuSession(snapshot, {
+      state,
+      characters: getAllCharacters(state),
+    }),
   });
 }
 
@@ -124,15 +196,14 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
 
   if (choiceId === "custom_edict") {
     const newlyFound = extractCustomPoliciesFromEdict(choiceText || "", state.currentYear, state.currentMonth);
-    console.debug("[custom-policy] extracted", newlyFound.map((item) => item.name));
     if (newlyFound.length) {
       const mergedPolicies = mergeCustomPolicies(state.customPolicies, newlyFound);
       const fresh = mergedPolicies.filter((item) => !(state.customPolicies || []).some((old) => old.id === item.id));
       const policyNews = fresh.map((item) => ({
         title: "新国策设立",
         summary: `自拟诏书已将“${item.name}”纳入国策，季度结算将同步其长期影响。`,
-        tag: "重",
-        icon: "🏛️",
+        tag: "重要",
+        icon: "📜",
       }));
       setState({
         customPolicies: mergedPolicies,
@@ -141,19 +212,17 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     }
   }
 
-  // 如果是自拟诏书，优先根据文本做一个简单的效果预估，让数值立刻能体现变化
   let appliedEffects = effects;
   const isLLMStoryMode = (state.config?.storyMode || "template") === "llm";
   if (choiceId === "custom_edict" && !effects && !isLLMStoryMode) {
-    const est = estimateEffectsFromEdict(choiceText || "");
-    if (est) {
-      appliedEffects = est;
-    }
+    const estimated = estimateEffectsFromEdict(choiceText || "");
+    if (estimated) appliedEffects = estimated;
   }
 
+  const roster = getAllCharacters(state);
   const derivedAppointmentEffects = deriveAppointmentEffectsFromText(choiceText || "", {
     positions: positionsMeta?.positions || [],
-    ministers: state.ministers || [],
+    ministers: roster,
     currentAppointments: state.appointments || {},
   });
 
@@ -167,9 +236,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     }
     if (Array.isArray(derivedAppointmentEffects.appointmentDismissals)) {
       const currentDismissals = Array.isArray(base.appointmentDismissals) ? base.appointmentDismissals : [];
-      base.appointmentDismissals = Array.from(
-        new Set([...currentDismissals, ...derivedAppointmentEffects.appointmentDismissals])
-      );
+      base.appointmentDismissals = Array.from(new Set([...currentDismissals, ...derivedAppointmentEffects.appointmentDismissals]));
     }
     appliedEffects = base;
   }
@@ -177,7 +244,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
   const normalizedAppointmentEffects = appliedEffects
     ? normalizeAppointmentEffects(appliedEffects, {
       positions: positionsMeta?.positions || state.positionsMeta?.positions || [],
-      ministers: state.ministers || [],
+      ministers: roster,
     })
     : appliedEffects;
 
@@ -186,9 +253,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     : normalizedAppointmentEffects;
   const effectiveEffects = progressedEffects ? scaleEffectsByExecution(progressedEffects, state) : progressedEffects;
   const guardedEffects = effectiveEffects ? sanitizeStoryEffects(effectiveEffects) : effectiveEffects;
-  if (guardedEffects) {
-    applyEffects(guardedEffects);
-  }
+  if (guardedEffects) applyEffects(guardedEffects);
 
   pushCurrentTurnToHistory(state, { text: choiceText || "", hint: choiceHint ?? undefined }, guardedEffects);
 
@@ -199,41 +264,38 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     currentStoryTurn: null,
   });
 
-  // 每一轮代表一个月（按 state.currentMonth/Year 走），并且每12个月增长一年
   let nextMonth = (state.currentMonth || 1) + 1;
   let nextYear = state.currentYear || 1;
   if (nextMonth > 12) {
     nextMonth = 1;
     nextYear += 1;
   }
+
   setState({
     currentDay: (state.currentDay || 1) + 1,
     currentMonth: nextMonth,
     currentYear: nextYear,
-    currentPhase: "morning", // 保持单一阶段展示
+    currentPhase: "morning",
   });
 
   const coreTurn = processCoreGameplayTurn(getState(), choiceText || "", guardedEffects, nextYear, nextMonth);
   setState(coreTurn.statePatch);
-  if (coreTurn.consequenceEffects) {
-    applyEffects(coreTurn.consequenceEffects);
-  }
+  if (coreTurn.consequenceEffects) applyEffects(coreTurn.consequenceEffects);
 
   const hostileTurn = resolveHostileForcesAfterChoice(getState(), choiceText || "", guardedEffects || {}, nextYear, nextMonth);
   if (hostileTurn) {
     setState(hostileTurn.statePatch);
-    if (hostileTurn.effectsPatch) {
-      applyEffects(hostileTurn.effectsPatch);
-    }
+    if (hostileTurn.effectsPatch) applyEffects(hostileTurn.effectsPatch);
     if (hostileTurn.prestigeDelta) {
-      const s = getState();
-      setState({ prestige: Math.max(0, Math.min(100, (s.prestige || 0) + hostileTurn.prestigeDelta)) });
+      const current = getState();
+      setState({ prestige: Math.max(0, Math.min(100, (current.prestige || 0) + hostileTurn.prestigeDelta)) });
     }
   }
 
   progressNaturalMinisterDeaths(nextYear, nextMonth);
+  await progressKejuByMonth(nextYear, nextMonth);
+  await progressWujuByMonth(nextYear, nextMonth);
 
-  // 每季度（3 个月）自动加入税收/粮仓收入
   const quarterEffects = computeQuarterlyEffects(getState(), nextMonth);
   if (quarterEffects) {
     applyEffects(quarterEffects);
@@ -241,13 +303,17 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     const customPolicyCount = (stateAfterQuarter.customPolicies || []).length;
     const customBonus = quarterEffects._customPolicyBonus || null;
     if (customPolicyCount > 0 && customBonus) {
-      const bonusNews = {
-        title: "自定义国策生效",
-        summary: `本季 ${customPolicyCount} 条自定义国策参与结算：财政系数 x${customBonus.treasuryRatio.toFixed(2)}，粮储系数 x${customBonus.grainRatio.toFixed(2)}，军务 +${customBonus.militaryDelta}，贪腐 ${customBonus.corruptionDelta}.`,
-        tag: "重",
-        icon: "🏛️",
-      };
-      setState({ systemNewsToday: [...(stateAfterQuarter.systemNewsToday || []), bonusNews] });
+      setState({
+        systemNewsToday: [
+          ...(stateAfterQuarter.systemNewsToday || []),
+          {
+            title: "自定义国策生效",
+            summary: `本季 ${customPolicyCount} 条自定义国策参与结算：财政系数 x${customBonus.treasuryRatio.toFixed(2)}，粮储系数 x${customBonus.grainRatio.toFixed(2)}，军力 +${customBonus.militaryDelta}，贪腐 ${customBonus.corruptionDelta}。`,
+            tag: "重要",
+            icon: "📜",
+          },
+        ],
+      });
     }
     setState({
       lastQuarterSettlement: {
@@ -256,7 +322,6 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
         effects: quarterEffects,
       },
     });
-
   } else {
     setState({ lastQuarterSettlement: null });
   }
@@ -265,9 +330,9 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     await remindVacantCourtPositionsYearEnd();
   }
 
-  // 用本回合全部结算后的最新状态重算季度议题，避免议题落后于实时局势
   const agendaPatch = refreshQuarterAgendaByState(getState());
   setState(agendaPatch);
+  setState({ storyFacts: buildStoryFactsFromState(getState()) });
 
   const stateAfterTurn = getState();
   const displayEffects = buildOutcomeDisplayDelta(beforeTurnSnapshot, captureDisplayStateSnapshot(stateAfterTurn));
@@ -289,6 +354,9 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     if (main) {
       main.innerHTML = "";
       await runCurrentTurn(main);
+      requestAnimationFrame(() => {
+        main.scrollTop = main.scrollHeight;
+      });
     }
   }
 }
@@ -305,11 +373,11 @@ function applyMonthlyIncome() {
   let sumCorruption = 0;
   let count = 0;
 
-  provinces.forEach((p) => {
-    if (!p) return;
-    rawSilver += p.taxSilver || 0;
-    rawGrain += p.taxGrain || 0;
-    sumCorruption += typeof p.corruption === "number" ? p.corruption : 0;
+  provinces.forEach((province) => {
+    if (!province) return;
+    rawSilver += province.taxSilver || 0;
+    rawGrain += province.taxGrain || 0;
+    sumCorruption += typeof province.corruption === "number" ? province.corruption : 0;
     count += 1;
   });
 
@@ -317,11 +385,8 @@ function applyMonthlyIncome() {
   const avgCorruption = sumCorruption / count;
   const effectiveRate = Math.max(0, 1 - avgCorruption / 100);
 
-  const silverIncome = Math.max(0, Math.round(rawSilver * effectiveRate));
-  const grainIncome = Math.max(0, Math.round(rawGrain * effectiveRate));
-
-  nation.treasury = Math.max(0, (nation.treasury || 0) + silverIncome);
-  nation.grain = Math.max(0, (nation.grain || 0) + grainIncome);
+  nation.treasury = Math.max(0, (nation.treasury || 0) + Math.round(rawSilver * effectiveRate));
+  nation.grain = Math.max(0, (nation.grain || 0) + Math.round(rawGrain * effectiveRate));
 
   setState({ nation });
 }

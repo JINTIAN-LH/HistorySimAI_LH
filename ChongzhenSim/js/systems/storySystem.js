@@ -20,10 +20,24 @@ const MINISTER_NAME_COLORS = [
   "#00695c", "#ad1457", "#4527a0",
 ];
 
+function getRosterCharacters(state) {
+  const base = Array.isArray(state?.allCharacters) && state.allCharacters.length
+    ? state.allCharacters
+    : (state?.ministers || []);
+  const generated = Array.isArray(state?.keju?.generatedCandidates) ? state.keju.generatedCandidates : [];
+  if (!generated.length) return base;
+  const merged = new Map();
+  [...base, ...generated].forEach((item) => {
+    if (!item?.id) return;
+    merged.set(item.id, item);
+  });
+  return Array.from(merged.values());
+}
+
 function buildSpeakerMap() {
   const state = getState();
   const map = {};
-  (state.ministers || []).forEach((m) => {
+  getRosterCharacters(state).forEach((m) => {
     if (m && m.name) map[m.name] = m.id;
   });
   return map;
@@ -31,7 +45,7 @@ function buildSpeakerMap() {
 
 function buildMinisterNameToInfo() {
   const state = getState();
-  const ministers = state.ministers || [];
+  const ministers = getRosterCharacters(state);
   const map = {};
   ministers.forEach((m, i) => {
     if (m && m.name) {
@@ -668,11 +682,12 @@ function mergeUniqueStrings(base, extra) {
 function applyEffects(effects) {
   if (!effects) return;
   const s = getState();
+  const roster = getRosterCharacters(s);
   const normalizedEffects = normalizeAppointmentEffects(effects, {
     positions: s.positionsMeta?.positions || [],
-    ministers: s.ministers || [],
+    ministers: roster,
   }) || effects;
-  const ministers = Array.isArray(s.ministers) ? s.ministers : [];
+  const ministers = Array.isArray(roster) ? roster : [];
   const ministerNameById = buildNameById(ministers);
   const storylineTagsToClose = [];
   
@@ -895,11 +910,14 @@ function computeEffectDelta(prevEffects, nextEffects) {
     delta[key] = (delta[key] || 0) + value;
   };
 
-  const allKeys = new Set([...(prevEffects ? Object.keys(prevEffects) : []), ...Object.keys(nextEffects)]);
-  for (const key of allKeys) {
+  // Only reconcile keys explicitly provided by LLM `nextEffects`.
+  // Missing keys mean "no correction", not "reset to 0".
+  const nextKeys = Object.keys(nextEffects);
+  for (const key of nextKeys) {
     if (key === "loyalty") continue;
     const prevVal = prevEffects && typeof prevEffects[key] === "number" ? prevEffects[key] : 0;
     const nextVal = typeof nextEffects[key] === "number" ? nextEffects[key] : 0;
+    if (typeof nextEffects[key] !== "number") continue;
     const diff = nextVal - prevVal;
     if (diff !== 0) addDelta(key, diff);
   }

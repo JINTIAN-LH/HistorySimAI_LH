@@ -34,14 +34,26 @@ function normalizeString(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function canonicalizePositionText(value) {
+  const raw = normalizeString(value);
+  if (!raw) return "";
+  let text = compactText(raw);
+  text = text.replace(/督察院/g, "都察院");
+  text = text.replace(/^都察院/, "");
+  return text;
+}
+
 function buildPositionResolvers(positions) {
   const byId = new Map();
   const byName = new Map();
+  const byCanonicalName = new Map();
   (Array.isArray(positions) ? positions : []).forEach((position) => {
     const id = normalizeString(position?.id);
     const name = normalizeString(position?.name);
     if (id) byId.set(id, id);
     if (name) byName.set(name, id || name);
+    const canonicalName = canonicalizePositionText(name);
+    if (canonicalName) byCanonicalName.set(canonicalName, id || name);
   });
 
   return {
@@ -50,6 +62,22 @@ function buildPositionResolvers(positions) {
       if (!text) return "";
       if (byId.has(text)) return byId.get(text);
       if (byName.has(text)) return byName.get(text);
+      const canonical = canonicalizePositionText(text);
+      if (!canonical) return "";
+      if (byCanonicalName.has(canonical)) return byCanonicalName.get(canonical);
+
+      let bestId = "";
+      let bestLen = 0;
+      for (const [nameKey, id] of byCanonicalName.entries()) {
+        if (!nameKey) continue;
+        if (canonical.includes(nameKey) || nameKey.includes(canonical)) {
+          if (nameKey.length > bestLen) {
+            bestLen = nameKey.length;
+            bestId = id;
+          }
+        }
+      }
+      if (bestId) return bestId;
       return "";
     },
   };

@@ -1,6 +1,5 @@
 import { router } from "../router.js";
 import { runCurrentTurn } from "../systems/turnSystem.js";
-import { takeEdictScrollTop } from "./scrollMemory.js";
 
 const PANELS_WRAP_ID = "edict-panels-wrap";
 let isFirstVisit = true;
@@ -25,8 +24,7 @@ export function registerEdictView() {
     const renderId = container._storyRenderId;
     await runCurrentTurn(container, { renderId });
     requestAnimationFrame(() => {
-      const saved = takeEdictScrollTop();
-      container.scrollTop = saved != null ? saved : container.scrollHeight;
+      container.scrollTop = container.scrollHeight;
     });
     isFirstVisit = false;
   });

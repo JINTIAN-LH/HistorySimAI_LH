@@ -28,6 +28,12 @@ function getMetricDefinition(key) {
   return DISPLAY_STATE_METRICS.find((metric) => metric.key === key) || null;
 }
 
+function getRosterCharacters(state) {
+  return Array.isArray(state?.allCharacters) && state.allCharacters.length
+    ? state.allCharacters
+    : (state?.ministers || []);
+}
+
 export function getDisplayMetricsBySection(section) {
   return DISPLAY_STATE_METRICS.filter((metric) => metric.section === section);
 }
@@ -223,7 +229,7 @@ export function buildOutcomeDisplayEntries(effects, state) {
     });
   });
 
-  const ministers = state?.ministers || [];
+  const ministers = getRosterCharacters(state);
   const nameById = buildNameById(ministers);
   const positions = Array.isArray(state?.positionsMeta?.positions) ? state.positionsMeta.positions : [];
   const positionNameById = Object.fromEntries(
@@ -268,6 +274,7 @@ export function buildOutcomeDisplayEntries(effects, state) {
 
   if (effects.characterDeath && typeof effects.characterDeath === "object") {
     Object.entries(effects.characterDeath).forEach(([characterId, reason]) => {
+      if (!characterId || /^\d+$/.test(characterId)) return;
       entries.push({
         type: "text",
         label: `处置 ${nameById[characterId] || characterId}`,
