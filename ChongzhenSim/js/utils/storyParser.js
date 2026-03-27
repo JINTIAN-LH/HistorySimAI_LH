@@ -3,16 +3,22 @@ export const MINISTER_NAME_COLORS = [
   "#00695c", "#ad1457", "#4527a0",
 ];
 
+function getRosterCharacters(state) {
+  return Array.isArray(state?.allCharacters) && state.allCharacters.length
+    ? state.allCharacters
+    : (state.ministers || []);
+}
+
 export function buildSpeakerMap(state) {
   const map = {};
-  (state.ministers || []).forEach((m) => {
+  getRosterCharacters(state).forEach((m) => {
     if (m && m.name) map[m.name] = m.id;
   });
   return map;
 }
 
 export function buildMinisterNameToInfo(state) {
-  const ministers = state.ministers || [];
+  const ministers = getRosterCharacters(state);
   const map = {};
   ministers.forEach((m, i) => {
     if (m && m.name) {

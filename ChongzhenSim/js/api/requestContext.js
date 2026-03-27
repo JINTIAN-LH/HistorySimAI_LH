@@ -1,4 +1,5 @@
 import { getPolicyCatalog } from "../systems/coreGameplaySystem.js";
+import { buildStoryFactsFromState } from "../utils/storyFacts.js";
 
 const POLICY_TITLE_BY_ID = new Map(
   getPolicyCatalog().map((item) => [String(item.id || ""), String(item.title || item.id || "")])
@@ -42,6 +43,7 @@ export function buildSharedContextFromState(state, { compact = false } = {}) {
   setOptionalArray(ctx, "customPolicies", state.customPolicies, { requireNonEmpty: compact });
   setOptionalArray(ctx, "hostileForces", state.hostileForces, { requireNonEmpty: compact });
   setOptionalArray(ctx, "closedStorylines", state.closedStorylines, { requireNonEmpty: compact });
+  setOptionalObject(ctx, "storyFacts", state.storyFacts || buildStoryFactsFromState(state));
 
   setOptionalObject(ctx, "playerAbilities", state.playerAbilities);
   setOptionalArray(ctx, "unlockedPolicies", state.unlockedPolicies, { requireNonEmpty: compact });
