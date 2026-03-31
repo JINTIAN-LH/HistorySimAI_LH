@@ -69,3 +69,49 @@ body {
     padding: 8px 9px 10px;
   }
 }
+
+/* PC：诏书 / 朝堂 / 国家 三栏同显 */
+@media (min-width: 1200px) {
+  #app {
+    max-width: min(100%, 1600px);
+    width: 100%;
+  }
+
+  #main-view.main-view--desktop {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px 12px 14px;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .main-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid var(--color-border-soft);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.35);
+    overflow: hidden;
+  }
+
+  .main-col-header {
+    flex: 0 0 auto;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-accent);
+    border-bottom: 1px solid var(--color-border-soft);
+    background: rgba(250, 246, 239, 0.9);
+  }
+
+  .main-col-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 10px 12px;
+  }
+}

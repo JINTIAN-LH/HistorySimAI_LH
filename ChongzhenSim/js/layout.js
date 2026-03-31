@@ -54,8 +54,8 @@ export function initLayout() {
   if (bottombar) {
     bottombar.innerHTML = "";
     const tabs = [
-      { id: "edict", label: "诏书", icon: "📜" },
       { id: "court", label: "朝堂", icon: "🏛️" },
+      { id: "edict", label: "诏书", icon: "📜" },
       { id: "nation", label: "国家", icon: "🗺️" },
     ];
 

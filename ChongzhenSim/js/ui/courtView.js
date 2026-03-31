@@ -11,6 +11,14 @@ import { applyEffects as applyEffectsModule } from "../utils/effectsProcessor.js
 import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot, hasOutcomeDisplayDelta, renderOutcomeDisplayCard } from "../utils/displayStateMetrics.js";
 import { KEJU_STAGE_LABELS, advanceKejuSession, appendTalentReserve, applyKejuAppointLoyaltyBonus, getKejuStateSnapshot, getSeasonLabelByMonth, mergeKejuState } from "../systems/kejuSystem.js";
 
+function getCourtMountEl() {
+  return (
+    document.getElementById("main-col-court-body") ||
+    document.getElementById("main-view") ||
+    document.getElementById("view-container")
+  );
+}
+
 let currentMinisterChatId = null;
 let tagsConfigCache = null;
 let factionsCache = null;
@@ -408,7 +416,7 @@ async function requestAppoint(positionId, characterId) {
 }
 
 function rerenderCourtMainView() {
-  const container = document.getElementById("main-view") || document.getElementById("view-container");
+  const container = getCourtMountEl();
   if (!container) return;
   container.innerHTML = "";
   renderCourtView(container);
@@ -616,7 +624,7 @@ async function showAppointmentDialogByPosition(positionId) {
 
       setState({ appointments: newAppointments });
       overlay.remove();
-      const container = document.getElementById("main-view") || document.getElementById("view-container");
+      const container = getCourtMountEl();
       if (container) {
         container.innerHTML = "";
         renderCourtView(container);
@@ -823,7 +831,7 @@ async function showAppointmentDialogByMinister(ministerId) {
 
       setState(patch);
       overlay.remove();
-      const container = document.getElementById("main-view") || document.getElementById("view-container");
+      const container = getCourtMountEl();
       if (container) {
         container.innerHTML = "";
         renderCourtView(container);
@@ -1182,7 +1190,7 @@ async function showPositionSelectDialog(minister, state) {
 
       setState({ appointments: newAppointments });
       overlay.remove();
-      const container = document.getElementById("view-container");
+      const container = getCourtMountEl();
       if (container) {
         container.innerHTML = "";
         renderCourtView(container);
@@ -2331,7 +2339,7 @@ async function showAppointmentDialogAsync(position, state) {
 
       setState({ appointments: newAppointments });
       overlay.remove();
-      const container = document.getElementById("view-container");
+      const container = getCourtMountEl();
       if (container) {
         container.innerHTML = "";
         renderCourtView(container);

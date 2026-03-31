@@ -2,6 +2,7 @@ import { getState, setState } from "../state.js";
 import { renderStoryTurn, pushCurrentTurnToHistory, applyEffects, computeQuarterlyEffects, estimateEffectsFromEdict } from "./storySystem.js";
 import { autoSaveIfEnabled } from "../storage.js";
 import { updateTopbarByState } from "../layout.js";
+import { router } from "../router.js";
 import { applyProgressionToChoiceEffects, extractCustomPoliciesFromEdict, mergeCustomPolicies, processCoreGameplayTurn, refreshQuarterAgendaByState, resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
 import { sanitizeStoryEffects } from "../api/validators.js";
 import { loadJSON } from "../dataLoader.js";
@@ -285,10 +286,17 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
   updateTopbarByState(getState());
 
   if (typeof window !== "undefined") {
-    const main = document.getElementById("main-view");
-    if (main) {
-      main.innerHTML = "";
-      await runCurrentTurn(main);
+    const edictBody = document.getElementById("main-col-edict-body");
+    if (edictBody) {
+      edictBody.innerHTML = "";
+      await runCurrentTurn(edictBody);
+      await router.refreshDesktopCourtAndNation();
+    } else {
+      const main = document.getElementById("main-view");
+      if (main) {
+        main.innerHTML = "";
+        await runCurrentTurn(main);
+      }
     }
   }
 }
