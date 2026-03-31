@@ -8,8 +8,10 @@ import { getApiBase } from "../api/httpClient.js";
 import { AVAILABLE_AVATAR_NAMES, buildNameById } from "../utils/sharedConstants.js";
 import { showError, showSuccess } from "../utils/toast.js";
 import { applyEffects as applyEffectsModule } from "../utils/effectsProcessor.js";
+import { normalizeAppointmentEffects } from "../utils/appointmentEffects.js";
 import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot, hasOutcomeDisplayDelta, renderOutcomeDisplayCard } from "../utils/displayStateMetrics.js";
-import { KEJU_STAGE_LABELS, advanceKejuSession, appendTalentReserve, applyKejuAppointLoyaltyBonus, getKejuStateSnapshot, getSeasonLabelByMonth, mergeKejuState } from "../systems/kejuSystem.js";
+import { KEJU_STAGE_LABELS, WUJU_STAGE_LABELS, advanceKejuSession, advanceWujuSession, appendTalentReserve, appendWujuTalentReserve, applyKejuAppointLoyaltyBonus, getKejuStateSnapshot, getSeasonLabelByMonth, getWujuStateSnapshot, mergeKejuState, mergeWujuState } from "../systems/kejuSystem.js";
+import { deriveCharacterArchetypes } from "../utils/characterArchetype.js";
 
 function getCourtMountEl() {
   return (
@@ -53,6 +55,107 @@ function patchKejuState(partial) {
   setState({
     keju: mergeKejuState(state, partial),
   });
+}
+
+function patchWujuState(partial) {
+  const state = getState();
+  setState({
+    wuju: mergeWujuState(state, partial),
+  });
+}
+
+function getAllCharactersFromState(state) {
+  const base = Array.isArray(state?.allCharacters) && state.allCharacters.length
+    ? state.allCharacters
+    : Array.isArray(state?.ministers)
+      ? state.ministers
+      : [];
+  const generatedKeju = Array.isArray(state?.keju?.generatedCandidates) ? state.keju.generatedCandidates : [];
+  const generatedWuju = Array.isArray(state?.wuju?.generatedCandidates) ? state.wuju.generatedCandidates : [];
+  const merged = new Map();
+  [...base, ...generatedKeju, ...generatedWuju].forEach((character) => {
+    if (!character?.id) return;
+    merged.set(character.id, character);
+  });
+  return Array.from(merged.values());
+}
+
+function getActiveAppointmentHolderCount(state) {
+  const appointments = state?.appointments && typeof state.appointments === "object"
+    ? state.appointments
+    : {};
+  const allCharacters = getAllCharactersFromState(state);
+  const validIds = new Set(allCharacters.map((c) => c?.id).filter((id) => typeof id === "string" && id));
+  const aliveStatus = state?.characterStatus || {};
+  const holders = new Set();
+  Object.values(appointments).forEach((id) => {
+    if (typeof id !== "string" || !id) return;
+    if (!validIds.has(id)) return;
+    if (aliveStatus[id]?.isAlive === false) return;
+    holders.add(id);
+  });
+  return holders.size;
+}
+
+function buildAppointmentPatch(state, positionId, characterId) {
+  const nextAppointments = { ...(state.appointments || {}) };
+  for (const [posId, holderId] of Object.entries(nextAppointments)) {
+    if (holderId === characterId) {
+      delete nextAppointments[posId];
+    }
+  }
+  nextAppointments[positionId] = characterId;
+  return { appointments: nextAppointments };
+}
+
+function promoteGeneratedCandidate(state, characterId) {
+  const generatedKeju = Array.isArray(state?.keju?.generatedCandidates) ? state.keju.generatedCandidates : [];
+  const generatedWuju = Array.isArray(state?.wuju?.generatedCandidates) ? state.wuju.generatedCandidates : [];
+  const candidate = [...generatedKeju, ...generatedWuju].find((item) => item?.id === characterId);
+  if (!candidate) return {};
+  const allCharacters = Array.isArray(state?.allCharacters) ? state.allCharacters : [];
+  if (allCharacters.some((item) => item?.id === characterId)) return {};
+  return {
+    allCharacters: [...allCharacters, { ...candidate }],
+  };
+}
+
+function getCharacterLoyaltyValue(state, character) {
+  const loyaltyMap = state?.loyalty || {};
+  if (!character?.id) return 0;
+  const value = loyaltyMap[character.id];
+  if (typeof value === "number") return value;
+  return Number(character.loyalty || 30);
+}
+
+function filterAndSortCharactersForAppointment(characters, state, filterText = "", traitFilter = "all", sortMode = "default") {
+  const keyword = String(filterText || "").trim();
+  let list = Array.isArray(characters) ? characters.slice() : [];
+  if (keyword) {
+    list = list.filter((item) => {
+      const name = String(item?.name || "");
+      const courtesyName = String(item?.courtesyName || "");
+      return name.includes(keyword) || courtesyName.includes(keyword);
+    });
+  }
+
+  if (traitFilter !== "all") {
+    list = list.filter((item) => {
+      const archetypes = deriveCharacterArchetypes(item);
+      if (traitFilter === "scholar") return archetypes.has("scholar");
+      if (traitFilter === "warrior") return archetypes.has("warrior");
+      if (traitFilter === "both") return archetypes.has("scholar") && archetypes.has("warrior");
+      return true;
+    });
+  }
+
+  if (sortMode === "loyalty_desc") {
+    list.sort((a, b) => getCharacterLoyaltyValue(state, b) - getCharacterLoyaltyValue(state, a));
+  } else if (sortMode === "loyalty_asc") {
+    list.sort((a, b) => getCharacterLoyaltyValue(state, a) - getCharacterLoyaltyValue(state, b));
+  }
+
+  return list;
 }
 
 async function showKejuPanel() {
@@ -135,11 +238,10 @@ async function showKejuPanel() {
   nextBtn.addEventListener("click", async () => {
     const latestState = getState();
     const latestKeju = getKejuStateSnapshot(latestState);
-    const charactersData = latestKeju.stage === "idle" ? await loadJSON("data/characters.json") : { characters: [] };
     const nextKeju = advanceKejuSession(
       latestKeju,
-      { state: latestState, characters: charactersData?.characters || [] },
-      { formatName: getDisplayName, isAliveCharacter }
+      { state: latestState, characters: getAllCharactersFromState(latestState) },
+      { formatName: getDisplayName, isAliveCharacter, enableGeneratedCandidates: true }
     );
     patchKejuState(nextKeju);
     if (latestKeju.stage === "idle") {
@@ -163,6 +265,7 @@ async function showKejuPanel() {
       stage: "idle",
       candidatePool: [],
       publishedList: [],
+      generatedCandidates: [],
       bureauMomentum: 52,
       reserveQuality: 0,
       talentReserve: [],
@@ -285,16 +388,13 @@ async function showKejuPanel() {
             showKejuPanel();
             return;
           }
-          const appointments = { ...(latestState.appointments || {}) };
-          for (const [posId, charId] of Object.entries(appointments)) {
-            if (charId === item.candidateId) delete appointments[posId];
-          }
-          appointments[item.positionId] = item.candidateId;
+          const appointmentPatch = buildAppointmentPatch(latestState, item.positionId, item.candidateId);
           const loyaltyWithBonus = applyKejuAppointLoyaltyBonus(latestState.loyalty || {}, item.candidateId, 6);
           const updatedReserve = reserveList.filter((entry) => entry.candidateId !== item.candidateId);
           const currentSnapshot = getKejuStateSnapshot(getState());
           setState({
-            appointments,
+            ...appointmentPatch,
+            ...promoteGeneratedCandidate(latestState, item.candidateId),
             loyalty: loyaltyWithBonus,
             keju: mergeKejuState(getState(), {
               talentReserve: updatedReserve,
@@ -365,6 +465,209 @@ async function showKejuPanel() {
   app.appendChild(overlay);
 }
 
+async function showWujuPanel() {
+  const app = document.getElementById("app");
+  if (!app) return;
+
+  const currentState = getState();
+  const wujuState = getWujuStateSnapshot(currentState);
+
+  let overlay = document.getElementById("wuju-panel-overlay");
+  if (overlay) overlay.remove();
+  overlay = document.createElement("div");
+  overlay.id = "wuju-panel-overlay";
+  overlay.className = "relationship-panel-overlay";
+
+  const card = document.createElement("div");
+  card.className = "relationship-panel-card keju-panel-card";
+
+  const header = document.createElement("div");
+  header.className = "relationship-panel-card__header";
+  const title = document.createElement("div");
+  title.className = "relationship-panel-card__title";
+  title.textContent = "武举";
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "relationship-panel-card__close";
+  closeBtn.textContent = "×";
+  closeBtn.addEventListener("click", () => overlay.remove());
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+
+  const body = document.createElement("div");
+  body.className = "relationship-panel-card__body keju-panel-body";
+
+  const stageLabel = WUJU_STAGE_LABELS[wujuState.stage] || WUJU_STAGE_LABELS.idle;
+  const summary = document.createElement("div");
+  summary.className = "keju-summary";
+  summary.innerHTML = `
+    <div class="keju-summary__meta">当前阶段：${stageLabel}</div>
+    <div class="keju-summary__meta">候选武人：${wujuState.candidatePool.length} 人</div>
+    <div class="keju-summary__meta">武举声望：${wujuState.bureauMomentum}</div>
+    <div class="keju-summary__meta">人才储备质量：${wujuState.reserveQuality}</div>
+    <div class="keju-summary__note">武举仅进行会试，放榜只取一名武状元，并推荐至内廷/地方/军事官缺。</div>
+  `;
+
+  const actions = document.createElement("div");
+  actions.className = "keju-actions";
+  const nextBtn = document.createElement("button");
+  nextBtn.type = "button";
+  nextBtn.className = "keju-btn keju-btn--primary";
+  nextBtn.textContent = wujuState.stage === "idle" ? "开启武会试" : (wujuState.stage === "huishi" ? "武举放榜" : "本届已放榜");
+  nextBtn.disabled = wujuState.stage === "published";
+  nextBtn.addEventListener("click", () => {
+    const latestState = getState();
+    const latestWuju = getWujuStateSnapshot(latestState);
+    const nextWuju = advanceWujuSession(
+      latestWuju,
+      { state: latestState, characters: getAllCharactersFromState(latestState) },
+      { formatName: getDisplayName, isAliveCharacter, enableGeneratedCandidates: true }
+    );
+    patchWujuState(nextWuju);
+    showWujuPanel();
+  });
+  actions.appendChild(nextBtn);
+
+  if (wujuState.stage === "published" && wujuState.publishedList.length) {
+    const reserveBtn = document.createElement("button");
+    reserveBtn.type = "button";
+    reserveBtn.className = "keju-btn keju-btn--ghost";
+    reserveBtn.textContent = "加入待录用名单";
+    reserveBtn.addEventListener("click", async () => {
+      if (!positionsCache) {
+        try {
+          positionsCache = await loadJSON("data/positions.json");
+        } catch (_e) {
+          positionsCache = { positions: [], departments: [] };
+        }
+      }
+      const latestState = getState();
+      const latestWuju = getWujuStateSnapshot(latestState);
+      patchWujuState({
+        talentReserve: appendWujuTalentReserve(
+          latestWuju,
+          positionsCache,
+          latestState.appointments || {},
+          latestState.currentYear || 1,
+          latestState.currentMonth || 1
+        ),
+        note: "武状元已加入待录用名单（仅记录，不自动任命）。",
+      });
+      showWujuPanel();
+    });
+    actions.appendChild(reserveBtn);
+  }
+
+  const list = document.createElement("div");
+  list.className = "keju-candidate-list";
+  if (!wujuState.candidatePool.length) {
+    const empty = document.createElement("div");
+    empty.className = "keju-empty";
+    empty.textContent = "尚未开武举。";
+    list.appendChild(empty);
+  } else {
+    wujuState.candidatePool.forEach((candidate, idx) => {
+      const row = document.createElement("div");
+      row.className = "keju-candidate-row";
+      const rankLabel = wujuState.stage === "published" && idx === 0 ? "武状元" : `第 ${idx + 1} 名`;
+      row.innerHTML = `
+        <div class="keju-candidate-row__rank">${rankLabel}</div>
+        <div class="keju-candidate-row__main">
+          <div class="keju-candidate-row__name">${candidate.name}</div>
+          <div class="keju-candidate-row__meta">${candidate.factionLabel || "无党籍"} · 武力 ${candidate.force} · 统率 ${candidate.command} · 军纪 ${candidate.discipline} · 总评 ${candidate.total}</div>
+        </div>
+      `;
+      list.appendChild(row);
+    });
+  }
+
+  const reserve = document.createElement("div");
+  reserve.className = "keju-reserve";
+  const reserveList = Array.isArray(wujuState.talentReserve) ? wujuState.talentReserve : [];
+  if (!reserveList.length) {
+    reserve.textContent = "待录用名单：暂无";
+  } else {
+    const reserveTitle = document.createElement("div");
+    reserveTitle.className = "keju-reserve__title";
+    reserveTitle.textContent = "待录用名单";
+    reserve.appendChild(reserveTitle);
+    reserveList.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "keju-reserve-row";
+      const meta = document.createElement("div");
+      meta.className = "keju-reserve-row__meta";
+      meta.textContent = `${item.candidateName} → ${item.positionName}`;
+      const actionWrap = document.createElement("div");
+      actionWrap.className = "keju-reserve-row__actions";
+      const appointBtn = document.createElement("button");
+      appointBtn.type = "button";
+      appointBtn.className = "keju-btn keju-btn--ghost keju-reserve-row__appoint";
+      appointBtn.textContent = item.positionId ? "任命" : "待定";
+      if (!item.positionId || (currentState.appointments || {})[item.positionId]) appointBtn.disabled = true;
+      appointBtn.addEventListener("click", async () => {
+        if (!item.positionId) return;
+        const latestState = getState();
+        if ((latestState.appointments || {})[item.positionId]) {
+          showError("该官职已有人在任，请重新生成名单。", 2200);
+          showWujuPanel();
+          return;
+        }
+        const result = await requestAppoint(item.positionId, item.candidateId);
+        if (result?.success === false) {
+          showError(`任命失败: ${result.error || "未知错误"}`);
+          return;
+        }
+        const updatedReserve = reserveList.filter((entry) => entry.candidateId !== item.candidateId);
+        const snapshot = getWujuStateSnapshot(getState());
+        setState({
+          ...buildAppointmentPatch(latestState, item.positionId, item.candidateId),
+          ...promoteGeneratedCandidate(latestState, item.candidateId),
+          loyalty: applyKejuAppointLoyaltyBonus(latestState.loyalty || {}, item.candidateId, 8),
+          wuju: mergeWujuState(getState(), {
+            talentReserve: updatedReserve,
+            bureauMomentum: Math.min(100, (snapshot.bureauMomentum || 0) + 1),
+            note: `${item.candidateName} 已授 ${item.positionName}。`,
+          }),
+        });
+        showWujuPanel();
+        rerenderCourtMainView();
+      });
+      actionWrap.appendChild(appointBtn);
+      row.appendChild(meta);
+      row.appendChild(actionWrap);
+      reserve.appendChild(row);
+    });
+  }
+
+  const note = document.createElement("div");
+  note.className = "keju-note";
+  note.textContent = wujuState.note || "";
+
+  body.appendChild(summary);
+  body.appendChild(actions);
+  body.appendChild(list);
+  body.appendChild(reserve);
+  body.appendChild(note);
+
+  const footer = document.createElement("div");
+  footer.className = "relationship-panel-card__footer";
+  const closeBtnBottom = document.createElement("button");
+  closeBtnBottom.type = "button";
+  closeBtnBottom.className = "relationship-panel-card__footer-close";
+  closeBtnBottom.textContent = "关闭";
+  closeBtnBottom.addEventListener("click", () => overlay.remove());
+  footer.appendChild(closeBtnBottom);
+
+  card.appendChild(header);
+  card.appendChild(body);
+  card.appendChild(footer);
+  overlay.appendChild(card);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) overlay.remove();
+  });
+  app.appendChild(overlay);
+}
+
 function isAliveCharacter(state, characterId) {
   return state?.characterStatus?.[characterId]?.isAlive !== false;
 }
@@ -397,6 +700,10 @@ async function requestAppoint(positionId, characterId) {
       state: {
         appointments: state.appointments || {},
         characterStatus: state.characterStatus || {},
+        extraCharacters: [
+          ...((state.keju?.generatedCandidates || []).map((item) => ({ ...item }))),
+          ...((state.wuju?.generatedCandidates || []).map((item) => ({ ...item }))),
+        ],
       },
     }),
   });
@@ -445,8 +752,7 @@ async function showAppointmentDialogByPosition(positionId) {
   if (!app) return;
 
   const state = getState();
-  const charactersData = await loadJSON("data/characters.json");
-  const allCharacters = charactersData?.characters || [];
+  const allCharacters = getAllCharactersFromState(state);
   const positionsData = await loadJSON("data/positions.json");
   const positions = positionsData?.positions || [];
   const position = positions.find(p => p.id === positionId);
@@ -506,6 +812,38 @@ async function showAppointmentDialogByPosition(positionId) {
   searchInput.className = "appointment-search-input";
   searchInput.placeholder = "搜索角色姓名或字号...";
 
+  const traitSelect2 = document.createElement("select");
+  traitSelect2.className = "appointment-search-input";
+  traitSelect2.innerHTML = `
+    <option value="all">全部类型</option>
+    <option value="scholar">文人</option>
+    <option value="warrior">武人</option>
+    <option value="both">文武兼备</option>
+  `;
+  const sortSelect2 = document.createElement("select");
+  sortSelect2.className = "appointment-search-input";
+  sortSelect2.innerHTML = `
+    <option value="default">默认排序</option>
+    <option value="loyalty_desc">忠诚度从高到低</option>
+    <option value="loyalty_asc">忠诚度从低到高</option>
+  `;
+
+  const traitSelect = document.createElement("select");
+  traitSelect.className = "appointment-search-input";
+  traitSelect.innerHTML = `
+    <option value="all">全部类型</option>
+    <option value="scholar">文人</option>
+    <option value="warrior">武人</option>
+    <option value="both">文武兼备</option>
+  `;
+  const sortSelect = document.createElement("select");
+  sortSelect.className = "appointment-search-input";
+  sortSelect.innerHTML = `
+    <option value="default">默认排序</option>
+    <option value="loyalty_desc">忠诚度从高到低</option>
+    <option value="loyalty_asc">忠诚度从低到高</option>
+  `;
+
   const characterList = document.createElement("div");
   characterList.className = "appointment-character-list";
 
@@ -540,9 +878,13 @@ async function showAppointmentDialogByPosition(positionId) {
 
   const renderCharacters = (filter = "") => {
     characterList.innerHTML = "";
-    const filtered = filter 
-      ? availableCharacters.filter(c => c.name.includes(filter) || (c.courtesyName && c.courtesyName.includes(filter)))
-      : availableCharacters;
+    const filtered = filterAndSortCharactersForAppointment(
+      availableCharacters,
+      state,
+      filter,
+      traitSelect.value || "all",
+      sortSelect.value || "default"
+    );
 
     if (filtered.length === 0) {
       const empty = document.createElement("div");
@@ -597,6 +939,12 @@ async function showAppointmentDialogByPosition(positionId) {
   searchInput.addEventListener("input", (e) => {
     renderCharacters(e.target.value);
   });
+  traitSelect.addEventListener("change", () => {
+    renderCharacters(searchInput.value);
+  });
+  sortSelect.addEventListener("change", () => {
+    renderCharacters(searchInput.value);
+  });
 
   confirmBtn.addEventListener("click", async () => {
     if (!selectedCharacter || appointing) return;
@@ -613,16 +961,10 @@ async function showAppointmentDialogByPosition(positionId) {
       }
 
       const s = getState();
-      const currentAppointments = s.appointments || {};
-      const newAppointments = { ...currentAppointments };
-      for (const [posId, charId] of Object.entries(newAppointments)) {
-        if (charId === selectedCharacter.id) {
-          delete newAppointments[posId];
-        }
-      }
-      newAppointments[positionId] = selectedCharacter.id;
-
-      setState({ appointments: newAppointments });
+      setState({
+        ...buildAppointmentPatch(s, positionId, selectedCharacter.id),
+        ...promoteGeneratedCandidate(s, selectedCharacter.id),
+      });
       overlay.remove();
       const container = getCourtMountEl();
       if (container) {
@@ -643,6 +985,8 @@ async function showAppointmentDialogByPosition(positionId) {
   body.appendChild(positionInfo);
   body.appendChild(selectedHint);
   body.appendChild(searchInput);
+  body.appendChild(traitSelect);
+  body.appendChild(sortSelect);
   body.appendChild(characterList);
 
   const footer = document.createElement("div");
@@ -674,8 +1018,8 @@ async function showAppointmentDialogByMinister(ministerId) {
   if (!app) return;
 
   const state = getState();
-  const ministers = state.ministers || [];
-  const minister = ministers.find(m => m.id === ministerId);
+  const allCharacters = getAllCharactersFromState(state);
+  const minister = allCharacters.find(m => m.id === ministerId);
   if (!minister) return;
   if (!isAliveCharacter(state, ministerId)) {
     showError("该人物已故，无法授予官职。");
@@ -729,9 +1073,7 @@ async function showAppointmentDialogByMinister(ministerId) {
   confirmBtn.textContent = "确认调整";
   confirmBtn.disabled = true;
 
-  const charactersData = await loadJSON("data/characters.json");
-  const characters = charactersData?.characters || [];
-  const characterMap = new Map(characters.map(c => [c.id, c]));
+  const characterMap = new Map(allCharacters.map(c => [c.id, c]));
 
   const updateConfirmState = () => {
     confirmBtn.disabled = !selectedPosition || appointing;
@@ -810,18 +1152,13 @@ async function showAppointmentDialogByMinister(ministerId) {
       }
 
       const s = getState();
-      const currentAppointments = s.appointments || {};
-      const newAppointments = { ...currentAppointments };
-      for (const [posId, charId] of Object.entries(newAppointments)) {
-        if (charId === ministerId) {
-          delete newAppointments[posId];
-        }
-      }
-      newAppointments[selectedPosition.id] = ministerId;
-
+      const appointmentPatch = buildAppointmentPatch(s, selectedPosition.id, ministerId);
       const kejuSnapshot = getKejuStateSnapshot(s);
       const updatedReserve = (kejuSnapshot.talentReserve || []).filter((entry) => entry.candidateId !== ministerId);
-      const patch = { appointments: newAppointments };
+      const patch = {
+        ...appointmentPatch,
+        ...promoteGeneratedCandidate(s, ministerId),
+      };
       if (updatedReserve.length !== (kejuSnapshot.talentReserve || []).length) {
         patch.keju = mergeKejuState(s, {
           talentReserve: updatedReserve,
@@ -891,12 +1228,28 @@ function applyLocalAppointmentState(positionId, characterId) {
 function applyLocalAppointmentEffects(appointmentsMap) {
   if (!appointmentsMap || typeof appointmentsMap !== "object" || Array.isArray(appointmentsMap)) return false;
   const state = getState();
+  const roster = getAllCharactersFromState(state);
+  const normalized = normalizeAppointmentEffects(
+    { appointments: appointmentsMap },
+    {
+      positions: state.positionsMeta?.positions || positionsCache?.positions || [],
+      ministers: roster,
+    }
+  );
+  const normalizedAppointments = normalized?.appointments && typeof normalized.appointments === "object"
+    ? normalized.appointments
+    : {};
+  const validCharacterIds = new Set(
+    roster.map((item) => item?.id).filter((id) => typeof id === "string" && id)
+  );
   const currentAppointments = state.appointments || {};
   const nextAppointments = { ...currentAppointments };
   let changed = false;
 
-  for (const [positionId, characterId] of Object.entries(appointmentsMap)) {
+  for (const [positionId, characterId] of Object.entries(normalizedAppointments)) {
     if (typeof positionId !== "string" || typeof characterId !== "string") continue;
+    if (!validCharacterIds.has(characterId)) continue;
+    if (state.characterStatus?.[characterId]?.isAlive === false) continue;
 
     for (const [posId, holderId] of Object.entries(nextAppointments)) {
       if (holderId === characterId && posId !== positionId) {
@@ -1179,16 +1532,10 @@ async function showPositionSelectDialog(minister, state) {
       }
 
       const s = getState();
-      const currentAppointments = s.appointments || {};
-      const newAppointments = { ...currentAppointments };
-      for (const [posId, charId] of Object.entries(newAppointments)) {
-        if (charId === minister.id) {
-          delete newAppointments[posId];
-        }
-      }
-      newAppointments[selectedPosition.id] = minister.id;
-
-      setState({ appointments: newAppointments });
+      setState({
+        ...buildAppointmentPatch(s, selectedPosition.id, minister.id),
+        ...promoteGeneratedCandidate(s, minister.id),
+      });
       overlay.remove();
       const container = getCourtMountEl();
       if (container) {
@@ -1509,9 +1856,18 @@ function renderMinisterList(container, state, tagsConfig) {
     showKejuPanel();
   });
 
+  const wujuBtn = document.createElement("button");
+  wujuBtn.type = "button";
+  wujuBtn.className = "court-relations-btn";
+  wujuBtn.textContent = "武举";
+  wujuBtn.addEventListener("click", () => {
+    showWujuPanel();
+  });
+
   actions.appendChild(ministerBtn);
   actions.appendChild(relBtn);
   actions.appendChild(kejuBtn);
+  actions.appendChild(wujuBtn);
   header.appendChild(title);
   header.appendChild(actions);
   card.appendChild(header);
@@ -1536,15 +1892,24 @@ async function renderPositionMap(container, state) {
   const charactersData = await loadJSON("data/characters.json");
   const characters = charactersData?.characters || [];
   const characterMap = new Map(characters.map(c => [c.id, c]));
+  const aliveStatus = getState().characterStatus || {};
+  const getActiveHolder = (positionId) => {
+    const holderId = appointments[positionId];
+    if (typeof holderId !== "string" || !holderId) return null;
+    if (aliveStatus[holderId]?.isAlive === false) return null;
+    return characterMap.get(holderId) || null;
+  };
+  const isPositionVacant = (positionId) => !getActiveHolder(positionId);
 
   const card = document.createElement("div");
   card.className = "edict-block court-position-card";
 
   const header = document.createElement("div");
   header.className = "court-position-header";
+  const activeHolderCount = getActiveAppointmentHolderCount(getState());
   header.innerHTML = `
     <span>朝廷官职</span>
-    <span class="court-position-count">已任命 ${Object.keys(appointments).length} / ${positions.length}</span>
+    <span class="court-position-count">在任官员 ${activeHolderCount} 人 / 官职 ${positions.length}</span>
   `;
   card.appendChild(header);
 
@@ -1696,7 +2061,7 @@ async function renderPositionMap(container, state) {
     
     const totalVacant = moduleDepts.reduce((sum, deptId) => {
       const posList = groupedPositions.get(deptId) || [];
-      return sum + posList.filter((p) => !appointments[p.id]).length;
+      return sum + posList.filter((p) => isPositionVacant(p.id)).length;
     }, 0);
     
     moduleHeader.innerHTML = `
@@ -1733,8 +2098,7 @@ async function renderPositionMap(container, state) {
           const sortedPosList = [...posList].sort((a, b) => (b.importance || 0) - (a.importance || 0));
           
           sortedPosList.forEach((pos) => {
-            const holderId = appointments[pos.id];
-            const holder = holderId ? characterMap.get(holderId) : null;
+            const holder = getActiveHolder(pos.id);
             const isVacant = !holder;
 
             const item = document.createElement("div");
@@ -1814,7 +2178,7 @@ async function renderPositionMap(container, state) {
           if (!posList || posList.length === 0) return;
 
           const dept = deptMap.get(deptId) || { name: deptId, color: '#666' };
-          const vacantCount = posList.filter((p) => !appointments[p.id]).length;
+          const vacantCount = posList.filter((p) => isPositionVacant(p.id)).length;
 
           const section = document.createElement("section");
           const sectionIsOpen = courtModuleUIState.expandedDeptId === deptId;
@@ -1854,8 +2218,7 @@ async function renderPositionMap(container, state) {
             });
 
             sortedPosList.forEach((pos) => {
-              const holderId = appointments[pos.id];
-              const holder = holderId ? characterMap.get(holderId) : null;
+              const holder = getActiveHolder(pos.id);
               const isVacant = !holder;
 
               const item = document.createElement("div");
@@ -2328,16 +2691,10 @@ async function showAppointmentDialogAsync(position, state) {
       }
 
       const s = getState();
-      const currentAppointments = s.appointments || {};
-      const newAppointments = { ...currentAppointments };
-      for (const [posId, charId] of Object.entries(newAppointments)) {
-        if (charId === selectedCharacter.id) {
-          delete newAppointments[posId];
-        }
-      }
-      newAppointments[position.id] = selectedCharacter.id;
-
-      setState({ appointments: newAppointments });
+      setState({
+        ...buildAppointmentPatch(s, position.id, selectedCharacter.id),
+        ...promoteGeneratedCandidate(s, selectedCharacter.id),
+      });
       overlay.remove();
       const container = getCourtMountEl();
       if (container) {

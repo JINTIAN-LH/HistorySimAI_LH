@@ -8,14 +8,20 @@
       "birthYear": 1569,
       "deathYear": 1638,
       "hometown": "山东淄川",
-      "positions": ["hubu_shangshu"],
+      "positions": [
+        "hubu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 20,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["理财能手", "户部尚书", "清廉"],
+      "tags": [
+        "理财能手",
+        "户部尚书",
+        "清廉"
+      ],
       "summary": "毕自严，字景曾，淄川人。万历二十年进士，历任多地知县、御史、巡抚，清廉刚正。崇祯初年任户部尚书，面对空虚国库，竭力筹措军饷，曾苦笑道'银库老鼠都饿死了三窝'。为人谨慎务实，善于理财，但巧妇难为无米之炊。",
       "attitude": "忧心国库空虚，主张节流开源，反对横征暴敛。",
       "openingLine": "陛下，户部库房已近见底，臣实在是捉襟见肘……"
@@ -27,14 +33,20 @@
       "birthYear": 1585,
       "deathYear": 1636,
       "hometown": "真定",
-      "positions": ["bingbu_shilang_you"],
+      "positions": [
+        "bingbu_shilang_you"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 25,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["主战派", "兵部侍郎", "强硬"],
+      "tags": [
+        "主战派",
+        "兵部侍郎",
+        "强硬"
+      ],
       "summary": "梁廷栋，字玉阶，真定人。因后金入关、原巡抚战死，从兵备道被火线提拔为兵部右侍郎。其人性格强硬，是坚定的主战派，力主增加田赋以充军费，主张积极用兵剿灭流寇。崇祯三年间崛起最快的官员之一。",
       "attitude": "强硬主战，力主加征田赋以充军费，主张对内围剿流寇、对外坚决抵抗后金。",
       "openingLine": "陛下，臣以为当务之急，唯有加征田赋、充实军费。兵强则贼灭，贼灭则天下安。"
@@ -46,14 +58,20 @@
       "birthYear": 1573,
       "deathYear": 1638,
       "hometown": "浙江乌程",
-      "positions": ["neige_shoufu"],
+      "positions": [
+        "neige_shoufu"
+      ],
       "faction": "eunuch",
       "factionLabel": "阉党余部",
       "loyalty": 60,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["内阁首辅", "阴柔善谋", "排斥异己"],
+      "tags": [
+        "内阁首辅",
+        "阴柔善谋",
+        "排斥异己"
+      ],
       "summary": "温体仁，字长卿，乌程人。为人阴柔善谋，善于揣摩圣意。虽非魏忠贤嫡系，但与阉党余部关系密切。入阁后排斥异己，把持朝政，但在崇祯面前伪装忠良。崇祯三年入阁，六年为首辅，执政八年之久。",
       "attitude": "处处迎合圣意，暗中排斥东林，对国事无实质建树。",
       "openingLine": "陛下英明神武，诸事自有圣断，臣唯奉旨行事。"
@@ -65,14 +83,21 @@
       "birthYear": 1563,
       "deathYear": 1638,
       "hometown": "河北高阳",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 45,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["帝师", "军事家", "忠烈", "关宁锦防线"],
+      "tags": [
+        "帝师",
+        "军事家",
+        "忠烈",
+        "关宁锦防线"
+      ],
       "summary": "孙承宗，字稚绳，高阳人。帝师出身，曾督师辽东，构筑关宁锦防线，为抵御后金的中流砥柱。年事已高但忠心不二，军事才能卓越，深得边将敬仰。崇祯十一年清军攻破高阳，率全家守城殉国。",
       "attitude": "主张坚守辽东防线，反对与后金议和，愿以老迈之躯报国。",
       "openingLine": "老臣虽年迈，然辽东防线乃国之屏障，万不可弃。"
@@ -84,14 +109,20 @@
       "birthYear": 1585,
       "deathYear": 1662,
       "hometown": "直隶武清",
-      "positions": ["siliji_bingbi_taijian"],
+      "positions": [
+        "siliji_bingbi_taijian"
+      ],
       "faction": "imperial",
       "factionLabel": "帝党",
       "loyalty": 90,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["司礼监", "忠臣", "内廷"],
+      "tags": [
+        "司礼监",
+        "忠臣",
+        "内廷"
+      ],
       "summary": "曹化淳，直隶武清人。自幼入宫，聪慧好学，书画俱佳。崇祯帝铲除魏忠贤后，委以重任掌管司礼监。为人忠诚可靠，是崇祯最信任的内廷之人。",
       "attitude": "一切以皇上旨意为准，密切关注朝堂动向，为皇上耳目。",
       "openingLine": "奴婢万死不辞，陛下但有吩咐，赴汤蹈火在所不辞。"
@@ -103,14 +134,20 @@
       "birthYear": 1593,
       "deathYear": 1665,
       "hometown": "福建南安",
-      "positions": ["sanbian_zongdu"],
+      "positions": [
+        "sanbian_zongdu"
+      ],
       "faction": "military",
       "factionLabel": "军事将领",
       "loyalty": 40,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["总督", "围剿流寇", "后降清"],
+      "tags": [
+        "总督",
+        "围剿流寇",
+        "后降清"
+      ],
       "summary": "洪承畴，字彦演，南安人。万历进士出身，以文官领武事，在陕西围剿农民军颇有建树。为人精明干练，治军严整，是朝廷倚重的方面大员。后于松锦之战兵败降清。",
       "attitude": "主张以重兵围剿流寇，但苦于军饷不足、粮草匮乏。",
       "openingLine": "陛下，陕西贼势虽暂退，然军饷久欠，将士怨声载道，臣恐生变。"
@@ -122,14 +159,20 @@
       "birthYear": 1570,
       "deathYear": 1641,
       "hometown": "河南长垣",
-      "positions": ["libu_shangshu"],
+      "positions": [
+        "libu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 22,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["吏部尚书", "吏治", "考成"],
+      "tags": [
+        "吏部尚书",
+        "吏治",
+        "考成"
+      ],
       "summary": "王永光，字含一，出身进士，自县令、御史历练而上，熟悉各地官员根底。崇祯朝任吏部尚书，主掌全国官吏考核、升降黜陟，性情严峻而自持清正。",
       "attitude": "最重吏治清明，主张严考成、慎任用，不惜弹劾失职官员以正朝纲。",
       "openingLine": "陛下，吏治之弊，往往系于选任不谨。臣愿代陛下再加严考成，以清流品。"
@@ -141,14 +184,19 @@
       "birthYear": 1578,
       "deathYear": 1636,
       "hometown": "江西",
-      "positions": ["libu_li_shangshu"],
+      "positions": [
+        "libu_li_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 28,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["礼部尚书", "典章礼制"],
+      "tags": [
+        "礼部尚书",
+        "典章礼制"
+      ],
       "summary": "林钎，字实甫，江右人，少通经史，擅长典章礼制。崇祯朝任礼部尚书，掌天下礼仪、科举取士及对外册封朝贡等事，性情温和而守礼甚严。",
       "attitude": "重视科举取士与朝廷体面，主张以礼节束缚朝臣言行，以正邦交仪制。",
       "openingLine": "陛下，科场与朝仪皆系国体。若礼坏乐崩，人心必随之而散。"
@@ -160,14 +208,20 @@
       "birthYear": 1575,
       "deathYear": 1644,
       "hometown": "山东",
-      "positions": ["xingbu_shangshu"],
+      "positions": [
+        "xingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 25,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["刑部尚书", "慎刑", "律例"],
+      "tags": [
+        "刑部尚书",
+        "慎刑",
+        "律例"
+      ],
       "summary": "韩继思，字敬修，山东人，出身刑名世家，熟谙律例。崇祯朝任刑部尚书，掌天下狱讼、重案复核，素以慎刑著称，然后因耿如杞案轻拟，饱受非议。",
       "attitude": "主张慎刑宁失不纵，既畏冤狱，又恐轻纵权贵，时时夹在律例与人情之间踟蹰。",
       "openingLine": "陛下，刑狱之事，关乎万民性命，一轻一重，皆足以动摇人心。"
@@ -179,14 +233,20 @@
       "birthYear": 1577,
       "deathYear": 1657,
       "hometown": "河南",
-      "positions": ["gongbu_shangshu"],
+      "positions": [
+        "gongbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 20,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["工部尚书", "水利", "军需"],
+      "tags": [
+        "工部尚书",
+        "水利",
+        "军需"
+      ],
       "summary": "张凤翔，字稚羽，河洛人，少习水利与算学。崇祯朝任工部尚书，统筹宫室营造、河工水利与军需器械，常在节省经费与保证军需之间权衡。",
       "attitude": "关心河工军需与军器修造，主张量入为出，又忧财用不足误了边防。",
       "openingLine": "陛下，河工军需与城防器械，皆非可以暂缓之事，只是银两实在拮据。"
@@ -198,14 +258,20 @@
       "birthYear": 1589,
       "deathYear": 1644,
       "hometown": "江苏宜兴",
-      "positions": ["neige_shoufu"],
+      "positions": [
+        "neige_shoufu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["内阁首辅", "状元", "两度入阁"],
+      "tags": [
+        "内阁首辅",
+        "状元",
+        "两度入阁"
+      ],
       "summary": "周延儒，字玉绳，宜兴人。万历四十一年状元，才思敏捷，善于逢迎。崇祯二年首次入阁为首辅，后被温体仁排挤去职。崇祯十四年再度入阁，因虚报战功被赐死。",
       "attitude": "善于揣摩圣意，处事圆滑，但在国事上缺乏主见。",
       "openingLine": "陛下圣明，臣才疏学浅，唯有效忠陛下，鞠躬尽瘁。"
@@ -217,14 +283,20 @@
       "birthYear": 1588,
       "deathYear": 1641,
       "hometown": "湖南武陵",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 50,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书", "督师", "十面张网"],
+      "tags": [
+        "兵部尚书",
+        "督师",
+        "十面张网"
+      ],
       "summary": "杨嗣昌，字文弱，武陵人。万历进士，以父丧夺情起用，深受崇祯信任。主张'十面张网'围剿农民军，但战略失败，后督师殉职。为人有才干但刚愎自用。",
       "attitude": "主张集中兵力围剿流寇，提出'四正六隅'之策，但需大量增饷。",
       "openingLine": "陛下，流寇之患，在于流窜无定。臣请设十面之网，步步紧逼，必可歼灭。"
@@ -236,14 +308,20 @@
       "birthYear": 1600,
       "deathYear": 1639,
       "hometown": "江苏宜兴",
-      "positions": ["xuanda_zongdu"],
+      "positions": [
+        "xuanda_zongdu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 70,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["总督", "忠烈", "天雄军"],
+      "tags": [
+        "总督",
+        "忠烈",
+        "天雄军"
+      ],
       "summary": "卢象升，字建斗，宜兴人。天启进士，以知县起家，后任大名知府。善练兵，所部号'天雄军'，作战勇猛。崇祯十一年督师抗清，巨鹿之战力战殉国。",
       "attitude": "主战派，坚决反对议和，主张以武力抵御后金、剿灭流寇。",
       "openingLine": "陛下，臣愿率天雄军北上抗敌，虽死无憾！"
@@ -255,14 +333,22 @@
       "birthYear": 1593,
       "deathYear": 1643,
       "hometown": "山西代州",
-      "positions": ["shanxi_xunfu", "shanxi_zongbing"],
+      "positions": [
+        "shanxi_xunfu",
+        "shanxi_zongbing"
+      ],
       "faction": "military",
       "factionLabel": "军事将领",
       "loyalty": 55,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["巡抚", "总兵", "秦军", "剿匪"],
+      "tags": [
+        "巡抚",
+        "总兵",
+        "秦军",
+        "剿匪"
+      ],
       "summary": "孙传庭，字伯雅，代州人。万历进士，以知县起家。崇祯年间任陕西巡抚，练秦军剿灭农民军，擒杀高迎祥。后因谗言下狱，复出后于潼关战死。",
       "attitude": "主张以精兵剿灭流寇，反对仓促进兵，但朝廷催促甚急。",
       "openingLine": "陛下，秦军已成，臣请出关剿贼，定不辱使命。"
@@ -274,14 +360,20 @@
       "birthYear": 1579,
       "deathYear": 1656,
       "hometown": "辽东",
-      "positions": ["ningyuan_zongbing"],
+      "positions": [
+        "ningyuan_zongbing"
+      ],
       "faction": "military",
       "factionLabel": "军事将领",
       "loyalty": 30,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["总兵", "关宁军", "辽东"],
+      "tags": [
+        "总兵",
+        "关宁军",
+        "辽东"
+      ],
       "summary": "祖大寿，字复宇，辽东人。辽东名将，守宁远有功。曾随袁崇焕入援京师，后袁被杀，心怀疑惧。大凌河之战降清后又逃归，锦州之战终降清。",
       "attitude": "忠于朝廷但心存疑虑，对朝廷处置袁崇焕心怀不满。",
       "openingLine": "末将守辽东多年，将士用命，只求朝廷粮饷及时。"
@@ -293,14 +385,20 @@
       "birthYear": 1612,
       "deathYear": 1678,
       "hometown": "辽东中后所",
-      "positions": ["ningyuan_zongbing"],
+      "positions": [
+        "ningyuan_zongbing"
+      ],
       "faction": "military",
       "factionLabel": "军事将领",
       "loyalty": 25,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["总兵", "关宁军", "山海关"],
+      "tags": [
+        "总兵",
+        "关宁军",
+        "山海关"
+      ],
       "summary": "吴三桂，字长伯，辽东中后所人。武举出身，父吴襄为锦州总兵。年少勇猛，继承父职镇守山海关。后引清兵入关，封平西王。",
       "attitude": "观望局势，保存实力，对朝廷忠诚度有限。",
       "openingLine": "末将镇守山海关，关外之事，唯听朝廷调遣。"
@@ -312,14 +410,20 @@
       "birthYear": 1599,
       "deathYear": 1645,
       "hometown": "山东临清",
-      "positions": ["shanxi_zongbing"],
+      "positions": [
+        "shanxi_zongbing"
+      ],
       "faction": "military",
       "factionLabel": "军事将领",
       "loyalty": 20,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["总兵", "军阀", "拥兵自重"],
+      "tags": [
+        "总兵",
+        "军阀",
+        "拥兵自重"
+      ],
       "summary": "左良玉，字昆山，临清人。行伍出身，骁勇善战，在河南、湖广剿灭农民军。后拥兵自重，不听调遣，成为事实上的军阀。",
       "attitude": "保存实力，观望局势，对朝廷命令阳奉阴违。",
       "openingLine": "末将麾下兵马疲惫，需休整后再战，望陛下体谅。"
@@ -331,14 +435,20 @@
       "birthYear": 1595,
       "deathYear": 1635,
       "hometown": "山西大同",
-      "positions": ["shanxi_zongbing"],
+      "positions": [
+        "shanxi_zongbing"
+      ],
       "faction": "military",
       "factionLabel": "军事将领",
       "loyalty": 60,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["总兵", "勇将", "剿匪"],
+      "tags": [
+        "总兵",
+        "勇将",
+        "剿匪"
+      ],
       "summary": "曹文诏，字我弼，大同人。行伍出身，骁勇善战，在陕西剿灭农民军屡立战功。崇祯八年在河南信阳战死。",
       "attitude": "忠勇报国，愿率部剿灭流寇，不惧生死。",
       "openingLine": "末将愿为先锋，剿灭流寇，虽死无憾！"
@@ -350,14 +460,20 @@
       "birthYear": 1590,
       "deathYear": 1642,
       "hometown": "四川长寿",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 40,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书", "议和", "被杀"],
+      "tags": [
+        "兵部尚书",
+        "议和",
+        "被杀"
+      ],
       "summary": "陈新甲，字廷章，长寿人。万历进士，以兵部侍郎升任尚书。曾秘密与清廷议和，事泄后被崇祯处死。",
       "attitude": "主张与清廷议和以集中力量剿灭流寇，但不敢公开言和。",
       "openingLine": "陛下，兵部事务繁杂，臣当尽心竭力。"
@@ -369,14 +485,20 @@
       "birthYear": 1593,
       "deathYear": 1644,
       "hometown": "浙江上虞",
-      "positions": ["hubu_shangshu"],
+      "positions": [
+        "hubu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 65,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["户部尚书", "忠烈", "书法家"],
+      "tags": [
+        "户部尚书",
+        "忠烈",
+        "书法家"
+      ],
       "summary": "倪元璐，字玉汝，上虞人。天启进士，工书法。崇祯末年任户部尚书，李自成破京师时自缢殉国。",
       "attitude": "忠君爱国，主张整顿财政，反对横征暴敛。",
       "openingLine": "陛下，臣虽不才，愿为国理财，死而后已。"
@@ -388,14 +510,20 @@
       "birthYear": 1587,
       "deathYear": 1644,
       "hometown": "河北吴桥",
-      "positions": ["gongbu_shangshu"],
+      "positions": [
+        "gongbu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 70,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["工部尚书", "忠烈", "东林"],
+      "tags": [
+        "工部尚书",
+        "忠烈",
+        "东林"
+      ],
       "summary": "范景文，字梦章，吴桥人。万历进士，历官有政声。崇祯末年任工部尚书，李自成破京师时投井殉国。",
       "attitude": "忠君爱国，主张节约用度，修缮城防。",
       "openingLine": "陛下，工部虽无大事，然城防器械不可不备。"
@@ -407,14 +535,20 @@
       "birthYear": 1574,
       "deathYear": 1644,
       "hometown": "江西吉水",
-      "positions": ["dutcheng_duchayuan_zuoduyushi"],
+      "positions": [
+        "dutcheng_duchayuan_zuoduyushi"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 75,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["左都御史", "忠烈", "东林"],
+      "tags": [
+        "左都御史",
+        "忠烈",
+        "东林"
+      ],
       "summary": "李邦华，字孟暗，吉水人。万历进士，历官有清名。崇祯末年任左都御史，李自成破京师时自缢殉国。",
       "attitude": "忠君爱国，主张整顿吏治，纠察百官。",
       "openingLine": "陛下，都察院当为陛下耳目，纠察百官，不敢懈怠。"
@@ -426,14 +560,20 @@
       "birthYear": 1601,
       "deathYear": 1645,
       "hometown": "河南祥符",
-      "positions": ["nanjing_bingbu_shangshu"],
+      "positions": [
+        "nanjing_bingbu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 85,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["忠烈", "扬州", "南明"],
+      "tags": [
+        "忠烈",
+        "扬州",
+        "南明"
+      ],
       "summary": "史可法，字宪之，祥符人。崇祯进士，以清廉著称。崇祯末年任南京兵部尚书，后拥立福王，扬州城破殉国。",
       "attitude": "忠君爱国，主张坚守阵地，死战不退。",
       "openingLine": "臣虽在南京，心系京师，愿为陛下守好江南。"
@@ -445,14 +585,20 @@
       "birthYear": 1585,
       "deathYear": 1646,
       "hometown": "福建漳浦",
-      "positions": ["shaojiang_shi"],
+      "positions": [
+        "shaojiang_shi"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 80,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["忠烈", "学者", "直谏"],
+      "tags": [
+        "忠烈",
+        "学者",
+        "直谏"
+      ],
       "summary": "黄道周，字幼玄，漳浦人。天启进士，以学问著称。因直谏被贬，后于南明抗清被俘殉国。",
       "attitude": "忠直敢言，不畏权贵，主张以德治国。",
       "openingLine": "陛下，臣虽遭贬谪，然忠心不改，愿陛下圣明。"
@@ -464,14 +610,19 @@
       "birthYear": 1578,
       "deathYear": 1645,
       "hometown": "浙江嘉兴",
-      "positions": ["xingbu_shangshu"],
+      "positions": [
+        "xingbu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 55,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["刑部尚书", "东林"],
+      "tags": [
+        "刑部尚书",
+        "东林"
+      ],
       "summary": "徐石麒，字宝摩，嘉兴人。万历进士，历官有清名。崇祯末年任刑部尚书，后于南明殉国。",
       "attitude": "主张慎刑，反对滥杀，维护司法公正。",
       "openingLine": "陛下，刑狱之事，当慎之又慎，不可冤枉好人。"
@@ -483,14 +634,20 @@
       "birthYear": 1578,
       "deathYear": 1645,
       "hometown": "浙江山阴",
-      "positions": ["dutcheng_duchayuan_zuoduyushi"],
+      "positions": [
+        "dutcheng_duchayuan_zuoduyushi"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 70,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["左都御史", "理学家", "忠烈"],
+      "tags": [
+        "左都御史",
+        "理学家",
+        "忠烈"
+      ],
       "summary": "刘宗周，字起东，山阴人。万历进士，著名理学家。因直谏被罢官，后于南明殉国。",
       "attitude": "主张以德治国，反对权术，敢于直谏。",
       "openingLine": "陛下，臣虽遭罢官，然忠心不改，愿陛下圣明。"
@@ -502,14 +659,20 @@
       "birthYear": 1584,
       "deathYear": 1630,
       "hometown": "广东东莞",
-      "positions": ["jiliao_dushi"],
+      "positions": [
+        "jiliao_dushi"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 60,
       "isAlive": false,
       "deathReason": "凌迟处死",
       "deathDay": 3,
-      "tags": ["督师", "宁远大捷", "冤案"],
+      "tags": [
+        "督师",
+        "宁远大捷",
+        "冤案"
+      ],
       "summary": "袁崇焕，字元素，东莞人。万历进士，以守宁远大捷闻名。崇祯二年入援京师，因反间计被崇祯下狱，次年被凌迟处死。",
       "attitude": "主张坚守辽东，五年复辽，反对与后金议和。",
       "openingLine": "陛下，臣愿五年复辽，若不成功，请斩臣头。"
@@ -521,14 +684,19 @@
       "birthYear": 1579,
       "deathYear": 1645,
       "hometown": "山东德州",
-      "positions": ["libu_shangshu"],
+      "positions": [
+        "libu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 30,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["吏部尚书", "降清"],
+      "tags": [
+        "吏部尚书",
+        "降清"
+      ],
       "summary": "谢升，字伊晋，德州人。万历进士，历官吏部尚书。后降清，任清廷大学士。",
       "attitude": "善于观望局势，对朝廷忠诚度有限。",
       "openingLine": "陛下，吏部事务繁杂，臣当尽心办理。"
@@ -540,14 +708,20 @@
       "birthYear": 1590,
       "deathYear": 1655,
       "hometown": "河南商丘",
-      "positions": ["hubu_shangshu"],
+      "positions": [
+        "hubu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 45,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["户部尚书", "东林", "侯方域父"],
+      "tags": [
+        "户部尚书",
+        "东林",
+        "侯方域父"
+      ],
       "summary": "侯恂，字若谷，商丘人。万历进士，侯方域之父。历官户部尚书，因党争下狱。",
       "attitude": "主张整顿财政，反对阉党。",
       "openingLine": "陛下，户部库房空虚，臣愿尽力筹措。"
@@ -559,14 +733,18 @@
       "birthYear": 1580,
       "deathYear": 1644,
       "hometown": "江苏上元",
-      "positions": ["hubu_shangshu"],
+      "positions": [
+        "hubu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["户部尚书"],
+      "tags": [
+        "户部尚书"
+      ],
       "summary": "程国祥，字仲若，上元人。万历进士，历官户部尚书。",
       "attitude": "谨慎行事，不愿得罪权贵。",
       "openingLine": "陛下，户部事务臣当尽力办理。"
@@ -578,14 +756,19 @@
       "birthYear": 1585,
       "deathYear": 1644,
       "hometown": "广东南海",
-      "positions": ["hubu_shangshu"],
+      "positions": [
+        "hubu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 40,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["户部尚书", "殉国"],
+      "tags": [
+        "户部尚书",
+        "殉国"
+      ],
       "summary": "李待问，字葵孺，南海人。万历进士，历官户部尚书，李自成破京师时殉国。",
       "attitude": "忠君爱国，主张节约开支。",
       "openingLine": "陛下，户部钱粮，臣当精打细算。"
@@ -597,14 +780,19 @@
       "birthYear": 1569,
       "deathYear": 1642,
       "hometown": "安徽桐城",
-      "positions": ["libu_li_shangshu"],
+      "positions": [
+        "libu_li_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 50,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["礼部尚书", "东林"],
+      "tags": [
+        "礼部尚书",
+        "东林"
+      ],
       "summary": "何如宠，字康侯，桐城人。万历进士，历官礼部尚书、大学士。为人宽厚，不喜党争。",
       "attitude": "主张以礼治国，不愿卷入党争。",
       "openingLine": "陛下，礼部事务臣当尽心办理。"
@@ -616,14 +804,19 @@
       "birthYear": 1570,
       "deathYear": 1636,
       "hometown": "湖南湘潭",
-      "positions": ["libu_li_shangshu"],
+      "positions": [
+        "libu_li_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 45,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["礼部尚书", "东林"],
+      "tags": [
+        "礼部尚书",
+        "东林"
+      ],
       "summary": "李腾芳，字子实，湘潭人。万历进士，历官礼部尚书。",
       "attitude": "主张整顿礼制，反对奢靡。",
       "openingLine": "陛下，礼制乃国之根本，臣当尽心维护。"
@@ -635,14 +828,18 @@
       "birthYear": 1575,
       "deathYear": 1647,
       "hometown": "福建晋江",
-      "positions": ["libu_li_shangshu"],
+      "positions": [
+        "libu_li_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["礼部尚书"],
+      "tags": [
+        "礼部尚书"
+      ],
       "summary": "黄汝良，字明起，晋江人。万历进士，历官礼部尚书。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，礼部事务臣当尽心办理。"
@@ -654,14 +851,19 @@
       "birthYear": 1579,
       "deathYear": 1651,
       "hometown": "江西进贤",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 40,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书", "东林"],
+      "tags": [
+        "兵部尚书",
+        "东林"
+      ],
       "summary": "熊明遇，字良孺，进贤人。万历进士，历官兵部尚书。因党争被排挤。",
       "attitude": "主张整顿军务，反对阉党。",
       "openingLine": "陛下，兵部事务繁杂，臣当尽心办理。"
@@ -673,14 +875,18 @@
       "birthYear": 1580,
       "deathYear": 1642,
       "hometown": "山西代州",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 30,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书"],
+      "tags": [
+        "兵部尚书"
+      ],
       "summary": "张凤翼，字象风，代州人。万历进士，历官兵部尚书。后因战事不利自杀。",
       "attitude": "谨慎行事，不愿冒险。",
       "openingLine": "陛下，兵部事务臣当尽心办理。"
@@ -692,14 +898,18 @@
       "birthYear": 1580,
       "deathYear": 1644,
       "hometown": "浙江慈溪",
-      "positions": ["xingbu_shangshu"],
+      "positions": [
+        "xingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["刑部尚书"],
+      "tags": [
+        "刑部尚书"
+      ],
       "summary": "冯英，字美中，慈溪人。万历进士，历官刑部尚书。",
       "attitude": "主张慎刑，反对滥杀。",
       "openingLine": "陛下，刑狱之事，臣当谨慎办理。"
@@ -711,14 +921,21 @@
       "birthYear": 1574,
       "deathYear": 1656,
       "hometown": "安徽池州",
-      "positions": ["libu_shangshu", "xingbu_shangshu"],
+      "positions": [
+        "libu_shangshu",
+        "xingbu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 55,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["吏部尚书", "刑部尚书", "东林"],
+      "tags": [
+        "吏部尚书",
+        "刑部尚书",
+        "东林"
+      ],
       "summary": "郑三俊，字用章，池州人。万历进士，历官吏部、刑部尚书。以清廉著称。",
       "attitude": "主张整顿吏治，反对贪腐。",
       "openingLine": "陛下，臣愿为陛下整顿吏治，清除贪腐。"
@@ -730,14 +947,19 @@
       "birthYear": 1585,
       "deathYear": 1644,
       "hometown": "江西吉水",
-      "positions": ["libu_shangshu"],
+      "positions": [
+        "libu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 50,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["吏部尚书", "东林"],
+      "tags": [
+        "吏部尚书",
+        "东林"
+      ],
       "summary": "李日宣，字季晦，吉水人。万历进士，历官吏部尚书。",
       "attitude": "主张整顿吏治，反对阉党。",
       "openingLine": "陛下，吏部事务臣当尽心办理。"
@@ -749,14 +971,19 @@
       "birthYear": 1575,
       "deathYear": 1644,
       "hometown": "浙江乌程",
-      "positions": ["libu_shangshu"],
+      "positions": [
+        "libu_shangshu"
+      ],
       "faction": "eunuch",
       "factionLabel": "阉党余部",
       "loyalty": 45,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["吏部尚书", "阉党"],
+      "tags": [
+        "吏部尚书",
+        "阉党"
+      ],
       "summary": "闵洪学，字周先，乌程人。万历进士，历官吏部尚书。依附温体仁。",
       "attitude": "依附权贵，排斥异己。",
       "openingLine": "陛下，吏部事务臣当尽心办理。"
@@ -768,14 +995,18 @@
       "birthYear": 1570,
       "deathYear": 1644,
       "hometown": "湖北麻城",
-      "positions": ["libu_shangshu"],
+      "positions": [
+        "libu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["吏部尚书"],
+      "tags": [
+        "吏部尚书"
+      ],
       "summary": "李长庚，字酉卿，麻城人。万历进士，历官吏部尚书。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，吏部事务臣当尽心办理。"
@@ -787,14 +1018,18 @@
       "birthYear": 1580,
       "deathYear": 1644,
       "hometown": "河北饶阳",
-      "positions": ["libu_shangshu"],
+      "positions": [
+        "libu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 30,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["吏部尚书"],
+      "tags": [
+        "吏部尚书"
+      ],
       "summary": "田维嘉，字子升，饶阳人。万历进士，历官吏部尚书。",
       "attitude": "谨慎行事，不愿得罪权贵。",
       "openingLine": "陛下，吏部事务臣当尽心办理。"
@@ -806,14 +1041,18 @@
       "birthYear": 1580,
       "deathYear": 1644,
       "hometown": "福建晋江",
-      "positions": ["libu_shangshu"],
+      "positions": [
+        "libu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 40,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["吏部尚书"],
+      "tags": [
+        "吏部尚书"
+      ],
       "summary": "庄钦邻，字寅卿，晋江人。万历进士，历官吏部尚书。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，吏部事务臣当尽心办理。"
@@ -825,14 +1064,19 @@
       "birthYear": 1585,
       "deathYear": 1644,
       "hometown": "陕西朝邑",
-      "positions": ["libu_shangshu"],
+      "positions": [
+        "libu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["吏部尚书", "殉国"],
+      "tags": [
+        "吏部尚书",
+        "殉国"
+      ],
       "summary": "李遇知，字仲衡，朝邑人。万历进士，历官吏部尚书，李自成破京师时殉国。",
       "attitude": "忠君爱国，主张整顿吏治。",
       "openingLine": "陛下，吏部事务臣当尽心办理。"
@@ -844,14 +1088,19 @@
       "birthYear": 1585,
       "deathYear": 1641,
       "hometown": "云南昆明",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 50,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书", "殉国"],
+      "tags": [
+        "兵部尚书",
+        "殉国"
+      ],
       "summary": "傅宗龙，字仲纶，昆明人。万历进士，历官兵部尚书。后督师剿匪战死。",
       "attitude": "主张以武力剿灭流寇。",
       "openingLine": "陛下，臣愿督师剿匪，虽死无憾。"
@@ -863,14 +1112,19 @@
       "birthYear": 1595,
       "deathYear": 1646,
       "hometown": "浙江东阳",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 60,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书", "忠烈"],
+      "tags": [
+        "兵部尚书",
+        "忠烈"
+      ],
       "summary": "张国维，字玉笥，东阳人。天启进士，历官兵部尚书。后于南明殉国。",
       "attitude": "忠君爱国，主张抵抗清军。",
       "openingLine": "陛下，兵部事务臣当尽心办理。"
@@ -882,14 +1136,19 @@
       "birthYear": 1600,
       "deathYear": 1672,
       "hometown": "河南新乡",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 20,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书", "降清"],
+      "tags": [
+        "兵部尚书",
+        "降清"
+      ],
       "summary": "张缙彦，字濂源，新乡人。崇祯进士，历官兵部尚书。后降清。",
       "attitude": "观望局势，对朝廷忠诚度有限。",
       "openingLine": "陛下，兵部事务臣当尽心办理。"
@@ -901,14 +1160,18 @@
       "birthYear": 1585,
       "deathYear": 1644,
       "hometown": "浙江慈溪",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 40,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书"],
+      "tags": [
+        "兵部尚书"
+      ],
       "summary": "冯元飇，字尔弢，慈溪人。万历进士，历官兵部尚书。",
       "attitude": "谨慎行事，不愿冒险。",
       "openingLine": "陛下，兵部事务臣当尽心办理。"
@@ -920,14 +1183,18 @@
       "birthYear": 1580,
       "deathYear": 1644,
       "hometown": "湖南湘潭",
-      "positions": ["xingbu_shangshu"],
+      "positions": [
+        "xingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["刑部尚书"],
+      "tags": [
+        "刑部尚书"
+      ],
       "summary": "胡应台，字吉甫，湘潭人。万历进士，历官刑部尚书。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，刑狱之事，臣当谨慎办理。"
@@ -939,14 +1206,19 @@
       "birthYear": 1580,
       "deathYear": 1644,
       "hometown": "山东益都",
-      "positions": ["xingbu_shangshu"],
+      "positions": [
+        "xingbu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 45,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["刑部尚书", "东林"],
+      "tags": [
+        "刑部尚书",
+        "东林"
+      ],
       "summary": "曹珖，字用韦，益都人。万历进士，历官刑部尚书。",
       "attitude": "主张慎刑，反对滥杀。",
       "openingLine": "陛下，刑狱之事，臣当谨慎办理。"
@@ -958,14 +1230,18 @@
       "birthYear": 1580,
       "deathYear": 1644,
       "hometown": "河北任丘",
-      "positions": ["gongbu_shangshu"],
+      "positions": [
+        "gongbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["工部尚书"],
+      "tags": [
+        "工部尚书"
+      ],
       "summary": "刘遵宪，字公度，任丘人。万历进士，历官工部尚书。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，工部事务臣当尽心办理。"
@@ -977,14 +1253,19 @@
       "birthYear": 1580,
       "deathYear": 1644,
       "hometown": "浙江乌程",
-      "positions": ["dutcheng_duchayuan_zuoduyushi"],
+      "positions": [
+        "dutcheng_duchayuan_zuoduyushi"
+      ],
       "faction": "eunuch",
       "factionLabel": "阉党余部",
       "loyalty": 40,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["左都御史", "阉党"],
+      "tags": [
+        "左都御史",
+        "阉党"
+      ],
       "summary": "唐世济，字美承，乌程人。万历进士，历官左都御史。依附温体仁。",
       "attitude": "依附权贵，排斥异己。",
       "openingLine": "陛下，都察院事务臣当尽心办理。"
@@ -996,14 +1277,18 @@
       "birthYear": 1580,
       "deathYear": 1644,
       "hometown": "浙江会稽",
-      "positions": ["dutcheng_duchayuan_zuoduyushi"],
+      "positions": [
+        "dutcheng_duchayuan_zuoduyushi"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["左都御史"],
+      "tags": [
+        "左都御史"
+      ],
       "summary": "商周祚，字明兼，会稽人。万历进士，历官左都御史。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，都察院事务臣当尽心办理。"
@@ -1015,14 +1300,18 @@
       "birthYear": 1585,
       "deathYear": 1644,
       "hometown": "江西分宜",
-      "positions": ["dutcheng_duchayuan_zuoduyushi"],
+      "positions": [
+        "dutcheng_duchayuan_zuoduyushi"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 40,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["左都御史"],
+      "tags": [
+        "左都御史"
+      ],
       "summary": "钟炌，字文辉，分宜人。万历进士，历官左都御史。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，都察院事务臣当尽心办理。"
@@ -1034,14 +1323,18 @@
       "birthYear": 1585,
       "deathYear": 1667,
       "hometown": "河北灵寿",
-      "positions": ["dutcheng_duchayuan_zuoduyushi"],
+      "positions": [
+        "dutcheng_duchayuan_zuoduyushi"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["左都御史"],
+      "tags": [
+        "左都御史"
+      ],
       "summary": "傅永淳，字确君，灵寿人。万历进士，历官左都御史。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，都察院事务臣当尽心办理。"
@@ -1053,14 +1346,18 @@
       "birthYear": 1585,
       "deathYear": 1644,
       "hometown": "陕西三原",
-      "positions": ["dutcheng_duchayuan_zuoduyushi"],
+      "positions": [
+        "dutcheng_duchayuan_zuoduyushi"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 40,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["左都御史"],
+      "tags": [
+        "左都御史"
+      ],
       "summary": "王道直，字子方，三原人。万历进士，历官左都御史。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，都察院事务臣当尽心办理。"
@@ -1072,14 +1369,19 @@
       "birthYear": 1558,
       "deathYear": 1634,
       "hometown": "山西安邑",
-      "positions": ["dutcheng_duchayuan_zuoduyushi"],
+      "positions": [
+        "dutcheng_duchayuan_zuoduyushi"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 55,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["左都御史", "东林"],
+      "tags": [
+        "左都御史",
+        "东林"
+      ],
       "summary": "曹于汴，字自梁，安邑人。万历进士，历官左都御史。以清廉著称。",
       "attitude": "主张整顿吏治，反对贪腐。",
       "openingLine": "陛下，都察院当为陛下耳目，纠察百官。"
@@ -1091,14 +1393,19 @@
       "birthYear": 1566,
       "deathYear": 1635,
       "hometown": "江苏宜兴",
-      "positions": ["dutcheng_duchayuan_zuoduyushi"],
+      "positions": [
+        "dutcheng_duchayuan_zuoduyushi"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 50,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["左都御史", "东林"],
+      "tags": [
+        "左都御史",
+        "东林"
+      ],
       "summary": "陈于廷，字孟谔，宜兴人。万历进士，历官左都御史。",
       "attitude": "主张整顿吏治，反对阉党。",
       "openingLine": "陛下，都察院事务臣当尽心办理。"
@@ -1110,14 +1417,19 @@
       "birthYear": 1565,
       "deathYear": 1641,
       "hometown": "山东邹平",
-      "positions": ["dutcheng_duchayuan_zuoduyushi"],
+      "positions": [
+        "dutcheng_duchayuan_zuoduyushi"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 45,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["左都御史", "东林"],
+      "tags": [
+        "左都御史",
+        "东林"
+      ],
       "summary": "张延登，字济美，邹平人。万历进士，历官左都御史。",
       "attitude": "主张整顿吏治，反对贪腐。",
       "openingLine": "陛下，都察院事务臣当尽心办理。"
@@ -1129,14 +1441,18 @@
       "birthYear": 1570,
       "deathYear": 1644,
       "hometown": "河北盐山",
-      "positions": ["dutcheng_duchayuan_zuoduyushi"],
+      "positions": [
+        "dutcheng_duchayuan_zuoduyushi"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["左都御史"],
+      "tags": [
+        "左都御史"
+      ],
       "summary": "曹思诚，字景虞，盐山人。万历进士，历官左都御史。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，都察院事务臣当尽心办理。"
@@ -1148,14 +1464,19 @@
       "birthYear": 1575,
       "deathYear": 1644,
       "hometown": "河南洛阳",
-      "positions": ["xingbu_shangshu"],
+      "positions": [
+        "xingbu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 50,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["刑部尚书", "东林"],
+      "tags": [
+        "刑部尚书",
+        "东林"
+      ],
       "summary": "乔允升，字吉甫，洛阳人。万历进士，历官刑部尚书。",
       "attitude": "主张慎刑，反对滥杀。",
       "openingLine": "陛下，刑狱之事，臣当谨慎办理。"
@@ -1167,14 +1488,18 @@
       "birthYear": 1575,
       "deathYear": 1644,
       "hometown": "福建晋江",
-      "positions": ["xingbu_shangshu"],
+      "positions": [
+        "xingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 30,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["刑部尚书"],
+      "tags": [
+        "刑部尚书"
+      ],
       "summary": "苏茂相，字宏家，晋江人。万历进士，历官刑部尚书。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，刑狱之事，臣当谨慎办理。"
@@ -1186,14 +1511,19 @@
       "birthYear": 1575,
       "deathYear": 1644,
       "hometown": "陕西渭南",
-      "positions": ["gongbu_shangshu"],
+      "positions": [
+        "gongbu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 50,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["工部尚书", "东林"],
+      "tags": [
+        "工部尚书",
+        "东林"
+      ],
       "summary": "南居益，字思受，渭南人。万历进士，历官工部尚书。",
       "attitude": "主张节约用度，修缮城防。",
       "openingLine": "陛下，工部事务臣当尽心办理。"
@@ -1205,14 +1535,19 @@
       "birthYear": 1580,
       "deathYear": 1644,
       "hometown": "河南商丘",
-      "positions": ["gongbu_shangshu"],
+      "positions": [
+        "gongbu_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 45,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["工部尚书", "东林"],
+      "tags": [
+        "工部尚书",
+        "东林"
+      ],
       "summary": "周士朴，字丹其，商丘人。万历进士，历官工部尚书。",
       "attitude": "主张节约用度，修缮城防。",
       "openingLine": "陛下，工部事务臣当尽心办理。"
@@ -1224,14 +1559,19 @@
       "birthYear": 1570,
       "deathYear": 1636,
       "hometown": "湖南湘潭",
-      "positions": ["libu_li_shangshu"],
+      "positions": [
+        "libu_li_shangshu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 45,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["礼部尚书", "东林"],
+      "tags": [
+        "礼部尚书",
+        "东林"
+      ],
       "summary": "李腾芳，字子实，湘潭人。万历进士，历官礼部尚书。",
       "attitude": "主张整顿礼制，反对奢靡。",
       "openingLine": "陛下，礼制乃国之根本，臣当尽心维护。"
@@ -1243,14 +1583,18 @@
       "birthYear": 1570,
       "deathYear": 1644,
       "hometown": "江苏太仓",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书"],
+      "tags": [
+        "兵部尚书"
+      ],
       "summary": "王在晋，字明初，太仓人。万历进士，历官兵部尚书。",
       "attitude": "谨慎行事，不愿冒险。",
       "openingLine": "陛下，兵部事务臣当尽心办理。"
@@ -1262,14 +1606,19 @@
       "birthYear": 1580,
       "deathYear": 1630,
       "hometown": "山东临邑",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 40,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书", "下狱死"],
+      "tags": [
+        "兵部尚书",
+        "下狱死"
+      ],
       "summary": "王洽，字仲和，临邑人。万历进士，历官兵部尚书。因己巳之变下狱死。",
       "attitude": "谨慎行事，不愿冒险。",
       "openingLine": "陛下，兵部事务臣当尽心办理。"
@@ -1281,14 +1630,19 @@
       "birthYear": 1575,
       "deathYear": 1644,
       "hometown": "河北保定",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "eunuch",
       "factionLabel": "阉党余部",
       "loyalty": 30,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书", "阉党"],
+      "tags": [
+        "兵部尚书",
+        "阉党"
+      ],
       "summary": "阎鸣泰，字子讷，保定人。万历进士，历官兵部尚书。依附魏忠贤。",
       "attitude": "依附权贵，排斥异己。",
       "openingLine": "陛下，兵部事务臣当尽心办理。"
@@ -1300,14 +1654,19 @@
       "birthYear": 1570,
       "deathYear": 1644,
       "hometown": "河北安州",
-      "positions": ["libu_shangshu"],
+      "positions": [
+        "libu_shangshu"
+      ],
       "faction": "eunuch",
       "factionLabel": "阉党余部",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["吏部尚书", "阉党"],
+      "tags": [
+        "吏部尚书",
+        "阉党"
+      ],
       "summary": "房壮丽，字国华，安州人。万历进士，历官吏部尚书。依附魏忠贤。",
       "attitude": "依附权贵，排斥异己。",
       "openingLine": "陛下，吏部事务臣当尽心办理。"
@@ -1319,14 +1678,19 @@
       "birthYear": 1575,
       "deathYear": 1644,
       "hometown": "山东汶上",
-      "positions": ["libu_shangshu"],
+      "positions": [
+        "libu_shangshu"
+      ],
       "faction": "eunuch",
       "factionLabel": "阉党余部",
       "loyalty": 30,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["吏部尚书", "阉党"],
+      "tags": [
+        "吏部尚书",
+        "阉党"
+      ],
       "summary": "郭允厚，字载万，汶上人。万历进士，历官吏部尚书。依附魏忠贤。",
       "attitude": "依附权贵，排斥异己。",
       "openingLine": "陛下，吏部事务臣当尽心办理。"
@@ -1338,14 +1702,18 @@
       "birthYear": 1575,
       "deathYear": 1644,
       "hometown": "河南商丘",
-      "positions": ["hubu_shangshu"],
+      "positions": [
+        "hubu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["户部尚书"],
+      "tags": [
+        "户部尚书"
+      ],
       "summary": "孟绍虞，字玄铉，商丘人。万历进士，历官户部尚书。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，户部事务臣当尽心办理。"
@@ -1357,14 +1725,18 @@
       "birthYear": 1575,
       "deathYear": 1644,
       "hometown": "江苏苏州",
-      "positions": ["bingbu_shangshu"],
+      "positions": [
+        "bingbu_shangshu"
+      ],
       "faction": "neutral",
       "factionLabel": "中立",
       "loyalty": 35,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["兵部尚书"],
+      "tags": [
+        "兵部尚书"
+      ],
       "summary": "申用懋，字敬中，苏州人。万历进士，历官兵部尚书。",
       "attitude": "谨慎行事，不愿卷入党争。",
       "openingLine": "陛下，兵部事务臣当尽心办理。"
@@ -1376,14 +1748,19 @@
       "birthYear": 1575,
       "deathYear": 1644,
       "hometown": "河北滦州",
-      "positions": ["gongbu_shangshu"],
+      "positions": [
+        "gongbu_shangshu"
+      ],
       "faction": "eunuch",
       "factionLabel": "阉党余部",
       "loyalty": 30,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["工部尚书", "阉党"],
+      "tags": [
+        "工部尚书",
+        "阉党"
+      ],
       "summary": "薛凤翔，字孟翔，滦州人。万历进士，历官工部尚书。依附魏忠贤。",
       "attitude": "依附权贵，排斥异己。",
       "openingLine": "陛下，工部事务臣当尽心办理。"
@@ -1395,14 +1772,19 @@
       "birthYear": 1575,
       "deathYear": 1644,
       "hometown": "河北任丘",
-      "positions": ["gongbu_shangshu"],
+      "positions": [
+        "gongbu_shangshu"
+      ],
       "faction": "eunuch",
       "factionLabel": "阉党余部",
       "loyalty": 30,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["工部尚书", "阉党"],
+      "tags": [
+        "工部尚书",
+        "阉党"
+      ],
       "summary": "刘廷元，字本一，任丘人。万历进士，历官工部尚书。依附魏忠贤。",
       "attitude": "依附权贵，排斥异己。",
       "openingLine": "陛下，工部事务臣当尽心办理。"
@@ -1421,7 +1803,11 @@
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["国丈", "嘉定伯", "周皇后父"],
+      "tags": [
+        "国丈",
+        "嘉定伯",
+        "周皇后父"
+      ],
       "summary": "周奎，苏州人。崇祯皇后周氏之父，封嘉定伯。李自成破京师时，家财被掠。",
       "attitude": "以家族利益为重，对国事关心有限。",
       "openingLine": "臣乃皇后之父，唯愿陛下圣体安康。"
@@ -1433,14 +1819,23 @@
       "birthYear": 1562,
       "deathYear": 1633,
       "hometown": "上海",
-      "positions": ["libu_li_shangshu", "neige_cifu"],
+      "positions": [
+        "libu_li_shangshu",
+        "neige_cifu"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 75,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["内阁次辅", "科学家", "西学", "农政全书", "几何原本"],
+      "tags": [
+        "内阁次辅",
+        "科学家",
+        "西学",
+        "农政全书",
+        "几何原本"
+      ],
       "summary": "徐光启，字子先，上海人。万历三十二年进士，崇祯朝礼部尚书兼文渊阁大学士。与利玛窦合译《几何原本》，首次系统引入欧几里得几何体系；撰《农政全书》，总结古代农业技术并引入西方水利知识；主持修订《崇祯历书》，融合中西天文学成果；推广红夷大炮、火器战术。被誉为明末中西文化交流第一人。",
       "attitude": "主张引进西学、改革历法、发展农业、强化军备，以实学救国。",
       "openingLine": "陛下，臣以为欲富国强兵，当以实学为本，引进西法，改革历法，发展农政。"
@@ -1452,14 +1847,20 @@
       "birthYear": 1579,
       "deathYear": 1659,
       "hometown": "河北吴桥",
-      "positions": ["guanglu_si_qing"],
+      "positions": [
+        "guanglu_si_qing"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 55,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["光禄寺卿", "天文学家", "崇祯历书"],
+      "tags": [
+        "光禄寺卿",
+        "天文学家",
+        "崇祯历书"
+      ],
       "summary": "李天经，字性参，吴桥人。崇祯六年接替徐光启主持修历，官至光禄寺卿。完成《崇祯历书》编纂，引入第谷体系、哥白尼《天体运行论》部分内容；制造多项天文仪器如望远镜、浑仪，部分现存于北京古观象台。",
       "attitude": "主张以西方天文学改革历法，精确天文观测，为朝廷提供准确的历书。",
       "openingLine": "陛下，历法乃国之大事，臣愿继承徐公遗志，完成历书修订。"
@@ -1478,7 +1879,11 @@
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["机械学家", "远西奇器图说", "南徐北王"],
+      "tags": [
+        "机械学家",
+        "远西奇器图说",
+        "南徐北王"
+      ],
       "summary": "王徵，字葵心，泾阳人。天启二年进士，与徐光启并称'南徐北王'。编译《远西奇器图说录最》，为中国第一部机械工程学著作，引入'重心''杠杆'等术语；发明虹吸、自行车、自行磨等农用与生活器械。明末殉国。",
       "attitude": "主张以机械之学造福民生，引进西方奇器，发展农工商各业。",
       "openingLine": "陛下，奇器之学可利国利民，臣愿为陛下制造各种器械。"
@@ -1497,7 +1902,12 @@
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["光学仪器", "镜史", "望远镜", "显微镜"],
+      "tags": [
+        "光学仪器",
+        "镜史",
+        "望远镜",
+        "显微镜"
+      ],
       "summary": "孙云球，字文玉，吴江人。明末清初光学仪器制造家，被誉为'明朝科学巨人'。著《镜史》，制造七十余种光学仪器，包括眼镜、望远镜、显微镜等，为中国光学仪器发展做出重大贡献。",
       "attitude": "专注于光学仪器制造，以技艺报国。",
       "openingLine": "草民孙云球，愿为朝廷制造各种光学仪器。"
@@ -1509,14 +1919,21 @@
       "birthYear": 1611,
       "deathYear": 1671,
       "hometown": "安徽桐城",
-      "positions": ["hanlin_yuan_jiantao"],
+      "positions": [
+        "hanlin_yuan_jiantao"
+      ],
       "faction": "donglin",
       "factionLabel": "东林党",
       "loyalty": 50,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["明末四公子", "物理小识", "通雅", "科学家"],
+      "tags": [
+        "明末四公子",
+        "物理小识",
+        "通雅",
+        "科学家"
+      ],
       "summary": "方以智，字密之，桐城人。明末四公子之一，崇祯朝翰林院检讨，曾为皇子讲官。著《物理小识》《通雅》，涵盖力学、声学、光学、植物学等领域；学习西方科学，与传教士汤若望、毕方济交流。后出家为僧。",
       "attitude": "主张融合中西学问，以实证精神研究自然万物。",
       "openingLine": "臣方以智，愿为陛下讲授格物致知之学。"
@@ -1535,7 +1952,12 @@
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["机械制造家", "铜炮", "千里镜", "浑天仪"],
+      "tags": [
+        "机械制造家",
+        "铜炮",
+        "千里镜",
+        "浑天仪"
+      ],
       "summary": "薄珏，字子珏，苏州人。明末清初机械制造家，少时家境贫苦，勤奋好学。因仕途不顺，改学天文、数学和机械制造，曾自设实验室。崇祯年间为巡抚张国维造铜炮，构造先进，装有千里镜；又制造水车、火铳、地雷、地弩等器。著有《浑天仪图说》《格物测地论》等。张国维曾荐之于朝，不报，退归吴门，以穷病死。",
       "attitude": "专注于机械制造与火器研发，愿以技艺报国，但仕途坎坷。",
       "openingLine": "草民薄珏，愿为朝廷制造先进火器与天文仪器。"
@@ -1554,10 +1976,1579 @@
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["天工开物", "科学家", "农业技术", "手工业"],
+      "tags": [
+        "天工开物",
+        "科学家",
+        "农业技术",
+        "手工业"
+      ],
       "summary": "宋应星，字长庚，奉新人。万历四十三年举人。所著《天工开物》分《乃粒》《乃服》《彰施》《作咸》等共18章，插图123幅，涉及农业、手工业各方面，堪称中国古代农业、工业技术百科全书，被视为中国科学史的代表作。另有《野议》《论气》《谈天》《思怜诗》等著作。",
       "attitude": "主张总结生产技术经验，以实学造福民生，关注农业与手工业发展。",
       "openingLine": "臣宋应星，愿为陛下献上《天工开物》，以利国计民生。"
+    },
+    {
+      "id": "gao_panlong",
+      "name": "高攀龙",
+      "courtesyName": "文衡",
+      "birthYear": 1562,
+      "deathYear": 1626,
+      "hometown": "无锡",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "高攀龙，无锡人，约生于1562年、卒于1626年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "ye_xianggao",
+      "name": "叶向高",
+      "courtesyName": "子端",
+      "birthYear": 1559,
+      "deathYear": 1627,
+      "hometown": "福州",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "叶向高，福州人，约生于1559年、卒于1627年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "han_guang",
+      "name": "韩爌",
+      "courtesyName": "明允",
+      "birthYear": 1560,
+      "deathYear": 1644,
+      "hometown": "长治",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "韩爌，长治人，约生于1560年、卒于1644年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "liu_yijing",
+      "name": "刘一燝",
+      "courtesyName": "伯敬",
+      "birthYear": 1567,
+      "deathYear": 1635,
+      "hometown": "南昌",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "刘一燝，南昌人，约生于1567年、卒于1635年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "shi_fenglai",
+      "name": "施凤来",
+      "courtesyName": "敬修",
+      "birthYear": 1562,
+      "deathYear": 1642,
+      "hometown": "平湖",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "施凤来，平湖人，约生于1562年、卒于1642年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "qian_longxi",
+      "name": "钱龙锡",
+      "courtesyName": "懋功",
+      "birthYear": 1570,
+      "deathYear": 1646,
+      "hometown": "常熟",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "钱龙锡，常熟人，约生于1570年、卒于1646年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "cheng_jiming",
+      "name": "成基命",
+      "courtesyName": "景纯",
+      "birthYear": 1563,
+      "deathYear": 1641,
+      "hometown": "宣城",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "成基命，宣城人，约生于1563年、卒于1641年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "li_guopu",
+      "name": "李国普",
+      "courtesyName": "伯安",
+      "birthYear": 1570,
+      "deathYear": 1644,
+      "hometown": "安庆",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "李国普，安庆人，约生于1570年、卒于1644年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "huang_liji",
+      "name": "黄立极",
+      "courtesyName": "伯安",
+      "birthYear": 1568,
+      "deathYear": 1638,
+      "hometown": "新城",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "黄立极，新城人，约生于1568年、卒于1638年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "qian_shisheng",
+      "name": "钱士升",
+      "courtesyName": "伯恭",
+      "birthYear": 1574,
+      "deathYear": 1652,
+      "hometown": "嘉善",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "钱士升，嘉善人，约生于1574年、卒于1652年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "liu_yuliang",
+      "name": "刘宇亮",
+      "courtesyName": "士清",
+      "birthYear": 1579,
+      "deathYear": 1650,
+      "hometown": "安福",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "刘宇亮，安福人，约生于1579年、卒于1650年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "xue_guoguan",
+      "name": "薛国观",
+      "courtesyName": "子安",
+      "birthYear": 1595,
+      "deathYear": 1641,
+      "hometown": "韩城",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "薛国观，韩城人，约生于1595年、卒于1641年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "fan_fucui",
+      "name": "范复粹",
+      "courtesyName": "慎言",
+      "birthYear": 1570,
+      "deathYear": 1644,
+      "hometown": "咸宁",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "范复粹，咸宁人，约生于1570年、卒于1644年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "wu_sheng",
+      "name": "吴甡",
+      "courtesyName": "仲方",
+      "birthYear": 1589,
+      "deathYear": 1670,
+      "hometown": "蒲州",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "吴甡，蒲州人，约生于1589年、卒于1670年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "jiang_dejing",
+      "name": "蒋德璟",
+      "courtesyName": "懋功",
+      "birthYear": 1593,
+      "deathYear": 1646,
+      "hometown": "晋江",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "蒋德璟，晋江人，约生于1593年、卒于1646年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "huang_jingfang",
+      "name": "黄景昉",
+      "courtesyName": "伯安",
+      "birthYear": 1598,
+      "deathYear": 1662,
+      "hometown": "晋江",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "黄景昉，晋江人，约生于1598年、卒于1662年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "fang_yuegong",
+      "name": "方岳贡",
+      "courtesyName": "明德",
+      "birthYear": 1590,
+      "deathYear": 1645,
+      "hometown": "歙县",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "方岳贡，歙县人，约生于1590年、卒于1645年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "chen_zizhuang",
+      "name": "陈子壮",
+      "courtesyName": "伯恭",
+      "birthYear": 1596,
+      "deathYear": 1647,
+      "hometown": "南海",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "陈子壮，南海人，约生于1596年、卒于1647年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "ma_shiying",
+      "name": "马士英",
+      "courtesyName": "廷和",
+      "birthYear": 1591,
+      "deathYear": 1646,
+      "hometown": "贵阳",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "马士英，贵阳人，约生于1591年、卒于1646年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "ruan_dacheng",
+      "name": "阮大铖",
+      "courtesyName": "子安",
+      "birthYear": 1587,
+      "deathYear": 1646,
+      "hometown": "桐城",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "阮大铖，桐城人，约生于1587年、卒于1646年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "jiang_yueguang",
+      "name": "姜曰广",
+      "courtesyName": "慎行",
+      "birthYear": 1583,
+      "deathYear": 1649,
+      "hometown": "莱阳",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "姜曰广，莱阳人，约生于1583年、卒于1649年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "wang_duo",
+      "name": "王铎",
+      "courtesyName": "子谨",
+      "birthYear": 1592,
+      "deathYear": 1652,
+      "hometown": "孟津",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "王铎，孟津人，约生于1592年、卒于1652年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "gao_hongtu",
+      "name": "高弘图",
+      "courtesyName": "文衡",
+      "birthYear": 1583,
+      "deathYear": 1645,
+      "hometown": "会稽",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "高弘图，会稽人，约生于1583年、卒于1645年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "zhang_shenyan",
+      "name": "张慎言",
+      "courtesyName": "叔正",
+      "birthYear": 1572,
+      "deathYear": 1646,
+      "hometown": "阳城",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "张慎言，阳城人，约生于1572年、卒于1646年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "lv_daqi",
+      "name": "吕大器",
+      "courtesyName": "明允",
+      "birthYear": 1598,
+      "deathYear": 1650,
+      "hometown": "遂宁",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "吕大器，遂宁人，约生于1598年、卒于1650年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "zeng_ying",
+      "name": "曾樱",
+      "courtesyName": "士清",
+      "birthYear": 1582,
+      "deathYear": 1646,
+      "hometown": "临川",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "曾樱，临川人，约生于1582年、卒于1646年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "xie_xuelong",
+      "name": "解学龙",
+      "courtesyName": "文正",
+      "birthYear": 1553,
+      "deathYear": 1628,
+      "hometown": "兴化",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "解学龙，兴化人，约生于1553年、卒于1628年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "yang_lian",
+      "name": "杨涟",
+      "courtesyName": "子和",
+      "birthYear": 1571,
+      "deathYear": 1625,
+      "hometown": "应山",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "杨涟，应山人，约生于1571年、卒于1625年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "zuo_guangdou",
+      "name": "左光斗",
+      "courtesyName": "文衡",
+      "birthYear": 1575,
+      "deathYear": 1625,
+      "hometown": "桐城",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "左光斗，桐城人，约生于1575年、卒于1625年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "wei_dazhong",
+      "name": "魏大中",
+      "courtesyName": "元直",
+      "birthYear": 1575,
+      "deathYear": 1625,
+      "hometown": "嘉善",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "魏大中，嘉善人，约生于1575年、卒于1625年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "zhou_shunchang",
+      "name": "周顺昌",
+      "courtesyName": "叔雅",
+      "birthYear": 1584,
+      "deathYear": 1626,
+      "hometown": "吴县",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "周顺昌，吴县人，约生于1584年、卒于1626年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "miao_changqi",
+      "name": "缪昌期",
+      "courtesyName": "明远",
+      "birthYear": 1562,
+      "deathYear": 1626,
+      "hometown": "江阴",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "缪昌期，江阴人，约生于1562年、卒于1626年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "li_yingsheng",
+      "name": "李应升",
+      "courtesyName": "明远",
+      "birthYear": 1593,
+      "deathYear": 1627,
+      "hometown": "江阴",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "李应升，江阴人，约生于1593年、卒于1627年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "gu_dazhang",
+      "name": "顾大章",
+      "courtesyName": "廷和",
+      "birthYear": 1576,
+      "deathYear": 1625,
+      "hometown": "常熟",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "顾大章，常熟人，约生于1576年、卒于1625年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "zhao_nanxing",
+      "name": "赵南星",
+      "courtesyName": "廷和",
+      "birthYear": 1550,
+      "deathYear": 1627,
+      "hometown": "高邑",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "赵南星，高邑人，约生于1550年、卒于1627年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "zou_yuanbiao",
+      "name": "邹元标",
+      "courtesyName": "子廉",
+      "birthYear": 1551,
+      "deathYear": 1624,
+      "hometown": "吉水",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "邹元标，吉水人，约生于1551年、卒于1624年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "feng_congwu",
+      "name": "冯从吾",
+      "courtesyName": "叔雅",
+      "birthYear": 1557,
+      "deathYear": 1627,
+      "hometown": "长安",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "冯从吾，长安人，约生于1557年、卒于1627年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "sun_shenxing",
+      "name": "孙慎行",
+      "courtesyName": "伯恭",
+      "birthYear": 1565,
+      "deathYear": 1635,
+      "hometown": "武进",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "孙慎行，武进人，约生于1565年、卒于1635年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "bi_maokang",
+      "name": "毕懋康",
+      "courtesyName": "士林",
+      "birthYear": 1569,
+      "deathYear": 1644,
+      "hometown": "淄川",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "毕懋康，淄川人，约生于1569年、卒于1644年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "wei_zaode",
+      "name": "魏藻德",
+      "courtesyName": "叔达",
+      "birthYear": 1596,
+      "deathYear": 1646,
+      "hometown": "曲周",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "魏藻德，曲周人，约生于1596年、卒于1646年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "chen_yan",
+      "name": "陈演",
+      "courtesyName": "子安",
+      "birthYear": 1600,
+      "deathYear": 1647,
+      "hometown": "长洲",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "陈演，长洲人，约生于1600年、卒于1647年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "he_kai",
+      "name": "何楷",
+      "courtesyName": "季文",
+      "birthYear": 1590,
+      "deathYear": 1645,
+      "hometown": "顺德",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "何楷，顺德人，约生于1590年、卒于1645年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "wen_zhenmeng",
+      "name": "文震孟",
+      "courtesyName": "子端",
+      "birthYear": 1574,
+      "deathYear": 1636,
+      "hometown": "长洲",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "文震孟，长洲人，约生于1574年、卒于1636年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "liu_lishun",
+      "name": "刘理顺",
+      "courtesyName": "文渊",
+      "birthYear": 1578,
+      "deathYear": 1644,
+      "hometown": "杞县",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "刘理顺，杞县人，约生于1578年、卒于1644年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "wei_xuelian",
+      "name": "魏学濂",
+      "courtesyName": "允谦",
+      "birthYear": 1598,
+      "deathYear": 1644,
+      "hometown": "嘉善",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "魏学濂，嘉善人，约生于1598年、卒于1644年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "wu_ganlai",
+      "name": "吴甘来",
+      "courtesyName": "允和",
+      "birthYear": 1588,
+      "deathYear": 1644,
+      "hometown": "宁化",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "吴甘来，宁化人，约生于1588年、卒于1644年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "wang_jiayan",
+      "name": "王家彦",
+      "courtesyName": "伯安",
+      "birthYear": 1583,
+      "deathYear": 1644,
+      "hometown": "黄冈",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "王家彦，黄冈人，约生于1583年、卒于1644年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "li_jiantai",
+      "name": "李建泰",
+      "courtesyName": "君佐",
+      "birthYear": 1592,
+      "deathYear": 1661,
+      "hometown": "曲沃",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "李建泰，曲沃人，约生于1592年、卒于1661年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "qi_biaojia",
+      "name": "祁彪佳",
+      "courtesyName": "士林",
+      "birthYear": 1602,
+      "deathYear": 1645,
+      "hometown": "山阴",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "祁彪佳，山阴人，约生于1602年、卒于1645年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "lu_zhenfei",
+      "name": "路振飞",
+      "courtesyName": "廷益",
+      "birthYear": 1590,
+      "deathYear": 1647,
+      "hometown": "阜宁",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "路振飞，阜宁人，约生于1590年、卒于1647年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "zhang_kentang",
+      "name": "张肯堂",
+      "courtesyName": "子敬",
+      "birthYear": 1591,
+      "deathYear": 1645,
+      "hometown": "鄞县",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "张肯堂，鄞县人，约生于1591年、卒于1645年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "xiong_tingbi",
+      "name": "熊廷弼",
+      "courtesyName": "伯恭",
+      "birthYear": 1569,
+      "deathYear": 1625,
+      "hometown": "江夏",
+      "positions": [],
+      "faction": "military",
+      "factionLabel": "军务",
+      "loyalty": 48,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "边务",
+        "用兵",
+        "军政"
+      ],
+      "summary": "熊廷弼，江夏人，约生于1569年、卒于1625年。其人久历军务，熟悉边防、饷道与将士调度，主张先稳军心再图战功。遇内忧外患时偏重执行与纪律，强调防线、粮械与兵额配套并进。",
+      "attitude": "主张军政并举、先固边防与饷道，再议进取；反对空耗兵力与临阵改令。",
+      "openingLine": "陛下，臣请先固军心与饷道，边防既稳，方可图战机而不致再耗国力。"
+    },
+    {
+      "id": "man_gui",
+      "name": "满桂",
+      "courtesyName": "用中",
+      "birthYear": 1594,
+      "deathYear": 1630,
+      "hometown": "宣府",
+      "positions": [],
+      "faction": "military",
+      "factionLabel": "军务",
+      "loyalty": 48,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "边务",
+        "用兵",
+        "军政"
+      ],
+      "summary": "满桂，宣府人，约生于1594年、卒于1630年。其人久历军务，熟悉边防、饷道与将士调度，主张先稳军心再图战功。遇内忧外患时偏重执行与纪律，强调防线、粮械与兵额配套并进。",
+      "attitude": "主张军政并举、先固边防与饷道，再议进取；反对空耗兵力与临阵改令。",
+      "openingLine": "陛下，臣请先固军心与饷道，边防既稳，方可图战机而不致再耗国力。"
+    },
+    {
+      "id": "zu_kuan",
+      "name": "祖宽",
+      "courtesyName": "子敬",
+      "birthYear": 1600,
+      "deathYear": 1642,
+      "hometown": "宁远",
+      "positions": [],
+      "faction": "military",
+      "factionLabel": "军务",
+      "loyalty": 48,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "边务",
+        "用兵",
+        "军政"
+      ],
+      "summary": "祖宽，宁远人，约生于1600年、卒于1642年。其人久历军务，熟悉边防、饷道与将士调度，主张先稳军心再图战功。遇内忧外患时偏重执行与纪律，强调防线、粮械与兵额配套并进。",
+      "attitude": "主张军政并举、先固边防与饷道，再议进取；反对空耗兵力与临阵改令。",
+      "openingLine": "陛下，臣请先固军心与饷道，边防既稳，方可图战机而不致再耗国力。"
+    },
+    {
+      "id": "zhao_shuaijiao",
+      "name": "赵率教",
+      "courtesyName": "廷佐",
+      "birthYear": 1567,
+      "deathYear": 1629,
+      "hometown": "遵化",
+      "positions": [],
+      "faction": "military",
+      "factionLabel": "军务",
+      "loyalty": 48,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "边务",
+        "用兵",
+        "军政"
+      ],
+      "summary": "赵率教，遵化人，约生于1567年、卒于1629年。其人久历军务，熟悉边防、饷道与将士调度，主张先稳军心再图战功。遇内忧外患时偏重执行与纪律，强调防线、粮械与兵额配套并进。",
+      "attitude": "主张军政并举、先固边防与饷道，再议进取；反对空耗兵力与临阵改令。",
+      "openingLine": "陛下，臣请先固军心与饷道，边防既稳，方可图战机而不致再耗国力。"
+    },
+    {
+      "id": "cao_bianjiao",
+      "name": "曹变蛟",
+      "courtesyName": "元直",
+      "birthYear": 1600,
+      "deathYear": 1641,
+      "hometown": "大同",
+      "positions": [],
+      "faction": "military",
+      "factionLabel": "军务",
+      "loyalty": 48,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "边务",
+        "用兵",
+        "军政"
+      ],
+      "summary": "曹变蛟，大同人，约生于1600年、卒于1641年。其人久历军务，熟悉边防、饷道与将士调度，主张先稳军心再图战功。遇内忧外患时偏重执行与纪律，强调防线、粮械与兵额配套并进。",
+      "attitude": "主张军政并举、先固边防与饷道，再议进取；反对空耗兵力与临阵改令。",
+      "openingLine": "陛下，臣请先固军心与饷道，边防既稳，方可图战机而不致再耗国力。"
+    },
+    {
+      "id": "qin_liangyu",
+      "name": "秦良玉",
+      "courtesyName": "仲方",
+      "birthYear": 1574,
+      "deathYear": 1648,
+      "hometown": "忠州",
+      "positions": [],
+      "faction": "military",
+      "factionLabel": "军务",
+      "loyalty": 48,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "边务",
+        "用兵",
+        "军政"
+      ],
+      "summary": "秦良玉，忠州人，约生于1574年、卒于1648年。其人久历军务，熟悉边防、饷道与将士调度，主张先稳军心再图战功。遇内忧外患时偏重执行与纪律，强调防线、粮械与兵额配套并进。",
+      "attitude": "主张军政并举、先固边防与饷道，再议进取；反对空耗兵力与临阵改令。",
+      "openingLine": "陛下，臣请先固军心与饷道，边防既稳，方可图战机而不致再耗国力。"
+    },
+    {
+      "id": "zhu_dadian",
+      "name": "朱大典",
+      "courtesyName": "叔恭",
+      "birthYear": 1583,
+      "deathYear": 1646,
+      "hometown": "金华",
+      "positions": [],
+      "faction": "military",
+      "factionLabel": "军务",
+      "loyalty": 48,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "边务",
+        "用兵",
+        "军政"
+      ],
+      "summary": "朱大典，金华人，约生于1583年、卒于1646年。其人久历军务，熟悉边防、饷道与将士调度，主张先稳军心再图战功。遇内忧外患时偏重执行与纪律，强调防线、粮械与兵额配套并进。",
+      "attitude": "主张军政并举、先固边防与饷道，再议进取；反对空耗兵力与临阵改令。",
+      "openingLine": "陛下，臣请先固军心与饷道，边防既稳，方可图战机而不致再耗国力。"
+    },
+    {
+      "id": "wang_yingxiong",
+      "name": "王应熊",
+      "courtesyName": "存中",
+      "birthYear": 1579,
+      "deathYear": 1646,
+      "hometown": "巴县",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "王应熊，巴县人，约生于1579年、卒于1646年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "zhang_zhifa",
+      "name": "张至发",
+      "courtesyName": "伯恭",
+      "birthYear": 1566,
+      "deathYear": 1638,
+      "hometown": "莱阳",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "张至发，莱阳人，约生于1566年、卒于1638年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "fang_fengnian",
+      "name": "方逢年",
+      "courtesyName": "君衡",
+      "birthYear": 1593,
+      "deathYear": 1647,
+      "hometown": "桐城",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "方逢年，桐城人，约生于1593年、卒于1647年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "fang_kongzhao",
+      "name": "方孔炤",
+      "courtesyName": "存中",
+      "birthYear": 1590,
+      "deathYear": 1655,
+      "hometown": "桐城",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "方孔炤，桐城人，约生于1590年、卒于1655年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "chen_hongmi",
+      "name": "陈洪谧",
+      "courtesyName": "廷用",
+      "birthYear": 1603,
+      "deathYear": 1652,
+      "hometown": "晋江",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "陈洪谧，晋江人，约生于1603年、卒于1652年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "su_guansheng",
+      "name": "苏观生",
+      "courtesyName": "叔达",
+      "birthYear": 1592,
+      "deathYear": 1647,
+      "hometown": "晋江",
+      "positions": [],
+      "faction": "neutral",
+      "factionLabel": "中立",
+      "loyalty": 35,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "朝臣",
+        "理政",
+        "待任"
+      ],
+      "summary": "苏观生，晋江人，约生于1592年、卒于1647年。其人以中枢政务见长，擅长在财政、铨叙与地方执行之间求取平衡。面对局势多变时倾向务实调和，先保运转再谋改革，重视制度连续与官僚秩序。",
+      "attitude": "主张以稳政为先、循序修补财政与官制；反对激进施政导致中枢失衡。",
+      "openingLine": "陛下，臣愿先从可执行之处着手，稳住中枢与财计，再图后续整饬。"
+    },
+    {
+      "id": "he_tengjiao",
+      "name": "何腾蛟",
+      "courtesyName": "文衡",
+      "birthYear": 1592,
+      "deathYear": 1649,
+      "hometown": "黎平",
+      "positions": [],
+      "faction": "military",
+      "factionLabel": "军务",
+      "loyalty": 48,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "边务",
+        "用兵",
+        "军政"
+      ],
+      "summary": "何腾蛟，黎平人，约生于1592年、卒于1649年。其人久历军务，熟悉边防、饷道与将士调度，主张先稳军心再图战功。遇内忧外患时偏重执行与纪律，强调防线、粮械与兵额配套并进。",
+      "attitude": "主张军政并举、先固边防与饷道，再议进取；反对空耗兵力与临阵改令。",
+      "openingLine": "陛下，臣请先固军心与饷道，边防既稳，方可图战机而不致再耗国力。"
+    },
+    {
+      "id": "qu_shisi",
+      "name": "瞿式耜",
+      "courtesyName": "允中",
+      "birthYear": 1590,
+      "deathYear": 1651,
+      "hometown": "常熟",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "瞿式耜，常熟人，约生于1590年、卒于1651年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "jin_sheng",
+      "name": "金声",
+      "courtesyName": "景行",
+      "birthYear": 1598,
+      "deathYear": 1645,
+      "hometown": "休宁",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "金声，休宁人，约生于1598年、卒于1645年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
+    },
+    {
+      "id": "xia_yunyi",
+      "name": "夏允彝",
+      "courtesyName": "允和",
+      "birthYear": 1596,
+      "deathYear": 1645,
+      "hometown": "华亭",
+      "positions": [],
+      "faction": "donglin",
+      "factionLabel": "东林",
+      "loyalty": 42,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "清议",
+        "言官风骨",
+        "讲求名节"
+      ],
+      "summary": "夏允彝，华亭人，约生于1596年、卒于1645年。其人重名节，长于章奏议论，多从清议立场出言，常以整饬吏治、澄清言路为先。入朝后处事峻整，遇党争时立场鲜明，既能激励士气，也容易与权势掣肘。",
+      "attitude": "主张先清吏治与言路，再行财政治军；反对因权宜而牺牲名分纲纪。",
+      "openingLine": "陛下，臣以为朝纲之本在于名器与言路，若纪纲先立，则百政可次第而举。"
     }
   ]
 }

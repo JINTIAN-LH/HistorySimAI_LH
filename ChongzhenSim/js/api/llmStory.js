@@ -3,6 +3,12 @@ import { getApiBase, postJsonAndReadText } from "./httpClient.js";
 import { normalizeStoryPayload, sanitizeStoryEffects } from "./validators.js";
 import { buildNameById } from "../utils/sharedConstants.js";
 
+function getRosterCharacters(state) {
+  return Array.isArray(state?.allCharacters) && state.allCharacters.length
+    ? state.allCharacters
+    : (state.ministers || []);
+}
+
 export async function requestStoryTurn(state, lastChoice) {
   const config = state.config || {};
   const apiBase = getApiBase(config, "requestStoryTurn");
@@ -201,7 +207,7 @@ const COURT_CHAT_TAKE_PER_MINISTER = 5;
 
 function buildCourtChatSummary(state) {
   const courtChats = state.courtChats || {};
-  const ministers = state.ministers || [];
+  const ministers = getRosterCharacters(state);
   const nameById = buildNameById(ministers);
   const parts = [];
   let len = 0;

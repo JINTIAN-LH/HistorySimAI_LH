@@ -20,6 +20,7 @@ const SYSTEM_PROMPT = `你是《崇祯皇帝模拟器》游戏的剧情写手。
 每回合你必须只输出一个合法 JSON 对象，且结构中包含 header、storyParagraphs、choices。
 若涉及任命或处置，请写入 lastChoiceEffects.appointments / lastChoiceEffects.characterDeath。
 必须严格遵循传入的朝堂快照：已故角色不得复活、任职或作为在任官员出现；未在任角色不得被称作在任。
+已灭亡敌对势力不得在后续剧情中“复活”为完整存活势力。
 剧情、旁白、选项文案、提示必须使用中文，不得出现英文国策ID（如 civil_tax_reform）或英文句子。`;
 
 function readJsonSafely(filePath) {
@@ -69,6 +70,18 @@ function createApp(options = {}) {
 
   function getCharacters() {
     return (charactersData && (charactersData.characters || charactersData.ministers)) || [];
+  }
+
+  function getCharactersWithStateExtras(state) {
+    const merged = new Map();
+    getCharacters().forEach((item) => {
+      if (item?.id) merged.set(item.id, item);
+    });
+    const extras = Array.isArray(state?.extraCharacters) ? state.extraCharacters : [];
+    extras.forEach((item) => {
+      if (item?.id) merged.set(item.id, item);
+    });
+    return Array.from(merged.values());
   }
 
   function getPositions() {
@@ -172,6 +185,95 @@ function createApp(options = {}) {
     return next;
   }
 
+  function getDefeatedHostilesFromBody(body) {
+    const list = Array.isArray(body?.hostileForces)
+      ? body.hostileForces
+      : (Array.isArray(body?.state?.hostileForces) ? body.state.hostileForces : []);
+    return list
+      .filter((item) => item && (item.isDefeated || (typeof item.power === "number" && item.power <= 0)))
+      .map((item) => ({
+        id: String(item.id || ""),
+        name: String(item.name || "").trim(),
+        leader: String(item.leader || "").trim(),
+      }));
+  }
+
+  function sanitizeDefeatedHostileText(text, defeatedHostiles) {
+    if (typeof text !== "string" || !text.trim()) return text;
+    let output = text;
+    const escapeRegex = (input) => String(input || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const aliases = [];
+    defeatedHostiles.forEach((item) => {
+      [item.name, item.leader].forEach((alias) => {
+        const raw = String(alias || "").trim();
+        if (raw) aliases.push(raw);
+      });
+    });
+
+    Array.from(new Set(aliases)).sort((a, b) => b.length - a.length).forEach((alias) => {
+      const pattern = new RegExp(escapeRegex(alias), "g");
+      output = output.replace(pattern, (match, offset, source) => {
+        const nextSlice = source.slice(offset, offset + match.length + 8);
+        const prevSlice = source.slice(Math.max(0, offset - 4), offset + match.length);
+        if (/已灭|覆灭|已亡|既灭|已剿|已被剿/.test(nextSlice) || /已灭|覆灭|已亡|既灭|已剿|已被剿/.test(prevSlice)) {
+          return match;
+        }
+        return `${match}余部`;
+      });
+    });
+
+    return output;
+  }
+
+  function sanitizeStoryPayloadConsistency(payload, body) {
+    if (!payload || typeof payload !== "object") return payload;
+    const defeatedHostiles = getDefeatedHostilesFromBody(body);
+    if (!defeatedHostiles.length) return payload;
+
+    const next = { ...payload };
+    const defeatedAliasSet = new Set();
+    defeatedHostiles.forEach((item) => {
+      [item.id, item.name, item.leader].forEach((alias) => {
+        const raw = String(alias || "").trim();
+        if (raw) defeatedAliasSet.add(raw);
+      });
+    });
+
+    if (Array.isArray(next.storyParagraphs)) {
+      next.storyParagraphs = next.storyParagraphs.map((line) => sanitizeDefeatedHostileText(line, defeatedHostiles));
+    }
+
+    if (Array.isArray(next.choices)) {
+      next.choices = next.choices.map((choice) => {
+        if (!choice || typeof choice !== "object") return choice;
+        const updated = { ...choice };
+        ["text", "hint", "title", "description"].forEach((key) => {
+          if (typeof updated[key] === "string") {
+            updated[key] = sanitizeDefeatedHostileText(updated[key], defeatedHostiles);
+          }
+        });
+        if (updated.effects && typeof updated.effects === "object" && !Array.isArray(updated.effects)) {
+          const effects = { ...updated.effects };
+          if (effects.hostileDamage && typeof effects.hostileDamage === "object" && !Array.isArray(effects.hostileDamage)) {
+            const hostileDamage = {};
+            Object.entries(effects.hostileDamage).forEach(([targetId, delta]) => {
+              if (defeatedAliasSet.has(String(targetId || "").trim())) return;
+              hostileDamage[targetId] = delta;
+            });
+            effects.hostileDamage = hostileDamage;
+          }
+          updated.effects = effects;
+        }
+        return updated;
+      });
+    }
+
+    if (typeof next.news === "string") next.news = sanitizeDefeatedHostileText(next.news, defeatedHostiles);
+    if (typeof next.publicOpinion === "string") next.publicOpinion = sanitizeDefeatedHostileText(next.publicOpinion, defeatedHostiles);
+    return next;
+  }
+
   function getSeasonByMonth(month) {
     const m = Number(month) || 1;
     if (m >= 3 && m <= 5) return "春";
@@ -181,7 +283,17 @@ function createApp(options = {}) {
   }
 
   function buildUserMessage(body) {
-    const { state = {}, lastChoiceId, lastChoiceText, courtChatSummary, unlockedPolicies = [], customPolicies = [] } = body || {};
+    const {
+      state = {},
+      lastChoiceId,
+      lastChoiceText,
+      courtChatSummary,
+      unlockedPolicies = [],
+      customPolicies = [],
+      hostileForces = [],
+      closedStorylines = [],
+      storyFacts = null,
+    } = body || {};
 
     const day = state.currentDay ?? 1;
     const year = state.currentYear ?? 1;
@@ -269,6 +381,42 @@ function createApp(options = {}) {
       }));
 
     base += `\n\n朝堂任职快照（推理硬约束）：在任且在世=${JSON.stringify(activeAppointments)}；在世未任=${JSON.stringify(aliveNotInOffice)}；已故=${JSON.stringify(deceasedMinisters)}。请保持称谓与任职状态一致。`;
+    const hostiles = Array.isArray(hostileForces) ? hostileForces : [];
+    if (hostiles.length) {
+      const activeHostiles = hostiles
+        .filter((item) => item && !item.isDefeated && !(typeof item.power === "number" && item.power <= 0))
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          leader: item.leader,
+          power: item.power,
+        }));
+      const defeatedHostiles = hostiles
+        .filter((item) => item && (item.isDefeated || (typeof item.power === "number" && item.power <= 0)))
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          leader: item.leader,
+          defeatedYear: item.defeatedYear || null,
+          defeatedMonth: item.defeatedMonth || null,
+        }));
+      base += `\n\n敌对势力快照（推理硬约束）：存活=${JSON.stringify(activeHostiles)}；已灭亡=${JSON.stringify(defeatedHostiles)}。已灭亡势力不可复活为存活势力，只可描述余部、流寇或后续影响。`;
+    }
+    if (Array.isArray(closedStorylines) && closedStorylines.length) {
+      base += `\n\n已闭锁剧情线（硬约束）：${JSON.stringify(closedStorylines.slice(-40))}。闭锁剧情线不得反向重开。`;
+    }
+    if (storyFacts && typeof storyFacts === "object") {
+      const hardFacts = Array.isArray(storyFacts.hardFacts) ? storyFacts.hardFacts.slice(0, 24) : [];
+      if (hardFacts.length) {
+        base += `\n\n本地压缩关键事实（高优先级约束）：${JSON.stringify(hardFacts)}。`;
+      }
+    }
+    const officialPositionNames = (Array.isArray(positions) ? positions : [])
+      .map((item) => String(item?.name || "").trim())
+      .filter(Boolean);
+    if (officialPositionNames.length) {
+      base += `\n\n官职标准名录（剧情文本与选项中若出现官职称谓，必须优先使用以下标准名，避免近义混写）：${officialPositionNames.join("、")}。`;
+    }
 
     const unlocked = Array.isArray(unlockedPolicies) ? unlockedPolicies.filter((id) => typeof id === "string" && id.trim()) : [];
     const unlockedPolicyLabelMap = buildUnlockedPolicyLabelMap(body);
@@ -337,14 +485,13 @@ function createApp(options = {}) {
       }
 
       const policyLabelMap = buildUnlockedPolicyLabelMap(body);
-      if (Object.keys(policyLabelMap).length) {
-        try {
-          const parsed = JSON.parse(content);
-          const sanitized = sanitizeStoryPayloadLanguage(parsed, policyLabelMap);
-          return res.json(sanitized);
-        } catch (_e) {
-          // If model returns non-JSON text unexpectedly, keep original passthrough behavior.
-        }
+      try {
+        const parsed = JSON.parse(content);
+        const languageSanitized = sanitizeStoryPayloadLanguage(parsed, policyLabelMap);
+        const consistencySanitized = sanitizeStoryPayloadConsistency(languageSanitized, body);
+        return res.json(consistencySanitized);
+      } catch (_e) {
+        // If model returns non-JSON text unexpectedly, keep original passthrough behavior.
       }
 
       res.set("Content-Type", "application/json; charset=utf-8");
@@ -584,7 +731,7 @@ function createApp(options = {}) {
     }
 
     const positions = getPositions();
-    const characters = getCharacters();
+    const characters = getCharactersWithStateExtras(state);
 
     const targetPosition = positions.find((item) => item.id === positionId);
     if (!targetPosition) {

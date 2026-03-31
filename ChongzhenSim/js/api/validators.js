@@ -46,6 +46,14 @@ function clampDelta(key, value) {
   return Math.max(-limit, Math.min(limit, value));
 }
 
+function isValidEffectEntityId(value) {
+  if (typeof value !== "string") return false;
+  const id = value.trim();
+  if (!id) return false;
+  if (/^\d+$/.test(id)) return false;
+  return /^[a-zA-Z0-9_]+$/.test(id);
+}
+
 export function sanitizeStoryEffects(effects) {
   if (!effects || typeof effects !== "object" || Array.isArray(effects)) return {};
   const out = { ...effects };
@@ -75,6 +83,18 @@ export function sanitizeStoryEffects(effects) {
       hostileDamage[targetId] = Math.max(-25, Math.min(25, numeric));
     }
     out.hostileDamage = hostileDamage;
+  }
+
+  if (out.characterDeath && typeof out.characterDeath === "object" && !Array.isArray(out.characterDeath)) {
+    const characterDeath = {};
+    for (const [characterId, reason] of Object.entries(out.characterDeath)) {
+      if (!isValidEffectEntityId(characterId)) continue;
+      characterDeath[characterId.trim()] = typeof reason === "string" && reason.trim() ? reason.trim() : "处死";
+    }
+    if (Object.keys(characterDeath).length) out.characterDeath = characterDeath;
+    else delete out.characterDeath;
+  } else if (Object.prototype.hasOwnProperty.call(out, "characterDeath")) {
+    delete out.characterDeath;
   }
 
   return out;

@@ -755,6 +755,28 @@ function buildQuarterAgenda(state) {
   }
 
   // 上轮偏向什么，本季优先给对应承接议题，保持“连续推理”的叙事感。
+  const currentMonth = state.currentMonth || 1;
+  if (currentMonth === 12) {
+    const shouldAmnesty = (nation.civilMorale || 0) < 52 || (state.unrest || 0) > 24;
+    if (shouldAmnesty) {
+      pushAgenda(
+        "year_end_general_amnesty",
+        "年终议题：大赦天下",
+        "岁末可行恩赦与减刑，需耗费钱粮安置赈恤，以换取民心回升并缓和地方骚动。",
+        ["民心", "财政", "粮储", "动乱"],
+        "重"
+      );
+    } else {
+      pushAgenda(
+        "year_end_reward_ministers",
+        "年终议题：封赏大臣",
+        "岁终论功行赏，增加俸禄与赏银、赏粮，可稳住朝局并提升在任大臣忠诚。",
+        ["吏治", "财政", "粮储", "派系"],
+        "重"
+      );
+    }
+  }
+
   if (lastTags.relief || lastTags.reform || lastTags.tax || lastTags.royalReform) {
     pushAgenda("domestic_followup", "内政承接：赋役与赈抚复盘", `上轮政令已触达地方，本季需围绕赋税、赈济与吏治做二次校准。${lastTurnSummary ? ` ${lastTurnSummary}` : ""}`, ["内政", "财政", "民心"], "重");
   }
@@ -871,13 +893,14 @@ function toSemanticDeltaText(key, value) {
   return "";
 }
 
-function deriveAgendaImpactAdjustment(focus, agenda) {
+function deriveAgendaImpactAdjustment(focus, agenda, context = {}) {
   if (!focus || !agenda) {
     return {
       taxPressureDelta: 0,
       unrestDelta: 0,
       strifeDelta: 0,
       prestigeDelta: 0,
+      directEffects: null,
     };
   }
   const impacts = Array.isArray(agenda.impacts) ? agenda.impacts : [];
@@ -888,6 +911,7 @@ function deriveAgendaImpactAdjustment(focus, agenda) {
   let unrestDelta = 0;
   let strifeDelta = 0;
   let prestigeDelta = 0;
+  let directEffects = null;
 
   if (score(["财政", "军饷", "粮储"])) taxPressureDelta += Math.round(-2 * weight);
   if (score(["民心", "动乱"])) unrestDelta += Math.round(-2 * weight);
@@ -895,11 +919,88 @@ function deriveAgendaImpactAdjustment(focus, agenda) {
   if (score(["军事", "军力", "边患"])) prestigeDelta += Math.round(1 * weight);
   if (score(["外交"])) prestigeDelta += Math.round(1 * weight);
 
+  const appointedIds = Array.isArray(context.appointedMinisterIds) ? context.appointedMinisterIds : [];
+  const makeLoyaltyEffects = (delta) => {
+    const out = {};
+    for (const id of appointedIds) {
+      if (!id || typeof id !== "string") continue;
+      out[id] = delta;
+    }
+    return out;
+  };
+
+  if (agenda.id === "year_end_reward_ministers") {
+    if (focus.stance === "support") {
+      directEffects = {
+        treasury: -120000,
+        grain: -8000,
+        corruptionLevel: -1,
+        unrest: -1,
+        loyalty: makeLoyaltyEffects(6),
+      };
+    } else if (focus.stance === "compromise") {
+      directEffects = {
+        treasury: -70000,
+        grain: -5000,
+        unrest: -1,
+        loyalty: makeLoyaltyEffects(3),
+      };
+    } else if (focus.stance === "oppose") {
+      directEffects = {
+        treasury: 20000,
+        grain: 1200,
+        corruptionLevel: 1,
+        unrest: 1,
+        loyalty: makeLoyaltyEffects(-2),
+      };
+    } else if (focus.stance === "suppress") {
+      directEffects = {
+        treasury: -40000,
+        grain: -2000,
+        unrest: 2,
+        loyalty: makeLoyaltyEffects(-4),
+      };
+    }
+  } else if (agenda.id === "year_end_general_amnesty") {
+    if (focus.stance === "support") {
+      directEffects = {
+        treasury: -100000,
+        grain: -7000,
+        civilMorale: 8,
+        unrest: -3,
+        corruptionLevel: 1,
+      };
+    } else if (focus.stance === "compromise") {
+      directEffects = {
+        treasury: -60000,
+        grain: -4000,
+        civilMorale: 4,
+        unrest: -1,
+      };
+    } else if (focus.stance === "oppose") {
+      directEffects = {
+        treasury: 20000,
+        grain: 1500,
+        civilMorale: -3,
+        unrest: 2,
+      };
+    } else if (focus.stance === "suppress") {
+      directEffects = {
+        treasury: -30000,
+        grain: -2000,
+        civilMorale: -5,
+        unrest: 4,
+        corruptionLevel: 1,
+      };
+    }
+  }
+
   return {
     taxPressureDelta,
     unrestDelta,
     strifeDelta,
     prestigeDelta,
+    directEffects,
   };
 }
 
@@ -1382,7 +1483,14 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
   const policyBonus = getPolicyBonusSummary(state.unlockedPolicies || [], balance);
   const focus = state.currentQuarterFocus || null;
   const selectedAgenda = focus ? (state.currentQuarterAgenda || []).find((item) => item.id === focus.agendaId) : null;
-  const agendaAdjust = deriveAgendaImpactAdjustment(focus, selectedAgenda);
+  const appointedMinisterIds = Array.from(
+    new Set(
+      Object.values(state.appointments || {})
+        .filter((id) => typeof id === "string" && id)
+        .filter((id) => state.characterStatus?.[id]?.isAlive !== false)
+    )
+  );
+  const agendaAdjust = deriveAgendaImpactAdjustment(focus, selectedAgenda, { appointedMinisterIds });
   const prestigeBase = derivePrestigeDelta(choiceText, effectiveEffects);
   let focusPrestige = 0;
   let focusStrifeDelta = 0;
@@ -1443,6 +1551,22 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
     if (!effects) return;
     if (!consequenceEffects) consequenceEffects = {};
     for (const [key, value] of Object.entries(effects)) {
+      if (key === "loyalty" && value && typeof value === "object") {
+        const loyaltyEffects = {};
+        for (const [id, delta] of Object.entries(value)) {
+          if (typeof delta !== "number") continue;
+          loyaltyEffects[id] = (loyaltyEffects[id] || 0) + delta;
+        }
+        if (Object.keys(loyaltyEffects).length) {
+          consequenceEffects.loyalty = consequenceEffects.loyalty && typeof consequenceEffects.loyalty === "object"
+            ? consequenceEffects.loyalty
+            : {};
+          for (const [id, delta] of Object.entries(loyaltyEffects)) {
+            consequenceEffects.loyalty[id] = (consequenceEffects.loyalty[id] || 0) + delta;
+          }
+        }
+        continue;
+      }
       if (typeof value !== "number") continue;
       consequenceEffects[key] = (consequenceEffects[key] || 0) + value;
     }
@@ -1468,8 +1592,22 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
     factionSupport[id] = clamp((factionSupport[id] || 50) + value, 0, 100);
   }
 
+  if (agendaAdjust.directEffects) {
+    addEffect(agendaAdjust.directEffects);
+  }
+
   const quarterAgenda = nextMonth % 3 === 0
-    ? buildQuarterAgenda({ ...state, prestige, executionRate, factionSupport, partyStrife, unrest, taxPressure })
+    ? buildQuarterAgenda({
+      ...state,
+      currentYear: nextYear,
+      currentMonth: nextMonth,
+      prestige,
+      executionRate,
+      factionSupport,
+      partyStrife,
+      unrest,
+      taxPressure,
+    })
     : [];
 
   const quarterReward = nextMonth % 3 === 0 ? 1 : 0;
