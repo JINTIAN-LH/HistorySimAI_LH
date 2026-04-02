@@ -1,4 +1,52 @@
-# 版本更新日志 v1.2
+# 版本更新日志
+
+## [v1.3] - 2026-04-02
+
+### 🏗️ 项目结构重建
+
+#### 扁平化目录结构
+- 将 `ChongzhenSim/` 子目录内容提升至项目根目录，消除不必要的嵌套
+- 游戏数据与静态资源迁移至标准 `public/` 目录（`public/data/`、`public/assets/`）
+- 修复生产构建中 `publicDir` 配置导致 JSON 数据文件路径不匹配的问题
+
+#### npm workspaces 统一依赖管理
+- 使用根 `package.json` 管理工作区，`npm install` 一次安装所有依赖
+- `server/` 作为工作区子包，无需单独进入目录安装
+
+#### 测试框架统一
+- 服务端测试从 Jest 迁移至 Vitest
+- 前后端统一使用 Vitest，单一命令 `npm test` 运行全部 169 个用例
+- 消除对 Jest 的依赖
+
+#### 静态部署支持
+- 新增 GitHub Pages 自动部署工作流（`.github/workflows/deploy.yml`）
+- `npm run build` 生成的 `dist/` 目录可直接部署至任何静态托管平台
+- 修复 Vite `publicDir` 配置，确保 `data/` 文件在生产构建中路径正确
+
+#### 开发体验优化
+- 安装依赖：根目录执行 `npm install` 即可
+- 启动开发：`npm run start`（同时启动前后端）或 `npm run dev`（仅前端）
+- 运行测试：`npm test`
+- 生产构建：`npm run build`
+
+### 📁 文件变更
+
+| 原路径 | 新路径 | 说明 |
+|--------|--------|------|
+| `ChongzhenSim/js/` | `js/` | 前端源码 |
+| `ChongzhenSim/css/` | `css/` | 样式文件 |
+| `ChongzhenSim/data/` | `public/data/` | 静态数据 |
+| `ChongzhenSim/assets/` | `public/assets/` | 静态资源 |
+| `ChongzhenSim/server/` | `server/` | 后端服务 |
+| `ChongzhenSim/index.html` | `index.html` | 前端入口 |
+| `ChongzhenSim/package.json` | `package.json` | 根工作区配置 |
+
+### 🧪 测试覆盖
+
+- 全部测试：169 个用例通过 ✅
+- 服务端测试已从 Jest/CommonJS 迁移为 Vitest 兼容格式
+
+---
 
 ## [v1.2] - 2026-03-20 ~ 2026-03-28
 

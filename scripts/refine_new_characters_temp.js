@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const CHARACTERS_PATH = path.join(process.cwd(), "ChongzhenSim", "data", "characters.json");
+const CHARACTERS_PATH = path.join(process.cwd(), "public", "data", "characters.json");
 
 const COURTESY_POOL = [
   "子和", "伯敬", "仲明", "叔达", "季常", "公望", "公实", "景行", "景纯", "元直",

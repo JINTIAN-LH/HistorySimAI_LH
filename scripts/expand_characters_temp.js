@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const TARGET_COUNT = 150;
-const CHARACTERS_PATH = path.join(process.cwd(), "ChongzhenSim", "data", "characters.json");
+const CHARACTERS_PATH = path.join(process.cwd(), "public", "data", "characters.json");
 
 // Research seed pages used when curating the temporary expansion list:
 // https://zh.wikipedia.org/wiki/明朝内阁辅臣列表
