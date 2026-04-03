@@ -19,9 +19,9 @@
 
 一款由 AI 驱动的历史模拟器，打破传统文字游戏的剧情与交互壁垒，实现不同历史背景下的沉浸式模拟体验。
 
-- 不同历史背景的模拟项目独立存放在子文件夹中
-- 每个子项目可通过自身对应的 README 文件完成个性化配置
-- 轻量配置即可快速启动不同朝代、不同地域的历史模拟场景
+- 轻量化项目结构，前后端代码统一管理
+- 通过 npm workspaces 管理前后端依赖
+- 轻量配置即可快速启动历史模拟场景
 
 ---
 
@@ -53,7 +53,7 @@
 | **数据** | 静态 JSON | 无数据库，轻量部署 |
 | **存储** | localStorage | 存档持久化 |
 | **构建** | Vite | 现代化构建工具 |
-| **测试** | Jest + Vitest | 前后端测试覆盖 |
+| **测试** | Vitest | 前后端统一测试 |
 
 ---
 
@@ -61,38 +61,42 @@
 
 ```
 HistorySimAI/
-├── ChongzhenSim/              # 崇祯皇帝模拟器
-│   ├── index.html             # 前端入口
-│   ├── js/
-│   │   ├── main.js            # 应用启动
-│   │   ├── state.js           # 全局状态管理
-│   │   ├── router.js          # 视图路由
-│   │   ├── api/               # LLM API 封装
-│   │   │   ├── llmStory.js    # 剧情生成 API
-│   │   │   └── ministerChat.js# 大臣聊天 API
-│   │   ├── systems/           # 核心系统
-│   │   │   ├── storySystem.js # 剧情系统
-│   │   │   ├── turnSystem.js  # 回合系统
-│   │   │   ├── courtSystem.js # 朝堂系统
-│   │   │   └── nationSystem.js# 国势系统
-│   │   ├── ui/                # UI 视图组件
-│   │   └── utils/             # 工具函数
-│   │       ├── effectsProcessor.js  # 效果计算
-│   │       ├── storyParser.js       # 剧情解析
-│   │       ├── storyRenderer.js     # 剧情渲染
-│   │       └── storyUI.js           # UI 组件
-│   ├── server/                # Node.js 后端
-│   │   ├── index.js           # Express 服务
-│   │   ├── config.json        # LLM 配置（需创建）
-│   │   ├── config.example.json# 配置模板
-│   │   └── schemaValidator.js # JSON Schema 验证
+├── index.html                 # 前端入口
+├── package.json               # 根工作区配置
+├── vite.config.js             # Vite 构建配置
+├── vitest.config.js           # 测试配置
+├── js/                        # 前端源码
+│   ├── main.js                # 应用启动
+│   ├── state.js               # 全局状态管理
+│   ├── router.js              # 视图路由
+│   ├── api/                   # LLM API 封装
+│   │   ├── llmStory.js        # 剧情生成 API
+│   │   └── ministerChat.js    # 大臣聊天 API
+│   ├── systems/               # 核心系统
+│   │   ├── storySystem.js     # 剧情系统
+│   │   ├── turnSystem.js      # 回合系统
+│   │   ├── courtSystem.js     # 朝堂系统
+│   │   └── nationSystem.js    # 国势系统
+│   ├── ui/                    # UI 视图组件
+│   └── utils/                 # 工具函数
+│       ├── effectsProcessor.js# 效果计算
+│       ├── storyParser.js     # 剧情解析
+│       ├── storyRenderer.js   # 剧情渲染
+│       └── storyUI.js         # UI 组件
+├── server/                    # Node.js 后端
+│   ├── index.js               # Express 服务
+│   ├── config.json            # LLM 配置（需创建）
+│   ├── config.example.json    # 配置模板
+│   └── schemaValidator.js     # JSON Schema 验证
+├── public/                    # 静态资源（Vite public 目录）
 │   ├── data/                  # 静态数据
 │   │   ├── characters.json    # 大臣角色
 │   │   ├── config.json        # 前端配置
 │   │   ├── factions.json      # 派系关系
 │   │   └── story/             # 本地剧情
-│   ├── css/                   # 样式文件
 │   └── assets/                # 大臣头像
+├── css/                       # 样式文件
+├── scripts/                   # 开发脚本
 ├── .gitignore
 ├── LICENSE
 └── README.md
@@ -109,7 +113,7 @@ HistorySimAI/
 | `LLM_API_BASE` | API 网关地址 | ` |
 | `PORT` | 服务端口 | `3002` |
 
-### 前端配置 (`data/config.json`)
+### 前端配置 (`public/data/config.json`)
 
 | 字段 | 说明 | 可选值 |
 |------|------|--------|
@@ -122,9 +126,15 @@ HistorySimAI/
 
 ## 启动方式
 
-### 一条命令启动前后端
+### 安装依赖
 
-进入 [ChongzhenSim](ChongzhenSim) 目录后执行：
+```bash
+npm install
+```
+
+npm workspaces 会自动安装前端和 `server/` 后端的依赖。
+
+### 一条命令启动前后端
 
 ```bash
 npm run start
@@ -142,15 +152,6 @@ npm run start
 ```bash
 npm run start:frontend
 npm run start:server
-```
-
-启动前建议先分别安装依赖：
-
-```bash
-cd ChongzhenSim
-npm install
-cd server
-npm install
 ```
 
 ---
