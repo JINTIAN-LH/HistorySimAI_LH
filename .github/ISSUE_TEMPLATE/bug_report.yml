@@ -1,0 +1,77 @@
+name: 🐛 Bug Report
+description: 报告游戏中的 Bug 或异常行为
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你花时间填写这份 Bug 报告！请尽量详细描述，以便我们快速定位和修复问题。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug 描述
+      description: 请清晰简洁地描述发生了什么问题。
+      placeholder: 描述你遇到的 Bug……
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 描述复现 Bug 的操作步骤。
+      placeholder: |
+        1. 进入 '...' 界面
+        2. 点击 '...'
+        3. 看到错误 '...'
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+      description: 描述你期望发生什么。
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 描述实际发生了什么。
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图 / 录屏（可选）
+      description: 如有截图或录屏，请粘贴至此。
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: 浏览器
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - 其他
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: 操作系统
+      placeholder: 例如：Windows 11 / macOS 14 / iOS 17
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充信息（可选）
+      description: 游戏存档状态、控制台报错等任何有助于定位问题的信息。
