@@ -1,0 +1,47 @@
+version: 2
+updates:
+  # Frontend dependencies (ChongzhenSim)
+  - package-ecosystem: "npm"
+    directory: "/ChongzhenSim"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      vite-ecosystem:
+        patterns:
+          - "vite"
+          - "@vitejs/*"
+          - "vitest"
+      jsdom:
+        patterns:
+          - "jsdom"
+
+  # Server dependencies (ChongzhenSim/server)
+  - package-ecosystem: "npm"
+    directory: "/ChongzhenSim/server"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(actions)"
