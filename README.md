@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/powered%20by-Funloom%20AI-4285F4.svg" alt="Powered by Funloom AI">
   <img src="https://img.shields.io/badge/type-AI%E6%96%87%E6%B8%B8%E5%88%9B%E4%BD%9C-FF6B6B.svg" alt="AI文游创作">
   <img src="https://img.shields.io/badge/state-开发中-4CAF50.svg" alt="开发中">
-  <img src="https://img.shields.io/badge/tests-56%20passed-brightgreen.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-169%20passed-brightgreen.svg" alt="Tests">
 </div>
 
 本项目由 **Funloom AI** 强力支持，基于 Funloom 推出的 AI 文游创作工具开发实现，让历史模拟类文字游戏的创作与体验更具沉浸感和趣味性。
@@ -160,11 +160,23 @@ npm run start:server
 
 ### 崇祯皇帝模拟器
 
-- **时间系统**：早朝 → 午后 → 夜间 → 次日循环
+- **时间系统**：以月为单位推进，季度结算机制，早朝 → 午后 → 夜间循环
 - **国家数值**：国库、粮储、军力、民心、边患、天灾、贪腐
 - **大臣系统**：10 位历史大臣，各有派系和忠诚度
-- **自拟诏书**：玩家可自由撰写决策内容
+- **科举/武举系统**：通过科举选拔文官、武举选拔武将，扩充官员候选池
+- **国策树**：50+ 可选国策，影响国家数值走向
+- **敌对势力系统**：敌对势力可被打击至灭亡，省份动态规则驱动
+- **季度议题**：每季度自动生成急/重/缓三类朝堂议题
+- **皇帝成长**：皇帝属性成长，影响决策效果
+- **自拟诏书**：玩家可自由撰写决策内容，AI 解析并应用数值效果
 - **AI 剧情生成**：基于当前状态动态生成剧情
+
+### 双模式
+
+| 模式 | 说明 |
+|------|------|
+| **经典模式** | 玩家自由撰写诏书并与大臣互动，AI 实时生成剧情 |
+| **困难模式** | 刚性历史事件驱动，记忆锚点与执行约束链最大化历史还原度 |
 
 ### 大臣角色
 
