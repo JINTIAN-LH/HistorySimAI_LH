@@ -34,6 +34,22 @@ function writeJsonSafely(filePath, value) {
   fs.writeFileSync(filePath, payload, "utf8");
 }
 
+function isLoopbackHost(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized === "localhost" || normalized === "127.0.0.1" || normalized === "::1";
+}
+
+function extractHostname(input) {
+  if (!input) return "";
+  try {
+    return new URL(input).hostname || "";
+  } catch (_) {
+    const raw = String(input || "").trim();
+    const withoutPort = raw.split(":")[0];
+    return withoutPort;
+  }
+}
+
 function createApp(options = {}) {
   const app = express();
   
@@ -63,7 +79,7 @@ function createApp(options = {}) {
 
   let config = options.config || readJsonSafely(configPath) || {};
   if (!options.config && !Object.keys(config).length && !options.allowMissingConfig) {
-    console.warn("未找到 server/config.json 或格式错误。服务将以未配置状态启动，等待前端引导写入配置。");
+    console.warn("未找到 server/config.json 或格式错误。服务将以无默认模型配置启动；公网玩家仍可通过请求级模型配置游玩。");
   }
 
   const charactersData = options.charactersData || adaptCharactersData(readJsonSafely(charactersPath), worldviewOverrides);
@@ -116,10 +132,53 @@ function createApp(options = {}) {
         },
       },
       tips: [
-        "只需要补齐本地服务端用于调用大模型的参数，不会影响你的存档。",
-        "如果你不确定，通常只要填写 API Key，保留默认 Base 和模型即可开始游玩。",
+        "这是本地开发用的服务端默认配置入口，不面向公网玩家开放。",
+        "公开部署时，推荐让玩家通过请求级模型配置使用自己的 API Key。",
       ],
     };
+  }
+
+  function isConfigManagementEnabled(req) {
+    if (options.allowConfigManagement === true) {
+      return true;
+    }
+
+    if (String(process.env.ENABLE_SERVER_CONFIG_STATUS || "").trim().toLowerCase() === "true") {
+      return true;
+    }
+
+    const forwardedFor = String(req?.headers?.["x-forwarded-for"] || "").split(",")[0].trim().replace(/^::ffff:/, "");
+    if (forwardedFor) {
+      return isLoopbackHost(forwardedFor);
+    }
+
+    const host = extractHostname(req?.get?.("host"));
+    if (host) {
+      return isLoopbackHost(host);
+    }
+
+    const originHost = extractHostname(req?.get?.("origin"));
+    if (originHost) {
+      return isLoopbackHost(originHost);
+    }
+
+    const refererHost = extractHostname(req?.get?.("referer"));
+    if (refererHost) {
+      return isLoopbackHost(refererHost);
+    }
+
+    const ip = String(req?.ip || req?.socket?.remoteAddress || "").replace(/^::ffff:/, "");
+    if (isLoopbackHost(ip)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  function rejectPublicConfigManagement(res) {
+    return res.status(403).json({
+      error: "config-status is disabled for public deployments",
+    });
   }
 
   function getCharacters() {
@@ -493,11 +552,18 @@ function createApp(options = {}) {
     return base;
   }
 
-  app.get("/api/chongzhen/config-status", (_req, res) => {
+  app.get("/api/chongzhen/config-status", (req, res) => {
+    if (!isConfigManagementEnabled(req)) {
+      return rejectPublicConfigManagement(res);
+    }
     return res.json(buildConfigStatusPayload());
   });
 
   app.post("/api/chongzhen/config-status", (req, res) => {
+    if (!isConfigManagementEnabled(req)) {
+      return rejectPublicConfigManagement(res);
+    }
+
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const nextApiKey = String(body.LLM_API_KEY || "").trim();
     const nextApiBase = String(body.LLM_API_BASE || "").trim() || "https://open.bigmodel.cn/api/paas/v4";

@@ -12,6 +12,7 @@ build/
 
 # Sensitive config (contains API keys)
 server/config.json
+ChongzhenSim/server/config.json
 config.json
 
 # IDE

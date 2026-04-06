@@ -65,6 +65,7 @@ describe('API Endpoints', () => {
       const { app } = createApp({
         configPath: missingConfigPath,
         charactersData: mockCharactersData,
+        allowConfigManagement: true,
       });
 
       const res = await request(app).get('/api/chongzhen/config-status');
@@ -80,6 +81,7 @@ describe('API Endpoints', () => {
         config: {},
         charactersData: mockCharactersData,
         allowMissingConfig: true,
+        allowConfigManagement: true,
       });
 
       const res = await request(app).get('/api/chongzhen/config-status');
@@ -100,6 +102,7 @@ describe('API Endpoints', () => {
         configPath,
         charactersData: mockCharactersData,
         allowMissingConfig: true,
+        allowConfigManagement: true,
       });
 
       const res = await request(app)
@@ -132,6 +135,7 @@ describe('API Endpoints', () => {
         config: {},
         charactersData: mockCharactersData,
         allowMissingConfig: true,
+        allowConfigManagement: true,
       });
 
       const res = await request(app)
@@ -140,6 +144,22 @@ describe('API Endpoints', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('LLM_API_KEY is required');
+    });
+
+    it('should reject config-status access from public deployments by default', async () => {
+      const { app } = createApp({
+        config: {},
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const res = await request(app)
+        .get('/api/chongzhen/config-status')
+        .set('host', 'historysimai-lh.onrender.com')
+        .set('x-forwarded-for', '8.8.8.8');
+
+      expect(res.status).toBe(403);
+      expect(res.body.error).toBe('config-status is disabled for public deployments');
     });
   });
 
