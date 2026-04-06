@@ -1070,3 +1070,122 @@ describe("融合版本 — 战后恢复期", () => {
     expect(enemyKilled).toBeLessThan(session.initialEnemyCount);
   });
 });
+
+/* ──────────────────────────────────────────────
+   高玩内测专项 — chargeCooldown 实现验证
+   ────────────────────────────────────────────── */
+describe("高玩内测专项 — chargeCooldown 冷却机制", () => {
+  it("关宁铁骑配置了 chargeCooldown:2，冷却内选 charge 不触发冲锋加成", () => {
+    // 第1回合使用了冲锋，lastChargeRound=1，第2回合处于冷却（1+2>2）
+    const coolingSession = makeSession({
+      round: 2,
+      lastChargeRound: 1,
+      playerUnits: [{ unitId: "cavalry_guanning", count: 5000, morale: 80 }],
+      enemyUnits: [{ unitId: "infantry_spear", count: 5000, morale: 65 }],
+    });
+    const advanceSession = makeSession({
+      round: 2,
+      lastChargeRound: 1,
+      playerUnits: [{ unitId: "cavalry_guanning", count: 5000, morale: 80 }],
+      enemyUnits: [{ unitId: "infantry_spear", count: 5000, morale: 65 }],
+    });
+    const coolingResult = resolveBattleRound(coolingSession, "charge");
+    const advanceResult = resolveBattleRound(advanceSession, "advance");
+    // 冷却期间 charge 应退化为普通攻击，与 advance 结果相当（无 chargeBonus）
+    expect(coolingResult.playerDmgDealt).toBe(advanceResult.playerDmgDealt);
+  });
+
+  it("冷却结束后（第3回合）charge 重新触发冲锋加成", () => {
+    // lastChargeRound=1，chargeCooldown=2，第3回合：1+2=3，不大于3，冷却结束
+    const refreshedSession = makeSession({
+      round: 3,
+      lastChargeRound: 1,
+      playerUnits: [{ unitId: "cavalry_guanning", count: 5000, morale: 80 }],
+      enemyUnits: [{ unitId: "infantry_spear", count: 5000, morale: 65 }],
+    });
+    const advanceSession = makeSession({
+      round: 3,
+      lastChargeRound: 1,
+      playerUnits: [{ unitId: "cavalry_guanning", count: 5000, morale: 80 }],
+      enemyUnits: [{ unitId: "infantry_spear", count: 5000, morale: 65 }],
+    });
+    const chargeResult  = resolveBattleRound(refreshedSession, "charge");
+    const advanceResult = resolveBattleRound(advanceSession, "advance");
+    // 冷却完毕，charge 应再次高于 advance
+    expect(chargeResult.playerDmgDealt).toBeGreaterThan(advanceResult.playerDmgDealt);
+  });
+
+  it("resolveBattleRound 在 charge 决策时返回 chargeUsedThisRound=true", () => {
+    const session = makeSession({ round: 1 });
+    const result = resolveBattleRound(session, "charge");
+    expect(result.chargeUsedThisRound).toBe(true);
+  });
+
+  it("resolveBattleRound 在 advance 决策时返回 chargeUsedThisRound=false", () => {
+    const session = makeSession({ round: 1 });
+    const result = resolveBattleRound(session, "advance");
+    expect(result.chargeUsedThisRound).toBe(false);
+  });
+
+  it("buildInitialSession 包含 lastChargeRound:0 字段", () => {
+    const state = makeBaseState();
+    const force = { id: "li_zicheng", name: "李自成", power: 60 };
+    const choice = { text: "出征", effects: {} };
+    const session = buildInitialSession(state, force, choice);
+    expect(session.lastChargeRound).toBe(0);
+  });
+});
+
+/* ──────────────────────────────────────────────
+   高玩内测专项 — 雨天天气对称性（敌我一致）
+   ────────────────────────────────────────────── */
+describe("高玩内测专项 — 雨天敌方火铳对称哑火", () => {
+  it("雨天敌方火铳伤害与晴天相比被清零", () => {
+    const rainSession = makeSession({
+      weather: "rain",
+      round: 1,
+      // 己方无攻击力，让 playerDmg≈0，专门测 enemyDmg
+      playerUnits: [{ unitId: "infantry_spear", count: 1, morale: 10 }],
+      enemyUnits:  [{ unitId: "firearm",         count: 3000, morale: 80 }],
+    });
+    const clearSession = makeSession({
+      weather: "clear",
+      round: 1,
+      playerUnits: [{ unitId: "infantry_spear", count: 1, morale: 10 }],
+      enemyUnits:  [{ unitId: "firearm",         count: 3000, morale: 80 }],
+    });
+    const rainResult  = resolveBattleRound(rainSession,  "hold");
+    const clearResult = resolveBattleRound(clearSession, "hold");
+    // 雨天敌方火铳应哑火 → 敌方伤害更低
+    expect(rainResult.enemyDmgDealt).toBeLessThan(clearResult.enemyDmgDealt);
+  });
+});
+
+/* ──────────────────────────────────────────────
+   高玩内测专项 — state.weather 作为战场天气 fallback
+   ────────────────────────────────────────────── */
+describe("高玩内测专项 — state.weather 天气联动", () => {
+  const force = { id: "li_zicheng", name: "李自成", power: 50 };
+
+  it("choice.text 无天气关键字时，state.weather='桃花雪' 应映射到雪天", () => {
+    const state = { ...makeBaseState(), weather: "桃花雪" };
+    const choice = { text: "出征征讨李自成", effects: {} };
+    const session = buildInitialSession(state, force, choice);
+    expect(session.weather).toBe("snow");
+  });
+
+  it("choice.text 有天气关键字时，优先使用 choice.text 的天气", () => {
+    const state = { ...makeBaseState(), weather: "大雪漫天" };
+    const choice = { text: "趁阴雨出兵渡河", effects: {} };
+    const session = buildInitialSession(state, force, choice);
+    // choice.text 含"雨"→ rain，state.weather 含"雪"→ 应被忽略
+    expect(session.weather).toBe("rain");
+  });
+
+  it("choice.text 与 state.weather 均无天气关键字时，默认晴天", () => {
+    const state = { ...makeBaseState(), weather: "秋高气爽" };
+    const choice = { text: "出征征讨", effects: {} };
+    const session = buildInitialSession(state, force, choice);
+    expect(session.weather).toBe("clear");
+  });
+});

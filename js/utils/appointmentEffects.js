@@ -6,6 +6,13 @@ function compactText(text) {
   return String(text || "").replace(/\s+/g, "");
 }
 
+function splitActionClauses(text) {
+  return compactText(text)
+    .split(/[，；。！？]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function toPattern(text) {
   return escapeRegExp(compactText(text));
 }
@@ -142,6 +149,7 @@ export function normalizeAppointmentEffects(effects, context = {}) {
 export function deriveAppointmentEffectsFromText(edictText, context = {}) {
   const text = compactText(edictText);
   if (!text) return null;
+  const clauses = splitActionClauses(edictText);
 
   const ministers = Array.isArray(context.ministers) ? context.ministers : [];
   const positions = Array.isArray(context.positions) ? context.positions : [];
@@ -164,7 +172,7 @@ export function deriveAppointmentEffectsFromText(edictText, context = {}) {
 
     const posPattern = toPattern(positionName);
     const dismissByPosition = new RegExp(`${dismissKeyword}.{0,10}${posPattern}|${posPattern}.{0,8}${dismissKeyword}`);
-    if (dismissByPosition.test(text)) {
+    if (clauses.some((clause) => dismissByPosition.test(clause))) {
       dismissSet.add(positionId);
     }
 
@@ -179,14 +187,14 @@ export function deriveAppointmentEffectsFromText(edictText, context = {}) {
       const appointPattern = new RegExp(
         `${appointKeyword}.{0,10}${charPattern}.{0,8}(?:为|任|出任|担任)?${posPattern}|${charPattern}.{0,8}${appointKeyword}.{0,8}(?:为|任|出任|担任)?${posPattern}|${charPattern}.{0,4}(?:为|任|出任|担任)${posPattern}`
       );
-      if (appointPattern.test(text)) {
+      if (clauses.some((clause) => appointPattern.test(clause))) {
         appointMap[positionId] = characterId;
       }
 
       const dismissByPersonAndPosition = new RegExp(
         `${dismissKeyword}.{0,8}${charPattern}.{0,8}${posPattern}|${charPattern}.{0,8}${dismissKeyword}.{0,8}${posPattern}`
       );
-      if (dismissByPersonAndPosition.test(text)) {
+      if (clauses.some((clause) => dismissByPersonAndPosition.test(clause))) {
         dismissSet.add(positionId);
       }
     });
@@ -203,7 +211,7 @@ export function deriveAppointmentEffectsFromText(edictText, context = {}) {
 
     const charPattern = toPattern(characterName);
     const dismissByPerson = new RegExp(`${dismissKeyword}.{0,8}${charPattern}|${charPattern}.{0,8}${dismissKeyword}`);
-    if (dismissByPerson.test(text)) {
+    if (clauses.some((clause) => dismissByPerson.test(clause))) {
       dismissSet.add(currentPositionId);
     }
 

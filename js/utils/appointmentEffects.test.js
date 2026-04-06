@@ -50,6 +50,42 @@ describe("deriveAppointmentEffectsFromText", () => {
       appointments: { neige_shoufu: "bi_ziyan" },
     });
   });
+
+  it("should not bind one minister across multiple appointment clauses", () => {
+    const out = deriveAppointmentEffectsFromText(
+      "任命孙承宗为兵部尚书，任命毕自严为内阁首辅",
+      {
+        ...context,
+        positions: [...context.positions, { id: "bingbu_shangshu", name: "兵部尚书" }],
+        ministers: [...context.ministers, { id: "sun_chengzong", name: "孙承宗" }],
+      }
+    );
+
+    expect(out).toEqual({
+      appointments: {
+        bingbu_shangshu: "sun_chengzong",
+        neige_shoufu: "bi_ziyan",
+      },
+    });
+  });
+
+  it("should keep compatibility with compact multi-appointment wording", () => {
+    const out = deriveAppointmentEffectsFromText(
+      "任命孙承宗、毕自严分别为兵部尚书、内阁首辅",
+      {
+        ...context,
+        positions: [...context.positions, { id: "bingbu_shangshu", name: "兵部尚书" }],
+        ministers: [...context.ministers, { id: "sun_chengzong", name: "孙承宗" }],
+      }
+    );
+
+    expect(out).toEqual({
+      appointments: {
+        bingbu_shangshu: "sun_chengzong",
+        neige_shoufu: "bi_ziyan",
+      },
+    });
+  });
 });
 
 describe("normalizeAppointmentEffects", () => {

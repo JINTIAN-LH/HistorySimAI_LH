@@ -3,21 +3,33 @@
   "version": "1.2.0",
   "private": true,
   "type": "module",
-  "workspaces": ["server"],
+  "workspaces": [
+    "server"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "fleet:run": "node scripts/fleet-runner.mjs run",
+    "fleet:summary": "node scripts/fleet-runner.mjs summary",
     "preview": "vite preview",
     "start": "node scripts/start-dev.mjs",
     "start:frontend": "vite",
     "start:server": "npm --prefix server start",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:headless-playtest": "node scripts/headless-playtest.mjs",
+    "verify:experience": "node scripts/verify-player-experience.mjs"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.0",
     "jsdom": "^26.0.0",
+    "supertest": "^7.2.2",
     "vite": "^7.3.1",
     "vitest": "^3.0.5",
-    "supertest": "^7.2.2"
+    "yaml": "^2.8.3"
   }
 }

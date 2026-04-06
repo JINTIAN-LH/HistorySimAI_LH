@@ -174,6 +174,81 @@ describe("turnSystem dual-mode one-turn loop", () => {
     }));
   });
 
+  it("does not trigger immediate natural deaths for Southern Song characters at game start", async () => {
+    setState({
+      config: {
+        ...(getState().config || {}),
+        startYear: 3,
+        absoluteStartYear: 1129,
+      },
+      allCharacters: [
+        {
+          id: "sun_chengzong",
+          name: "李纲",
+          birthYear: 1083,
+          deathYear: 1140,
+          isAlive: true,
+        },
+      ],
+      characterStatus: {
+        sun_chengzong: { isAlive: true },
+      },
+      appointments: {
+        neige_shoufu: "sun_chengzong",
+      },
+      systemNewsToday: [],
+      currentYear: 3,
+      currentMonth: 4,
+    });
+
+    let choiceTriggered = false;
+    mocked.renderStoryTurnMock.mockImplementation(async (_state, _container, onChoice) => {
+      if (!choiceTriggered) {
+        choiceTriggered = true;
+        await onChoice("classic_choice", "稳住朝局", null, { nation: { treasury: 1000 } });
+      }
+      return { choices: [] };
+    });
+
+    const container = document.getElementById("main-view");
+    await runCurrentTurn(container);
+
+    const state = getState();
+    expect(state.characterStatus.sun_chengzong.isAlive).toBe(true);
+    expect((state.systemNewsToday || []).some((item) => item?.title === "群臣讣告")).toBe(false);
+    expect(state.appointments.neige_shoufu).toBe("sun_chengzong");
+  });
+
+  it("fills missing non-resource estimates in classic mode when custom edict already adds appointments", async () => {
+    mocked.deriveAppointmentEffectsFromTextMock.mockReturnValueOnce({
+      appointments: { libu_shangshu: "minister_a" },
+    });
+    mocked.estimateEffectsFromEdictMock.mockReturnValueOnce({
+      treasury: -200000,
+      militaryStrength: 8,
+      civilMorale: 3,
+    });
+
+    let choiceTriggered = false;
+    mocked.renderStoryTurnMock.mockImplementation(async (_state, _container, onChoice) => {
+      if (!choiceTriggered) {
+        choiceTriggered = true;
+        await onChoice("custom_edict", "任命甲为吏部尚书，并发军饷", null, null);
+      }
+      return { choices: [] };
+    });
+
+    const container = document.getElementById("main-view");
+    await runCurrentTurn(container);
+
+    expect(mocked.applyEffectsMock).toHaveBeenCalledWith(expect.objectContaining({
+      appointments: expect.objectContaining({ libu_shangshu: "minister_a" }),
+      treasury: -200000,
+      militaryStrength: 8,
+      civilMorale: 3,
+    }));
+  });
+
   it("completes one rigid-mode turn loop through shared story entry", async () => {
     setState({
       mode: "rigid_v1",
@@ -226,6 +301,37 @@ describe("turnSystem dual-mode one-turn loop", () => {
     expect(mocked.deriveAppointmentEffectsFromTextMock).toHaveBeenCalled();
     expect(mocked.applyEffectsMock).toHaveBeenCalledWith(expect.objectContaining({
       appointments: expect.objectContaining({ libu_shangshu: "minister_a" }),
+    }));
+  });
+
+  it("fills missing non-resource estimates in rigid mode custom edict flow", async () => {
+    setState({
+      mode: "rigid_v1",
+      config: { ...(getState().config || {}), gameplayMode: "rigid_v1", storyMode: "template", apiBase: "" },
+    });
+
+    mocked.estimateEffectsFromEdictMock.mockReturnValueOnce({
+      treasury: -200000,
+      militaryStrength: 8,
+      civilMorale: 3,
+    });
+
+    let choiceTriggered = false;
+    mocked.renderStoryTurnMock.mockImplementation(async (_state, _container, onChoice) => {
+      if (!choiceTriggered) {
+        choiceTriggered = true;
+        await onChoice("custom_edict", "发军饷以振军心", null, null);
+      }
+      return { choices: [] };
+    });
+
+    const container = document.getElementById("main-view");
+    await runCurrentTurn(container);
+
+    expect(mocked.applyEffectsMock).toHaveBeenCalledWith(expect.objectContaining({
+      treasury: -200000,
+      militaryStrength: 8,
+      civilMorale: 3,
     }));
   });
 

@@ -9,13 +9,13 @@ import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot } from "../utils/
 import { deriveAppointmentEffectsFromText, normalizeAppointmentEffects } from "../utils/appointmentEffects.js";
 import { advanceKejuSession, advanceWujuSession, getKejuStateSnapshot, getWujuStateSnapshot, resetKejuForNextCycle, resetWujuForNextCycle } from "./kejuSystem.js";
 import { buildStoryFactsFromState } from "../utils/storyFacts.js";
+import { getAbsoluteYearForEraYear } from "../utils/eraYear.js";
 import { isRigidMode } from "../rigid/config.js";
 import { ensureRigidState, runRigidTurn } from "../rigid/engine.js";
 import { appendMemoryAnchor, createMemoryAnchor } from "../rigid/memory.js";
 import { computeRigidSettlementDelta } from "../rigid/settlement.js";
 
 let positionsMetaCache = null;
-const CHONGZHEN_BASE_YEAR = 1627;
 
 async function getPositionsMeta() {
   if (positionsMetaCache) return positionsMetaCache;
@@ -37,6 +37,41 @@ function getAllCharacters(state) {
     : Array.isArray(state?.ministers)
       ? state.ministers
       : [];
+}
+
+function mergeMissingEstimatedEffects(baseEffects, estimatedEffects) {
+  if (!estimatedEffects || typeof estimatedEffects !== "object") return baseEffects;
+
+  const next = baseEffects && typeof baseEffects === "object" ? { ...baseEffects } : {};
+  const mergeableKeys = [
+    "treasury",
+    "grain",
+    "militaryStrength",
+    "civilMorale",
+    "borderThreat",
+    "disasterLevel",
+    "corruptionLevel",
+  ];
+
+  let changed = false;
+  mergeableKeys.forEach((key) => {
+    if (typeof next[key] === "number") return;
+    if (typeof estimatedEffects[key] !== "number") return;
+    next[key] = estimatedEffects[key];
+    changed = true;
+  });
+
+  return changed ? next : baseEffects;
+}
+
+export function buildCustomPolicyQuarterNews(customPolicyCount, customBonus) {
+  if (!customPolicyCount || !customBonus) return null;
+  return {
+    title: "自定义国策生效",
+    summary: `本季 ${customPolicyCount} 条自定义国策参与结算：财政系数 x${customBonus.treasuryRatio.toFixed(2)}，粮储系数 x${customBonus.grainRatio.toFixed(2)}，军力 +${customBonus.militaryDelta}，贪腐 ${customBonus.corruptionDelta}。`,
+    tag: "重要",
+    icon: "📜",
+  };
 }
 
 async function remindVacantCourtPositionsYearEnd() {
@@ -75,7 +110,7 @@ function progressNaturalMinisterDeaths(nextYear, nextMonth) {
   const allCharacters = getAllCharacters(state);
   if (!allCharacters.length) return;
 
-  const absoluteYear = CHONGZHEN_BASE_YEAR + (nextYear || 1);
+  const absoluteYear = getAbsoluteYearForEraYear(nextYear || 1, state.config);
   const characterStatus = { ...(state.characterStatus || {}) };
   const appointments = { ...(state.appointments || {}) };
   const deathList = [];
@@ -211,6 +246,19 @@ export function runCurrentTurn(container, options = {}) {
   return renderStoryTurn(state, container, handleChoice, options);
 }
 
+function getEdictRerenderTarget() {
+  if (typeof document === "undefined") return null;
+  return document.querySelector(".main-view--edict") || document.getElementById("main-view");
+}
+
+function scrollEdictToLatest(target) {
+  if (!target) return;
+  const scrollHost = target?._storyLayout?.mainBody || target;
+  requestAnimationFrame(() => {
+    scrollHost.scrollTop = scrollHost.scrollHeight;
+  });
+}
+
 async function handleChoice(choiceId, choiceText, choiceHint, effects) {
   if (isRigidMode(getState())) {
     const beforeRigidState = getState();
@@ -258,16 +306,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     }
 
     const estimatedRigidEffects = estimateEffectsFromEdict(`${choiceText || ""}\n${choiceHint || ""}`);
-    if (estimatedRigidEffects && (typeof estimatedRigidEffects.treasury === "number" || typeof estimatedRigidEffects.grain === "number")) {
-      const base = rigidAppliedEffects && typeof rigidAppliedEffects === "object" ? { ...rigidAppliedEffects } : {};
-      if (typeof base.treasury !== "number" && typeof estimatedRigidEffects.treasury === "number") {
-        base.treasury = estimatedRigidEffects.treasury;
-      }
-      if (typeof base.grain !== "number" && typeof estimatedRigidEffects.grain === "number") {
-        base.grain = estimatedRigidEffects.grain;
-      }
-      rigidAppliedEffects = base;
-    }
+    rigidAppliedEffects = mergeMissingEstimatedEffects(rigidAppliedEffects, estimatedRigidEffects);
 
     const normalizedRigidEffects = rigidAppliedEffects
       ? normalizeAppointmentEffects(rigidAppliedEffects, {
@@ -361,14 +400,12 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     setState({ storyFacts: buildStoryFactsFromState(getState()) });
     autoSaveIfEnabled();
     updateTopbarByState(getState());
-    if (typeof window !== "undefined") {
-      const main = document.getElementById("main-view");
-      if (main) {
-        main.innerHTML = "";
-        await runCurrentTurn(main);
-        requestAnimationFrame(() => {
-          main.scrollTop = main.scrollHeight;
-        });
+  if (typeof window !== "undefined") {
+      const edictTarget = getEdictRerenderTarget();
+      if (edictTarget) {
+        edictTarget.innerHTML = "";
+        await runCurrentTurn(edictTarget);
+        scrollEdictToLatest(edictTarget);
       }
     }
     return;
@@ -426,16 +463,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
   }
 
   const estimatedClassicEffects = estimateEffectsFromEdict(`${choiceText || ""}\n${choiceHint || ""}`);
-  if (estimatedClassicEffects && (typeof estimatedClassicEffects.treasury === "number" || typeof estimatedClassicEffects.grain === "number")) {
-    const base = appliedEffects && typeof appliedEffects === "object" ? { ...appliedEffects } : {};
-    if (typeof base.treasury !== "number" && typeof estimatedClassicEffects.treasury === "number") {
-      base.treasury = estimatedClassicEffects.treasury;
-    }
-    if (typeof base.grain !== "number" && typeof estimatedClassicEffects.grain === "number") {
-      base.grain = estimatedClassicEffects.grain;
-    }
-    appliedEffects = base;
-  }
+  appliedEffects = mergeMissingEstimatedEffects(appliedEffects, estimatedClassicEffects);
 
   const normalizedAppointmentEffects = appliedEffects
     ? normalizeAppointmentEffects(appliedEffects, {
@@ -498,16 +526,12 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     const stateAfterQuarter = getState();
     const customPolicyCount = (stateAfterQuarter.customPolicies || []).length;
     const customBonus = quarterEffects._customPolicyBonus || null;
-    if (customPolicyCount > 0 && customBonus) {
+    const customPolicyNews = buildCustomPolicyQuarterNews(customPolicyCount, customBonus);
+    if (customPolicyNews) {
       setState({
         systemNewsToday: [
           ...(stateAfterQuarter.systemNewsToday || []),
-          {
-            title: "自定义国策生效",
-            summary: `本季 ${customPolicyCount} 条自定义国策参与结算：财政系数 x${customBonus.treasuryRatio.toFixed(2)}，粮储系数 x${customBonus.grainRatio.toFixed(2)}，军力 +${customBonus.militaryDelta}，贪腐 ${customBonus.corruptionDelta}。`,
-            tag: "重要",
-            icon: "📜",
-          },
+          customPolicyNews,
         ],
       });
     }
@@ -546,13 +570,11 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
   updateTopbarByState(getState());
 
   if (typeof window !== "undefined") {
-    const main = document.getElementById("main-view");
-    if (main) {
-      main.innerHTML = "";
-      await runCurrentTurn(main);
-      requestAnimationFrame(() => {
-        main.scrollTop = main.scrollHeight;
-      });
+    const edictTarget = getEdictRerenderTarget();
+    if (edictTarget) {
+      edictTarget.innerHTML = "";
+      await runCurrentTurn(edictTarget);
+      scrollEdictToLatest(edictTarget);
     }
   }
 }

@@ -31,6 +31,16 @@ const DEFAULT_BALANCE_CONFIG = {
     baseDamageMin: 4,
     baseDamageMax: 22,
   },
+  hostileGrowth: {
+    quarterlyBase: 2,
+    yearEndBonus: 1,
+    unrestThreshold: 24,
+    unrestBonus: 1,
+    borderThreatThreshold: 60,
+    borderThreatBonus: 1,
+    highPowerThreshold: 85,
+    highPowerBonus: 0,
+  },
   partyStrife: {
     currentWeight: 0.55,
     spreadWeight: 0.5,
@@ -75,6 +85,10 @@ function resolveBalanceConfig(balanceConfig) {
     military: {
       ...DEFAULT_BALANCE_CONFIG.military,
       ...(source.military || {}),
+    },
+    hostileGrowth: {
+      ...DEFAULT_BALANCE_CONFIG.hostileGrowth,
+      ...(source.hostileGrowth || {}),
     },
     partyStrife: {
       ...DEFAULT_BALANCE_CONFIG.partyStrife,
@@ -127,7 +141,7 @@ export const PLAYER_ABILITY_KEYS = ["management", "military", "scholarship", "po
 export const POLICY_CATALOG = [
   { id: "civil_light_tax", branch: "内政", title: "轻徭薄赋", cost: 1, requires: [], description: "降低税压，提振民间经济。" },
   { id: "civil_tax_reform", branch: "内政", title: "税制改革", cost: 1, requires: ["civil_light_tax"], description: "稳定财政，打击偷税漏税。" },
-  { id: "civil_canal", branch: "内政", title: "漕运整顿", cost: 1, requires: ["civil_tax_reform"], description: "修复京杭大运河，保障京师粮运。" },
+  { id: "civil_canal", branch: "内政", title: "漕运整顿", cost: 1, requires: ["civil_tax_reform"], description: "整顿江路转运，保障行在粮运。" },
   { id: "civil_salt_iron", branch: "内政", title: "盐铁官营优化", cost: 1, requires: ["civil_canal"], description: "平衡官私盐利，稳定盐税收入。" },
   { id: "civil_port_office", branch: "内政", title: "市舶司复开", cost: 1, requires: ["civil_salt_iron"], description: "重开广州、泉州市舶司，增加海关税收。" },
   { id: "civil_remove_mining_tax", branch: "内政", title: "矿税监裁撤", cost: 1, requires: ["civil_port_office"], description: "废除矿监税使，缓和官民矛盾。" },
@@ -140,11 +154,11 @@ export const POLICY_CATALOG = [
 
   { id: "military_border_defense", branch: "军事", title: "守边固防", cost: 1, requires: [], description: "提升边防收益。" },
   { id: "military_firearms", branch: "军事", title: "火器革新", cost: 1, requires: ["military_border_defense"], description: "强化火器部队战力。" },
-  { id: "military_capital_drill", branch: "军事", title: "京营整训", cost: 1, requires: ["military_firearms"], description: "整顿京营，恢复禁军战斗力。" },
+  { id: "military_capital_drill", branch: "军事", title: "禁军整训", cost: 1, requires: ["military_firearms"], description: "整顿宿卫兵马，恢复中枢禁军战斗力。" },
   { id: "military_recruit", branch: "军事", title: "边军募兵制", cost: 1, requires: ["military_capital_drill"], description: "提升兵员素质。" },
   { id: "military_wagon", branch: "军事", title: "车营重建", cost: 1, requires: ["military_recruit"], description: "复刻车营战术，对抗骑兵。" },
   { id: "military_navy", branch: "军事", title: "水师扩建", cost: 1, requires: ["military_wagon"], description: "打造沿海水师，抵御袭扰。" },
-  { id: "military_fort", branch: "军事", title: "堡垒防线修筑", cost: 1, requires: ["military_navy"], description: "在辽东修筑棱堡防线。" },
+  { id: "military_fort", branch: "军事", title: "堡垒防线修筑", cost: 1, requires: ["military_navy"], description: "在沿江要地修筑堡垒防线。" },
   { id: "military_command", branch: "军事", title: "兵备道整合", cost: 1, requires: ["military_fort"], description: "统一地方军务指挥。" },
   { id: "military_tuntian", branch: "军事", title: "军屯恢复", cost: 1, requires: ["military_command"], description: "鼓励士兵屯田，自给军粮。" },
   { id: "military_workshop", branch: "军事", title: "火器工坊集中", cost: 1, requires: ["military_tuntian"], description: "建立大型火器制造局。" },
@@ -169,8 +183,8 @@ export const POLICY_CATALOG = [
   { id: "tech_medicine", branch: "科技", title: "医学典籍整理", cost: 1, requires: ["tech_ship"], description: "推广防疫知识。" },
   { id: "tech_math", branch: "科技", title: "算学馆设立", cost: 1, requires: ["tech_medicine"], description: "培养算学人才，服务工程与历法。" },
 
-  { id: "diplomacy_mongol", branch: "外交", title: "联蒙制满", cost: 1, requires: [], description: "与蒙古结盟，牵制后金。" },
-  { id: "diplomacy_korea", branch: "外交", title: "朝鲜羁縻", cost: 1, requires: ["diplomacy_mongol"], description: "防止朝鲜倒向后金。" },
+  { id: "diplomacy_mongol", branch: "外交", title: "联外制敌", cost: 1, requires: [], description: "联络周边势力，牵制金军。" },
+  { id: "diplomacy_korea", branch: "外交", title: "邻邦羁縻", cost: 1, requires: ["diplomacy_mongol"], description: "防止周边势力倒向金军。" },
   { id: "diplomacy_macao", branch: "外交", title: "澳门通商", cost: 1, requires: ["diplomacy_korea"], description: "获取火器与技术。" },
   { id: "diplomacy_japan", branch: "外交", title: "日本勘合贸易重启", cost: 1, requires: ["diplomacy_macao"], description: "恢复官方贸易，抑制倭患。" },
   { id: "diplomacy_rome", branch: "外交", title: "遣使罗马", cost: 1, requires: ["diplomacy_japan"], description: "争取西方军事援助。" },
@@ -539,6 +553,33 @@ function buildStorylineTag(name) {
   return `${String(name || "未知势力").replace(/\s+/g, "")}_线`;
 }
 
+function buildHostileAliases(force) {
+  const aliases = new Set();
+  const add = (value) => {
+    if (typeof value !== "string") return;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    aliases.add(trimmed);
+    aliases.add(trimmed.replace(/\([^)]*\)/g, "").replace(/[（【].*?[】）]/g, "").trim());
+  };
+
+  add(force?.name);
+  add(force?.leader);
+
+  const name = String(force?.name || "");
+  if (name.includes("农民军") || name.includes("地方叛军")) {
+    ["流寇", "流民军", "地方乱军", "地方叛军", "兵乱"].forEach(add);
+  }
+  if (name.includes("后金") || name.includes("金军")) {
+    ["后金", "建奴", "金军", "北方敌军", "江北敌军", "满清"].forEach(add);
+  }
+  if (name.includes("登州叛军")) {
+    ["登州", "登州兵变", "孔有德部", "孔有德", "叛军"].forEach(add);
+  }
+
+  return Array.from(aliases).filter(Boolean);
+}
+
 export function initializeHostileForces(currentState, nationInit) {
   const existing = Array.isArray(currentState.hostileForces) ? currentState.hostileForces : [];
   if (existing.length) {
@@ -629,6 +670,7 @@ function parseChoiceTags(choiceText) {
     relief: /赈灾|赈济|赈恤|开仓|发粮|减免赋税|减税|免税/.test(text),
     military: /军饷|调兵|增兵|练兵|剿匪|边防|守关|火器|新军|征讨|北伐|平叛|出师|开拓|讨伐|灭贼|剿灭|攻城/.test(text),
     reform: /改革|税制|监察|考成|整顿|吏治|肃贪|反腐/.test(text),
+    consult: /廷议|会商|共商|商讨/.test(text),
     austerity: /裁撤|节流|压缩开支|裁员|俸禄/.test(text),
     emergency: /抄没|抄家|内帑|查抄/.test(text),
     antiEunuch: /阉党|魏忠贤|清洗阉党|处置阉党/.test(text),
@@ -712,8 +754,70 @@ function scheduleConsequences(choiceText, nextYear, nextMonth) {
   if (tags.royalReform) {
     add(6, "royal_reform_dividend", "宗室改革余波", "宗室开支被压缩，财政稍有回暖，但宗亲怨气累积。", { treasury: 200000, civilMorale: -2 }, { source: "宗室与地方士绅", text: "宗室俸禄被削，朝野私议不断。", type: "neutral" }, { imperial: -4, neutral: 2 });
   }
+  if (tags.consult && !tags.military) {
+    add(2, "court_consultation_delay", "廷议拖延后效", "廷议虽稳住朝堂，但决断迟缓使军务与地方处置出现滞后，边患与民间焦躁随之抬头。", { civilMorale: -2, borderThreat: 3, unrest: 1 });
+  }
 
   return scheduled;
+}
+
+function computeHostileNaturalGrowth(state, nextYear, nextMonth, choiceText) {
+  if (nextMonth % 3 !== 0) {
+    return null;
+  }
+
+  const activeHostiles = Array.isArray(state.hostileForces)
+    ? state.hostileForces.filter((item) => !item.isDefeated)
+    : [];
+  if (!activeHostiles.length) {
+    return null;
+  }
+
+  const balance = getBalanceFromState(state);
+  const growthConfig = balance.hostileGrowth || DEFAULT_BALANCE_CONFIG.hostileGrowth;
+  const unrest = clamp(state.unrest || 0, 0, 100);
+  const borderThreat = clamp(state.nation?.borderThreat || 0, 0, 100);
+  const suppressedTargets = new Set(extractHostileTargetsFromText(choiceText, activeHostiles));
+  const isYearEndQuarter = nextMonth === 12;
+  const nextHostiles = (state.hostileForces || []).map((item) => ({ ...item }));
+  const news = [];
+  let changed = false;
+
+  nextHostiles.forEach((item) => {
+    if (item.isDefeated || suppressedTargets.has(item.id)) {
+      return;
+    }
+
+    let growth = growthConfig.quarterlyBase;
+    if (isYearEndQuarter) growth += growthConfig.yearEndBonus;
+    if (unrest >= growthConfig.unrestThreshold) growth += growthConfig.unrestBonus;
+    if (borderThreat >= growthConfig.borderThreatThreshold) growth += growthConfig.borderThreatBonus;
+    if ((item.power || 0) >= growthConfig.highPowerThreshold) growth += growthConfig.highPowerBonus;
+
+    const nextPower = clamp((item.power || 0) + growth, 0, 100);
+    if (nextPower === item.power) {
+      return;
+    }
+
+    item.power = nextPower;
+    item.status = `${item.name}借季度间隙扩张，势力值升至 ${item.power}/100。`;
+    news.push({
+      title: `${item.name}趁隙坐大`,
+      summary: `季度结算期内，对${item.name}缺乏持续压制，其势力自然增长 ${growth} 点，当前为 ${item.power}/100。`,
+      tag: nextPower >= 90 ? "急" : "重",
+      icon: "⚠️",
+    });
+    changed = true;
+  });
+
+  if (!changed) {
+    return null;
+  }
+
+  return {
+    hostileForces: nextHostiles,
+    news,
+  };
 }
 
 function buildQuarterAgenda(state) {
@@ -1184,7 +1288,7 @@ function extractHostileTargetsFromText(choiceText, hostileForces) {
   const active = (hostileForces || []).filter((item) => !item.isDefeated);
   const targets = [];
   active.forEach((item) => {
-    const aliases = [item.name, item.leader].filter(Boolean);
+    const aliases = buildHostileAliases(item);
     if (aliases.some((name) => text.includes(name))) {
       targets.push(item.id);
     }
@@ -1220,7 +1324,7 @@ export function resolveHostileForcesAfterChoice(state, choiceText, effects, year
     balance.military.baseDamageMin,
     balance.military.baseDamageMax
   );
-  const effectsPatch = { militaryStrength: -2 };
+  const effectsPatch = { militaryStrength: -1 };
   let prestigeDelta = 0;
   const news = [];
   const defeatedTags = [];
@@ -1454,7 +1558,7 @@ function buildSystemPublicOpinion(state) {
   return opinions;
 }
 
-function buildSystemNews(state, quarterAgenda, resolvedConsequences) {
+function buildSystemNews(state, quarterAgenda, resolvedConsequences, hostileGrowthNews = []) {
   const news = [];
   if (quarterAgenda.length) {
     news.push({
@@ -1474,6 +1578,9 @@ function buildSystemNews(state, quarterAgenda, resolvedConsequences) {
   }
   resolvedConsequences.forEach((item) => {
     news.push({ title: item.title, summary: item.summary, tag: "重", icon: "🧭" });
+  });
+  hostileGrowthNews.forEach((item) => {
+    news.push(item);
   });
   return news;
 }
@@ -1596,11 +1703,14 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
     addEffect(agendaAdjust.directEffects);
   }
 
+  const hostileGrowth = computeHostileNaturalGrowth(state, nextYear, nextMonth, choiceText);
+
   const quarterAgenda = nextMonth % 3 === 0
     ? buildQuarterAgenda({
       ...state,
       currentYear: nextYear,
       currentMonth: nextMonth,
+      hostileForces: hostileGrowth?.hostileForces || state.hostileForces,
       prestige,
       executionRate,
       factionSupport,
@@ -1620,6 +1730,7 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
     unrest,
     taxPressure,
     pendingConsequences,
+    ...(hostileGrowth?.hostileForces ? { hostileForces: hostileGrowth.hostileForces } : {}),
     currentQuarterAgenda: quarterAgenda,
     currentQuarterFocus: null,
     abilityPoints: (state.abilityPoints || 0) + quarterReward,
@@ -1630,7 +1741,7 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
   if (nextProvinceStats) {
     nextState.provinceStats = nextProvinceStats;
   }
-  nextState.systemNewsToday = buildSystemNews(nextState, quarterAgenda, resolvedConsequences);
+  nextState.systemNewsToday = buildSystemNews(nextState, quarterAgenda, resolvedConsequences, hostileGrowth?.news || []);
 
   if (quarterReward > 0) {
     nextState.systemNewsToday.unshift({

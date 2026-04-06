@@ -5,6 +5,9 @@ import {
   appendTalentReserve,
   buildKejuCandidatePool,
   buildKejuRecommendPositions,
+  buildWujuRecommendPositions,
+  generateRandomKejuCandidates,
+  generateRandomWujuCandidates,
   getKejuStateSnapshot,
 } from "./kejuSystem.js";
 
@@ -97,6 +100,27 @@ describe("advanceKejuSession", () => {
     expect(started.generatedCandidates).toHaveLength(5);
     expect(started.candidatePool.length).toBeGreaterThanOrEqual(8);
   });
+
+  it("should generate candidate birth and death years around the configured Southern Song era", () => {
+    const state = {
+      currentYear: 3,
+      currentMonth: 4,
+      config: {
+        startYear: 3,
+        absoluteStartYear: 1129,
+      },
+    };
+
+    const kejuCandidates = generateRandomKejuCandidates(state, { random: () => 0.5, count: 2 });
+    const wujuCandidates = generateRandomWujuCandidates(state, { random: () => 0.5, count: 2 });
+
+    [...kejuCandidates, ...wujuCandidates].forEach((candidate) => {
+      expect(candidate.birthYear).toBeGreaterThanOrEqual(1039);
+      expect(candidate.birthYear).toBeLessThanOrEqual(1111);
+      expect(candidate.deathYear).toBeGreaterThan(candidate.birthYear);
+      expect(candidate.deathYear).toBeLessThanOrEqual(1199);
+    });
+  });
 });
 
 describe("appendTalentReserve", () => {
@@ -112,9 +136,14 @@ describe("appendTalentReserve", () => {
     };
     const positionsMeta = {
       positions: [
-        { id: "neige_shoufu", name: "内阁首辅", importance: 10, rank: 1 },
-        { id: "libu_shangshu", name: "吏部尚书", importance: 9, rank: 3 },
-        { id: "hubu_shangshu", name: "户部尚书", importance: 8, rank: 3 },
+        { id: "neige_shoufu", name: "内阁首辅", department: "neige", importance: 10, rank: 1 },
+        { id: "libu_shangshu", name: "吏部尚书", department: "libu", importance: 9, rank: 3 },
+        { id: "hubu_shangshu", name: "户部尚书", department: "hubu", importance: 8, rank: 3 },
+      ],
+      departments: [
+        { id: "neige", moduleId: "neige" },
+        { id: "libu", moduleId: "liubu" },
+        { id: "hubu", moduleId: "liubu" },
       ],
     };
     const reserve = appendTalentReserve(kejuState, positionsMeta, { neige_shoufu: "holder_1" }, 3, 4);
@@ -128,14 +157,65 @@ describe("appendTalentReserve", () => {
       [{ id: "a", name: "甲" }, { id: "b", name: "乙" }],
       {
         positions: [
-          { id: "mid", name: "中位", importance: 5, rank: 6 },
-          { id: "top", name: "高位", importance: 9, rank: 2 },
+          { id: "mid", name: "中位", department: "hubu", importance: 5, rank: 6 },
+          { id: "top", name: "高位", department: "neige", importance: 9, rank: 2 },
+        ],
+        departments: [
+          { id: "neige", moduleId: "neige" },
+          { id: "hubu", moduleId: "liubu" },
         ],
       },
       {}
     );
     expect(recommends[0].positionId).toBe("top");
     expect(recommends[1].positionId).toBe("mid");
+  });
+
+  it("should exclude military and palace positions from keju recommendations", () => {
+    const recommends = buildKejuRecommendPositions(
+      [{ id: "a", name: "甲" }, { id: "b", name: "乙" }],
+      {
+        positions: [
+          { id: "eunuch", name: "司礼监掌印太监", department: "neiting", importance: 10, rank: 1 },
+          { id: "marshal", name: "辽东总兵", department: "military", importance: 9, rank: 1 },
+          { id: "censor", name: "左都御史", department: "dutcheng", importance: 8, rank: 2 },
+          { id: "governor", name: "顺天府尹", department: "shuntian", importance: 7, rank: 3 },
+        ],
+        departments: [
+          { id: "neiting", moduleId: "neiting" },
+          { id: "military", moduleId: "junshi" },
+          { id: "dutcheng", moduleId: "fasisi" },
+          { id: "shuntian", moduleId: "difang" },
+        ],
+      },
+      {}
+    );
+
+    expect(recommends[0].positionId).toBe("censor");
+    expect(recommends[1].positionId).toBe("governor");
+  });
+});
+
+describe("buildWujuRecommendPositions", () => {
+  it("should exclude palace eunuch offices from wuju recommendations", () => {
+    const recommends = buildWujuRecommendPositions(
+      [{ id: "w1", name: "武甲" }],
+      {
+        positions: [
+          { id: "eunuch", name: "司礼监掌印太监", department: "neiting", importance: 10, rank: 1 },
+          { id: "governor", name: "蓟辽督师", department: "local", importance: 9, rank: 2 },
+          { id: "general", name: "辽东总兵", department: "military", importance: 8, rank: 3 },
+        ],
+        departments: [
+          { id: "neiting", moduleId: "neiting" },
+          { id: "local", moduleId: "difang" },
+          { id: "military", moduleId: "junshi" },
+        ],
+      },
+      { governor: "holder_1" }
+    );
+
+    expect(recommends[0].positionId).toBe("general");
   });
 });
 

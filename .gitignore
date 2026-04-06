@@ -58,3 +58,6 @@ coverage/
 .trae/
 .planning/
 skills-lock.json
+
+# Fleet execution reports
+.fleet/reports/

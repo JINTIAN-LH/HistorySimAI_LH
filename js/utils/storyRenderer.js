@@ -1,6 +1,6 @@
 import { buildSpeakerMap, buildMinisterNameToInfo, highlightMinisterNames, buildBlockText } from "../utils/storyParser.js";
 import { loadJSON } from "../dataLoader.js";
-import { AVAILABLE_AVATAR_NAMES, buildNameById, NATION_LABELS, INVERT_COLOR_KEYS } from "./sharedConstants.js";
+import { AVAILABLE_AVATAR_NAMES, buildNameById, NATION_LABELS, INVERT_COLOR_KEYS, resolveCharacterDisplayName, resolvePositionDisplayName } from "./sharedConstants.js";
 
 let positionsCache = null;
 
@@ -23,7 +23,7 @@ export async function renderDeltaCard(container, effects, state) {
     const nameById = buildNameById(ministers);
     for (const [id, delta] of Object.entries(effects.loyalty)) {
       if (typeof delta === "number" && delta !== 0) {
-        entries.push({ label: (nameById[id] || id) + " 忠诚", delta, invertColor: false });
+        entries.push({ label: resolveCharacterDisplayName(nameById, id) + " 忠诚", delta, invertColor: false });
       }
     }
   }
@@ -40,8 +40,8 @@ export async function renderDeltaCard(container, effects, state) {
     const ministers = getRosterCharacters(state);
     const nameById = buildNameById(ministers);
     for (const [positionId, characterId] of Object.entries(effects.appointments)) {
-      const posName = positionMap[positionId] || positionId;
-      const charName = nameById[characterId] || characterId;
+      const posName = resolvePositionDisplayName(positionMap, positionId);
+      const charName = resolveCharacterDisplayName(nameById, characterId);
       entries.push({ label: `任命 ${charName} 为 ${posName}`, delta: null, isAppointment: true });
     }
   }

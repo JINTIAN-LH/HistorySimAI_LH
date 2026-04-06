@@ -3,6 +3,8 @@ import {
   getState,
   setState,
   resetState,
+  selectState,
+  subscribeStateSelector,
   initializeAppointments,
   initializeCharacterStatus,
   getAliveCharacters,
@@ -278,5 +280,33 @@ describe('integration: appointment and death', () => {
     const newState = getState();
     expect(newState.appointments['neige_shoufu']).toBeUndefined();
     expect(newState.appointments['bingbu_shangshu']).toBeUndefined();
+  });
+});
+
+describe('state selectors', () => {
+  beforeEach(() => {
+    resetState();
+  });
+
+  it('selectState returns the selected slice', () => {
+    const nation = selectState((state) => state.nation);
+
+    expect(nation).toEqual(getState().nation);
+  });
+
+  it('subscribeStateSelector only notifies when the selected slice changes', () => {
+    const calls = [];
+    const unsubscribe = subscribeStateSelector(
+      (state) => state.nation,
+      () => calls.push('changed')
+    );
+
+    setState({ trackedGoalId: 'goal_a' });
+    expect(calls).toHaveLength(0);
+
+    setState({ nation: { ...getState().nation, treasury: 123 } });
+    expect(calls).toHaveLength(1);
+
+    unsubscribe();
   });
 });

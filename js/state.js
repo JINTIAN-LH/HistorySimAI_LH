@@ -1,4 +1,5 @@
 import { createDefaultRigidState, DEFAULT_RIGID_INITIAL } from "./rigid/config.js";
+import { DEFAULT_WORLD_VERSION } from "./worldVersion.js";
 
 const initialState = {
   schemaVersion: 2,
@@ -6,11 +7,12 @@ const initialState = {
   currentPhase: "morning",
   currentMonth: 4,
   currentYear: 3,
-  weather: "桃花雪",
+  weather: "阴寒",
+  worldVersion: DEFAULT_WORLD_VERSION,
 
   player: {
-    name: "朱由检",
-    title: "崇祯帝",
+    name: "赵构",
+    title: "宋高宗",
     age: 20,
   },
 
@@ -40,7 +42,7 @@ const initialState = {
     "dutcheng_duchayuan_zuoduyushi": "cao_yubian"
   },
   characterStatus: {},
-  // 外部势力势力值（如 { "后金(清)": 100, "农民军": 80 }）
+  // 外部势力势力值（如 { "金军": 100, "地方叛军": 80 }）
   externalPowers: {},
 
   // 省级经济与民生数据快照（按省名索引）
@@ -114,6 +116,21 @@ const initialState = {
 };
 
 let state = JSON.parse(JSON.stringify(initialState));
+const stateListeners = new Set();
+
+function resolveStateSelector(selector) {
+  return typeof selector === "function" ? selector : (currentState) => currentState;
+}
+
+function notifyStateListeners() {
+  stateListeners.forEach((listener) => {
+    try {
+      listener(state);
+    } catch (error) {
+      console.error("[state] listener failed", error);
+    }
+  });
+}
 
 function deriveCourtMinistersFromState(nextState) {
   const allCharacters = Array.isArray(nextState.allCharacters) && nextState.allCharacters.length
@@ -148,10 +165,49 @@ export function setState(partial) {
     nextState.ministers = deriveCourtMinistersFromState(nextState);
   }
   state = nextState;
+  notifyStateListeners();
 }
 
 export function resetState() {
   state = JSON.parse(JSON.stringify(initialState));
+  notifyStateListeners();
+}
+
+export function subscribeState(listener) {
+  if (typeof listener !== "function") {
+    return () => {};
+  }
+  stateListeners.add(listener);
+  return () => {
+    stateListeners.delete(listener);
+  };
+}
+
+export function selectState(selector) {
+  return resolveStateSelector(selector)(state);
+}
+
+export function subscribeStateSelector(selector, listener, isEqual = Object.is) {
+  if (typeof listener !== "function") {
+    return () => {};
+  }
+
+  const select = resolveStateSelector(selector);
+  let selected = select(state);
+
+  const wrappedListener = (nextState) => {
+    const nextSelected = select(nextState);
+    if (isEqual(selected, nextSelected)) {
+      return;
+    }
+    selected = nextSelected;
+    listener();
+  };
+
+  stateListeners.add(wrappedListener);
+  return () => {
+    stateListeners.delete(wrappedListener);
+  };
 }
 
 export function getRosterCharacters() {

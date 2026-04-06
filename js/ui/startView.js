@@ -3,6 +3,7 @@ import { saveGame, setSavedGameplayMode } from "../storage.js";
 import { router } from "../router.js";
 import { loadJSON } from "../dataLoader.js";
 import { showGoalPanel } from "./goalPanel.js";
+import { createActionButton, createElement, createSectionCard, createViewShell } from "./viewPrimitives.js";
 
 let startPhase = "intro";
 
@@ -32,42 +33,34 @@ function applyModeSelection(mode) {
 }
 
 async function renderIntroView(container) {
-  const root = document.createElement("div");
-  root.className = "start-intro-root";
+  const { root, header, content } = createViewShell({
+    className: "start-intro-root",
+    centered: true,
+    title: "南宋中兴模拟器",
+  });
+  header?.firstChild?.classList.add("start-intro-title");
+  header?.lastChild?.classList.add("start-intro-subtitle");
 
-  const title = document.createElement("div");
-  title.className = "start-intro-title";
-  title.textContent = "崇祯皇帝模拟器";
-  root.appendChild(title);
+  const block = createElement("div", {
+    className: "edict-block start-intro-block",
+  });
+  content.appendChild(block);
 
-  const block = document.createElement("div");
-  block.className = "edict-block start-intro-block";
-  root.appendChild(block);
-
-  const modeWrap = document.createElement("div");
-  modeWrap.className = "start-intro-actions";
-  modeWrap.style.marginBottom = "10px";
-
-  const modeLabel = document.createElement("div");
-  modeLabel.style.fontSize = "12px";
-  modeLabel.style.color = "var(--color-text-sub)";
-  modeLabel.style.marginBottom = "6px";
-  modeLabel.style.textAlign = "left";
-  modeLabel.textContent = "请选择玩法模式";
-  modeWrap.appendChild(modeLabel);
+  const modeSection = createSectionCard({
+    className: "start-intro-mode-card",
+    title: "玩法模式",
+    hint: "先确定本局节奏。新模式扩展时可以直接复用这块结构。",
+  });
+  const modeWrap = createElement("div", { className: "start-intro-actions start-intro-mode-actions" });
 
   let selectedMode = getState().mode === "rigid_v1" ? "rigid_v1" : "classic";
 
   const buildModeBtn = (mode, label, desc) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "start-view-btn";
-    btn.style.marginBottom = "6px";
-    btn.style.textAlign = "left";
-    btn.style.border = "1px solid var(--color-border-soft)";
-    btn.style.background = "var(--color-block-bg)";
-    btn.style.color = "var(--color-text-main)";
-    btn.innerHTML = `<div style=\"font-weight:700;\">${label}</div><div style=\"font-size:12px;opacity:.8;\">${desc}</div>`;
+    const btn = createActionButton({
+      label,
+      description: desc,
+      className: "start-view-btn",
+    });
     btn.addEventListener("click", () => {
       selectedMode = mode;
       refreshModeButtons();
@@ -75,10 +68,12 @@ async function renderIntroView(container) {
     return btn;
   };
 
-  const classicBtn = buildModeBtn("classic", "经典模式", "初玩者推荐，崇祯皇帝模拟器第一代节奏与叙事系统");
+  const classicBtn = buildModeBtn("classic", "经典模式", "初玩者推荐，第一代节奏与叙事系统");
   const rigidBtn = buildModeBtn("rigid_v1", "困难模式", "更严苛的节奏与叙事系统，适合追求挑战的玩家");
   modeWrap.appendChild(classicBtn);
   modeWrap.appendChild(rigidBtn);
+  modeSection.body.appendChild(modeWrap);
+  content.appendChild(modeSection.section);
 
   function refreshModeButtons() {
     const pairs = [
@@ -87,24 +82,30 @@ async function renderIntroView(container) {
     ];
     pairs.forEach(([btn, mode]) => {
       const active = selectedMode === mode;
-      btn.style.borderColor = active ? "var(--color-accent)" : "var(--color-border-soft)";
-      btn.style.boxShadow = active ? "0 0 0 1px var(--color-accent) inset" : "none";
+      btn.classList.toggle("ui-btn--selected", active);
+      btn.setAttribute("aria-pressed", active ? "true" : "false");
     });
   }
   refreshModeButtons();
-  root.appendChild(modeWrap);
 
-  const actions = document.createElement("div");
-  actions.className = "start-intro-actions";
+  const startSection = createSectionCard({
+    className: "start-intro-actions-card",
+    title: "开始本局",
+    hint: "介绍播放结束后解锁，避免玩家在状态尚未准备完时提前进入。",
+  });
+  const actions = createElement("div", { className: "start-intro-actions" });
 
-  const startBtn = document.createElement("button");
-  startBtn.type = "button";
-  startBtn.className = "start-view-btn start-view-btn--primary start-intro-start-btn";
-  startBtn.textContent = "临朝执政";
+  const startBtn = createActionButton({
+    label: "临朝执政",
+    description: "载入当前模式的独立存档与目标追踪面板。",
+    variant: "primary",
+    className: "start-view-btn start-intro-start-btn",
+  });
   startBtn.disabled = true;
 
   actions.appendChild(startBtn);
-  root.appendChild(actions);
+  startSection.body.appendChild(actions);
+  content.appendChild(startSection.section);
   container.appendChild(root);
 
   let data;
@@ -161,5 +162,3 @@ export function registerStartView() {
     renderStartView(container);
   });
 }
-
-registerStartView();

@@ -25,8 +25,8 @@ export function showCustomEdictPanel(onChoice) {
 
   const fields = [
     { id: "ce-neizhi", label: "内政", placeholder: "如：减免赋税、整顿吏治..." },
-    { id: "ce-junshi", label: "军事", placeholder: "如：增兵辽东、加强城防..." },
-    { id: "ce-waijiao", label: "外交", placeholder: "如：遣使议和、联络蒙古..." },
+    { id: "ce-junshi", label: "军事", placeholder: "如：增援江防、整顿守军..." },
+    { id: "ce-waijiao", label: "外交", placeholder: "如：遣使议和、安抚周边..." },
     { id: "ce-qita", label: "其他", placeholder: "如：祭天祈福、下罪己诏..." },
   ];
 

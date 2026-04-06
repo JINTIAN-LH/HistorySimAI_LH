@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+const { adaptCharactersData, adaptPositionsData } = require("./worldviewAdapter.cjs");
+const { buildStorySystemPrompt } = require("./worldviewPrompt.cjs");
 
 const DEFAULT_ALLOWED_ORIGINS = [
   "http://localhost:8080",
@@ -18,13 +20,6 @@ const REQUEST_TIMEOUT_MS = 60000;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 200;
 
-const SYSTEM_PROMPT = `你是《崇祯皇帝模拟器》游戏的剧情写手。
-每回合你必须只输出一个合法 JSON 对象，且结构中包含 header、storyParagraphs、choices。
-若涉及任命或处置，请写入 lastChoiceEffects.appointments / lastChoiceEffects.characterDeath。
-必须严格遵循传入的朝堂快照：已故角色不得复活、任职或作为在任官员出现；未在任角色不得被称作在任。
-已灭亡敌对势力不得在后续剧情中“复活”为完整存活势力。
-剧情、旁白、选项文案、提示必须使用中文，不得出现英文国策ID（如 civil_tax_reform）或英文句子。`;
-
 function readJsonSafely(filePath) {
   try {
     const raw = fs.readFileSync(filePath, "utf8");
@@ -32,6 +27,11 @@ function readJsonSafely(filePath) {
   } catch (_) {
     return null;
   }
+}
+
+function writeJsonSafely(filePath, value) {
+  const payload = `${JSON.stringify(value, null, 2)}\n`;
+  fs.writeFileSync(filePath, payload, "utf8");
 }
 
 function createApp(options = {}) {
@@ -55,20 +55,72 @@ function createApp(options = {}) {
   const configPath = options.configPath || path.join(__dirname, "config.json");
   const charactersPath = options.charactersPath || path.join(__dirname, "..", "public", "data", "characters.json");
   const positionsPath = options.positionsPath || path.join(__dirname, "..", "public", "data", "positions.json");
+  const worldviewPath = options.worldviewPath || path.join(__dirname, "..", "public", "data", "worldview.json");
+  const worldviewOverrides = options.worldviewOverrides && typeof options.worldviewOverrides === "object"
+    ? options.worldviewOverrides
+    : undefined;
+  const worldviewData = options.worldviewData || readJsonSafely(worldviewPath) || {};
 
   let config = options.config || readJsonSafely(configPath) || {};
   if (!options.config && !Object.keys(config).length && !options.allowMissingConfig) {
-    console.error("未找到 server/config.json 或格式错误。请创建 config.json 并填写 LLM_API_KEY。");
-    process.exit(1);
+    console.warn("未找到 server/config.json 或格式错误。服务将以未配置状态启动，等待前端引导写入配置。");
   }
 
-  const charactersData = options.charactersData || readJsonSafely(charactersPath);
-  const positionsData = options.positionsData || readJsonSafely(positionsPath);
+  const charactersData = options.charactersData || adaptCharactersData(readJsonSafely(charactersPath), worldviewOverrides);
+  const positionsData = options.positionsData || adaptPositionsData(readJsonSafely(positionsPath), worldviewOverrides);
 
-  const LLM_API_KEY = config.LLM_API_KEY || "";
-  const LLM_API_BASE = (config.LLM_API_BASE || "https://open.bigmodel.cn/api/paas/v4").replace(/\/$/, "");
-  const LLM_MODEL = config.LLM_MODEL || "glm-4-flash";
-  const LLM_CHAT_MODEL = config.LLM_CHAT_MODEL || "glm-4-flash";
+  function normalizeRequestHeaderValue(value) {
+    return typeof value === "string" ? value.trim() : "";
+  }
+
+  function getRuntimeConfig(req) {
+    const currentConfig = config && typeof config === "object" ? config : {};
+    const requestApiKey = normalizeRequestHeaderValue(req?.get?.("X-LLM-API-Key"));
+    const requestApiBase = normalizeRequestHeaderValue(req?.get?.("X-LLM-API-Base"));
+    const requestModel = normalizeRequestHeaderValue(req?.get?.("X-LLM-Model"));
+    const requestChatModel = normalizeRequestHeaderValue(req?.get?.("X-LLM-Chat-Model"));
+    const apiKey = requestApiKey || String(currentConfig.LLM_API_KEY || "").trim();
+    const apiBase = (requestApiBase || String(currentConfig.LLM_API_BASE || "https://open.bigmodel.cn/api/paas/v4").trim()).replace(/\/$/, "");
+    const model = requestModel || String(currentConfig.LLM_MODEL || "glm-4-flash").trim() || "glm-4-flash";
+    const chatModel = requestChatModel || String(currentConfig.LLM_CHAT_MODEL || model || "glm-4-flash").trim() || model || "glm-4-flash";
+    return {
+      apiKey,
+      apiBase,
+      model,
+      chatModel,
+    };
+  }
+
+  function buildConfigStatusPayload() {
+    const runtime = getRuntimeConfig();
+    return {
+      ready: !!runtime.apiKey,
+      configPath,
+      fields: {
+        LLM_API_KEY: {
+          configured: !!runtime.apiKey,
+          masked: runtime.apiKey ? `已填写（尾号 ${runtime.apiKey.slice(-4)}）` : "",
+          required: true,
+        },
+        LLM_API_BASE: {
+          value: runtime.apiBase,
+          required: true,
+        },
+        LLM_MODEL: {
+          value: runtime.model,
+          required: true,
+        },
+        LLM_CHAT_MODEL: {
+          value: runtime.chatModel,
+          required: false,
+        },
+      },
+      tips: [
+        "只需要补齐本地服务端用于调用大模型的参数，不会影响你的存档。",
+        "如果你不确定，通常只要填写 API Key，保留默认 Base 和模型即可开始游玩。",
+      ],
+    };
+  }
 
   function getCharacters() {
     return (charactersData && (charactersData.characters || charactersData.ministers)) || [];
@@ -317,7 +369,7 @@ function createApp(options = {}) {
     const treasuryStatus = treasury >= 5000000 ? "极度充裕" : treasury >= 1000000 ? "充裕" : treasury >= 300000 ? "一般" : treasury >= 100000 ? "紧张" : "极度空虚";
 
     const nationStr = `国库=${treasury.toLocaleString()}两（${treasuryStatus}）, 粮储=${grain.toLocaleString()}石, 军力=${militaryStrength}, 民心=${civilMorale}, 边患=${borderThreat}, 天灾=${disasterLevel}, 贪腐=${corruptionLevel}`;
-    const timeContext = `当前是崇祯${year}年${month}月（第${day}回合）${phaseLabel}，季节=${season}，天气=${weather}。国势：${nationStr}。`;
+    const timeContext = `当前是建炎${year}年${month}月（第${day}回合）${phaseLabel}，季节=${season}，天气=${weather}。国势：${nationStr}。`;
 
     let base = "";
     if (lastChoiceId == null || lastChoiceText == null) {
@@ -441,14 +493,50 @@ function createApp(options = {}) {
     return base;
   }
 
+  app.get("/api/chongzhen/config-status", (_req, res) => {
+    return res.json(buildConfigStatusPayload());
+  });
+
+  app.post("/api/chongzhen/config-status", (req, res) => {
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const nextApiKey = String(body.LLM_API_KEY || "").trim();
+    const nextApiBase = String(body.LLM_API_BASE || "").trim() || "https://open.bigmodel.cn/api/paas/v4";
+    const nextModel = String(body.LLM_MODEL || "").trim() || "glm-4-flash";
+    const nextChatModel = String(body.LLM_CHAT_MODEL || "").trim() || nextModel;
+
+    if (!nextApiKey) {
+      return res.status(400).json({ error: "LLM_API_KEY is required" });
+    }
+
+    const nextConfig = {
+      ...(config && typeof config === "object" ? config : {}),
+      LLM_API_KEY: nextApiKey,
+      LLM_API_BASE: nextApiBase,
+      LLM_MODEL: nextModel,
+      LLM_CHAT_MODEL: nextChatModel,
+    };
+
+    try {
+      writeJsonSafely(configPath, nextConfig);
+      config = nextConfig;
+      return res.json({
+        success: true,
+        status: buildConfigStatusPayload(),
+      });
+    } catch (error) {
+      return res.status(500).json({ error: error.message || "failed to write config.json" });
+    }
+  });
+
   app.post("/api/chongzhen/story", async (req, res) => {
-    if (!LLM_API_KEY) {
+    const runtimeConfig = getRuntimeConfig(req);
+    if (!runtimeConfig.apiKey) {
       return res.status(500).json({ error: "LLM_API_KEY not configured" });
     }
 
     const body = req.body || {};
     const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: buildStorySystemPrompt(worldviewData) },
       { role: "user", content: buildUserMessage(body) },
     ];
 
@@ -458,14 +546,14 @@ function createApp(options = {}) {
       
       let response;
       try {
-        response = await fetch(`${LLM_API_BASE}/chat/completions`, {
+        response = await fetch(`${runtimeConfig.apiBase}/chat/completions`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${LLM_API_KEY}`,
+            Authorization: `Bearer ${runtimeConfig.apiKey}`,
           },
           body: JSON.stringify({
-            model: LLM_MODEL,
+            model: runtimeConfig.model,
             messages,
             response_format: { type: "json_object" },
           }),
@@ -504,7 +592,8 @@ function createApp(options = {}) {
   });
 
   app.post("/api/chongzhen/ministerChat", async (req, res) => {
-    if (!LLM_API_KEY) {
+    const runtimeConfig = getRuntimeConfig(req);
+    if (!runtimeConfig.apiKey) {
       return res.status(500).json({ error: "LLM_API_KEY not configured" });
     }
 
@@ -638,13 +727,13 @@ function createApp(options = {}) {
       
       let response;
       try {
-        response = await fetch(`${LLM_API_BASE}/chat/completions`, {
+        response = await fetch(`${runtimeConfig.apiBase}/chat/completions`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${LLM_API_KEY}`,
+            Authorization: `Bearer ${runtimeConfig.apiKey}`,
           },
-          body: JSON.stringify({ model: LLM_CHAT_MODEL, messages }),
+          body: JSON.stringify({ model: runtimeConfig.chatModel, messages }),
           signal: controller.signal,
         });
       } finally {
@@ -842,6 +931,7 @@ function createApp(options = {}) {
   return {
     app,
     buildUserMessage,
+    buildStorySystemPrompt: () => buildStorySystemPrompt(worldviewData),
     sanitizeMinisterReplyText,
     buildUnlockedPolicyLabelMap,
     sanitizeStoryPayloadLanguage,
@@ -855,7 +945,11 @@ module.exports = { createApp };
 if (require.main === module) {
   const { app } = createApp();
   const localConfig = readJsonSafely(path.join(__dirname, "config.json")) || {};
-  const PORT = localConfig.PORT != null ? localConfig.PORT : 3002;
+  const envPort = Number(process.env.PORT);
+  const configuredPort = Number(localConfig.PORT);
+  const PORT = Number.isFinite(envPort) && envPort > 0
+    ? envPort
+    : (Number.isFinite(configuredPort) && configuredPort > 0 ? configuredPort : 3002);
   app.listen(PORT, () => {
     console.log(`ChongzhenSim proxy listening on http://localhost:${PORT} (routes: /api/chongzhen/story, /api/chongzhen/ministerChat, /api/chongzhen/characters, /api/chongzhen/positions, /api/chongzhen/appoint, /api/chongzhen/punish)`);
     if (!localConfig.LLM_API_KEY) {

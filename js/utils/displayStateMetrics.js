@@ -1,5 +1,5 @@
 ﻿import { formatTreasury, formatGrain } from "../systems/nationSystem.js";
-import { buildNameById } from "./sharedConstants.js";
+import { buildNameById, resolveCharacterDisplayName, resolvePositionDisplayName } from "./sharedConstants.js";
 
 export const DISPLAY_STATE_METRICS = [
   { key: "treasury", label: "国库", icon: "💰", section: "nation", source: "nation", defaultValue: 0, invert: false, format: "treasury", bar: "treasury" },
@@ -293,7 +293,7 @@ export function buildOutcomeDisplayEntries(effects, state) {
       if (typeof delta !== "number" || delta === 0) return;
       entries.push({
         type: "number",
-        label: `${nameById[id] || id} 忠诚`,
+        label: `${resolveCharacterDisplayName(nameById, id)} 忠诚`,
         value: delta,
         invertColor: false,
       });
@@ -302,10 +302,10 @@ export function buildOutcomeDisplayEntries(effects, state) {
 
   if (effects.appointments && typeof effects.appointments === "object" && !Array.isArray(effects.appointments)) {
     Object.entries(effects.appointments).forEach(([positionId, characterId]) => {
-      const positionLabel = positionNameById[positionId] || positionId;
+      const positionLabel = resolvePositionDisplayName(positionNameById, positionId);
       entries.push({
         type: "text",
-        label: `任命 ${nameById[characterId] || characterId} -> ${positionLabel}`,
+        label: `任命 ${resolveCharacterDisplayName(nameById, characterId)} -> ${positionLabel}`,
         value: "已生效",
       });
     });
@@ -313,7 +313,7 @@ export function buildOutcomeDisplayEntries(effects, state) {
 
   if (Array.isArray(effects.appointmentDismissals)) {
     effects.appointmentDismissals.forEach((positionId) => {
-      const positionLabel = positionNameById[positionId] || positionId;
+      const positionLabel = resolvePositionDisplayName(positionNameById, positionId);
       entries.push({
         type: "text",
         label: `免去 ${positionLabel}`,
@@ -327,7 +327,7 @@ export function buildOutcomeDisplayEntries(effects, state) {
       if (!characterId || /^\d+$/.test(characterId)) return;
       entries.push({
         type: "text",
-        label: `处置 ${nameById[characterId] || characterId}`,
+        label: `处置 ${resolveCharacterDisplayName(nameById, characterId)}`,
         value: typeof reason === "string" && reason ? reason : "已处置",
       });
     });

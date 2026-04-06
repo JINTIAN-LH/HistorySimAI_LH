@@ -1,16 +1,15 @@
 import { initLayout, updateTopbarByState, updateMinisterTabBadge, updateGoalBar } from "./layout.js";
 import { router } from "./router.js";
-import "./ui/edictView.js";
-import "./ui/courtView.js";
-import "./ui/settingsView.js";
-import "./ui/nationView.js";
-import { setStartPhase } from "./ui/startView.js";
+import { setStartPhase } from "@client/ui/registerViews.js";
+import "@client/ui/registerViews.js";
 import { loadJSON } from "./dataLoader.js";
 import { getState, setState } from "./state.js";
-import { loadGame, applyLoadedGame, getSavedGameplayMode } from "./storage.js";
+import { loadGame, applyLoadedGame, getSavedGameplayMode, resolveInitialLoadSlotId } from "./storage.js";
 import { initializeCoreGameplayState } from "./systems/coreGameplaySystem.js";
 import { buildStoryFactsFromState } from "./utils/storyFacts.js";
 import { createDefaultRigidState, DEFAULT_RIGID_INITIAL, DEFAULT_RIGID_TRIGGERS } from "./rigid/config.js";
+import { getConfiguredWorldVersion, isSaveCompatibleWithWorld } from "./worldVersion.js";
+import { mergePlayerRuntimeConfig } from "./playerRuntimeConfig.js";
 
 function normalizeCharacterId(rawId, aliasToCanonical) {
   if (typeof rawId !== "string") return "";
@@ -164,6 +163,7 @@ async function preloadBasicData(preferredMode = null) {
   const normalizedDefaultAppointments = normalizeAppointmentsMap(defaultAppointments, aliasToCanonical);
 
   const selectedMode = current.mode || preferredMode || config?.gameplayMode || "classic";
+  const worldVersion = getConfiguredWorldVersion(config);
   const resolvedRigidState = current.rigid && typeof current.rigid === "object"
     ? current.rigid
     : createDefaultRigidState(rigidInitialData || DEFAULT_RIGID_INITIAL);
@@ -171,7 +171,8 @@ async function preloadBasicData(preferredMode = null) {
 
   setState({
     config: {
-      ...(config || {}),
+      ...mergePlayerRuntimeConfig(config || {}),
+      worldVersion,
       balance: balanceConfig || {},
       gameplayMode: selectedMode,
       rigid: {
@@ -193,6 +194,7 @@ async function preloadBasicData(preferredMode = null) {
     provinceStats,
     positionsMeta: positionsData || { positions: [], departments: [] },
     mode: selectedMode,
+    worldVersion,
     currentQuarterAgenda: [],
     currentQuarterFocus: null,
     rigid: resolvedRigidState,
@@ -213,17 +215,26 @@ function shouldShowStartView() {
   return !state.gameStarted;
 }
 
-async function bootstrap() {
+export async function bootstrap() {
+  const bootstrapConfig = await loadJSON("data/config.json").catch(() => ({}));
   initLayout();
-
   const preferredMode = getSavedGameplayMode();
-  const loaded = loadGame(preferredMode);
-  if (loaded) {
+
+  const initialSlotId = resolveInitialLoadSlotId(preferredMode);
+  const loaded = loadGame(initialSlotId, preferredMode);
+  if (loaded && isSaveCompatibleWithWorld(loaded, bootstrapConfig)) {
     applyLoadedGame(loaded);
+  } else if (loaded) {
+    console.warn(
+      `[bootstrap] detected incompatible save world version (${loaded?.game_data?.worldVersion || "legacy"}); skipping autoload for new worldview ${getConfiguredWorldVersion(bootstrapConfig)}`
+    );
   }
 
   await preloadBasicData(preferredMode);
   const stateAfterLoad = getState();
+  if (stateAfterLoad.config?.gameTitle) {
+    document.title = stateAfterLoad.config.gameTitle;
+  }
   updateTopbarByState(stateAfterLoad);
   updateGoalBar(stateAfterLoad);
   updateMinisterTabBadge(stateAfterLoad);
@@ -240,10 +251,30 @@ async function bootstrap() {
   }
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    bootstrap().catch((err) => console.error(err));
+let mountPromise = null;
+
+export function mountLegacyGameApp() {
+  if (mountPromise) return mountPromise;
+
+  mountPromise = new Promise((resolve, reject) => {
+    const start = () => {
+      bootstrap().then(resolve).catch(reject);
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", start, { once: true });
+      return;
+    }
+
+    start();
+  }).catch((err) => {
+    console.error(err);
+    throw err;
   });
-} else {
-  bootstrap().catch((err) => console.error(err));
+
+  return mountPromise;
+}
+
+if (typeof window !== "undefined" && !window.__HISTORY_SIM_MANUAL_BOOTSTRAP__) {
+  mountLegacyGameApp().catch(() => {});
 }

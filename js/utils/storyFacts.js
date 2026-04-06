@@ -1,3 +1,5 @@
+import { resolveCharacterDisplayName, resolvePositionDisplayName } from "./sharedConstants.js";
+
 function toArray(value) {
   return Array.isArray(value) ? value : [];
 }
@@ -43,7 +45,7 @@ function summarizeDeceasedMinisters(state) {
     .filter(([, v]) => v && v.isAlive === false)
     .map(([id, v]) => ({
       id,
-      name: nameById[id] || id,
+      name: resolveCharacterDisplayName(nameById, id),
       reason: typeof v.deathReason === "string" && v.deathReason ? v.deathReason : "已故",
       deathDay: v.deathDay ?? null,
     }))
@@ -59,9 +61,9 @@ function summarizeActiveAppointments(state) {
     .filter(([, holderId]) => typeof holderId === "string" && holderId && status[holderId]?.isAlive !== false)
     .map(([positionId, holderId]) => ({
       positionId,
-      positionName: positionNameById[positionId] || positionId,
+      positionName: resolvePositionDisplayName(positionNameById, positionId),
       characterId: holderId,
-      characterName: nameById[holderId] || holderId,
+      characterName: resolveCharacterDisplayName(nameById, holderId),
     }))
     .slice(0, 24);
 }
@@ -74,7 +76,7 @@ export function buildStoryFactsFromState(state) {
 
   defeatedHostiles.forEach((item) => {
     const when = item.defeatedYear && item.defeatedMonth
-      ? `（崇祯${item.defeatedYear}年${item.defeatedMonth}月）`
+      ? `（建炎${item.defeatedYear}年${item.defeatedMonth}月）`
       : "";
     hardFacts.push(`敌对势力「${item.name}」已灭亡${when}，不得在后续剧情中以存活势力复活。`);
   });

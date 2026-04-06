@@ -1,3 +1,6 @@
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const request = require('supertest');
 const { createApp } = require('./index');
 
@@ -29,6 +32,117 @@ const mockCharactersData = {
 };
 
 describe('API Endpoints', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should compose story prompt from injected worldview data', () => {
+    const { buildStorySystemPrompt } = createApp({
+      config: {},
+      charactersData: mockCharactersData,
+      worldviewData: {
+        storyPrompt: {
+          role: '你是《测试王朝模拟器》剧情写手。',
+          worldview: ['世界观固定为测试王朝草创未稳。'],
+          gameplayConstraints: ['保留现有玩法骨架，不得擅自新增机制。'],
+        },
+      },
+      allowMissingConfig: true,
+    });
+
+    const prompt = buildStorySystemPrompt();
+
+    expect(prompt).toContain('你是《测试王朝模拟器》剧情写手。');
+    expect(prompt).toContain('每回合你必须只输出一个合法 JSON 对象');
+    expect(prompt).toContain('世界观固定为测试王朝草创未稳。');
+    expect(prompt).toContain('保留现有玩法骨架，不得擅自新增机制。');
+  });
+
+  describe('GET/POST /api/chongzhen/config-status', () => {
+    it('should still boot the server when config.json is missing', async () => {
+      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'historysim-missing-config-'));
+      const missingConfigPath = path.join(tempDir, 'missing-config.json');
+      const { app } = createApp({
+        configPath: missingConfigPath,
+        charactersData: mockCharactersData,
+      });
+
+      const res = await request(app).get('/api/chongzhen/config-status');
+
+      expect(res.status).toBe(200);
+      expect(res.body.ready).toBe(false);
+
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    it('should expose readiness and friendly defaults for local setup', async () => {
+      const { app } = createApp({
+        config: {},
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const res = await request(app).get('/api/chongzhen/config-status');
+
+      expect(res.status).toBe(200);
+      expect(res.body.ready).toBe(false);
+      expect(res.body.fields.LLM_API_KEY.configured).toBe(false);
+      expect(res.body.fields.LLM_API_BASE.value).toBe('https://open.bigmodel.cn/api/paas/v4');
+      expect(res.body.fields.LLM_MODEL.value).toBe('glm-4-flash');
+      expect(Array.isArray(res.body.tips)).toBe(true);
+    });
+
+    it('should save runtime config into config.json and report ready state', async () => {
+      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'historysim-config-'));
+      const configPath = path.join(tempDir, 'config.json');
+      const { app } = createApp({
+        config: {},
+        configPath,
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const res = await request(app)
+        .post('/api/chongzhen/config-status')
+        .send({
+          LLM_API_KEY: 'test-key-1234',
+          LLM_API_BASE: 'https://example.com/v1',
+          LLM_MODEL: 'glm-custom',
+          LLM_CHAT_MODEL: 'glm-chat-custom',
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.status.ready).toBe(true);
+      expect(res.body.status.fields.LLM_API_KEY.masked).toContain('1234');
+
+      const writtenConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      expect(writtenConfig).toMatchObject({
+        LLM_API_KEY: 'test-key-1234',
+        LLM_API_BASE: 'https://example.com/v1',
+        LLM_MODEL: 'glm-custom',
+        LLM_CHAT_MODEL: 'glm-chat-custom',
+      });
+
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    it('should reject empty api keys when saving runtime config', async () => {
+      const { app } = createApp({
+        config: {},
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const res = await request(app)
+        .post('/api/chongzhen/config-status')
+        .send({ LLM_API_KEY: '   ' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('LLM_API_KEY is required');
+    });
+  });
+
   describe('POST /api/chongzhen/story', () => {
     it('should return 500 when LLM_API_KEY is not configured', async () => {
       const { app } = createApp({ 
@@ -71,6 +185,52 @@ describe('API Endpoints', () => {
           lastChoiceText: '测试选项'
         });
       expect(res.status).toBe(500);
+    });
+
+    it('should accept request-scoped llm config headers without relying on global config.json', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            message: {
+              content: JSON.stringify({
+                header: { time: '建炎1年1月 早朝', season: '春', weather: '晴' },
+                storyParagraphs: ['测试剧情'],
+                choices: [
+                  { id: 'a', text: '甲' },
+                  { id: 'b', text: '乙' },
+                  { id: 'c', text: '丙' },
+                ],
+              }),
+            },
+          }],
+        }),
+      });
+
+      const { app } = createApp({
+        config: {},
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const res = await request(app)
+        .post('/api/chongzhen/story')
+        .set('X-LLM-API-Key', 'player-key')
+        .set('X-LLM-API-Base', 'https://example.com/v1')
+        .set('X-LLM-Model', 'story-model')
+        .send({ state: { currentDay: 1, currentPhase: 'morning' } });
+
+      expect(res.status).toBe(200);
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'https://example.com/v1/chat/completions',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer player-key',
+            'Content-Type': 'application/json',
+          }),
+          body: expect.stringContaining('story-model'),
+        })
+      );
     });
   });
 
@@ -152,6 +312,44 @@ describe('API Endpoints', () => {
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('characters.json not loaded');
     });
+
+    it('should accept request-scoped llm config headers for per-player chat config', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            message: {
+              content: JSON.stringify({ reply: '臣遵旨。', loyaltyDelta: 1 }),
+            },
+          }],
+        }),
+      });
+
+      const { app } = createApp({
+        config: {},
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const res = await request(app)
+        .post('/api/chongzhen/ministerChat')
+        .set('X-LLM-API-Key', 'player-key')
+        .set('X-LLM-API-Base', 'https://example.com/v1')
+        .set('X-LLM-Chat-Model', 'chat-model')
+        .send({ ministerId: 'bi_ziyan', history: [] });
+
+      expect(res.status).toBe(200);
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'https://example.com/v1/chat/completions',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer player-key',
+            'Content-Type': 'application/json',
+          }),
+          body: expect.stringContaining('chat-model'),
+        })
+      );
+    });
   });
 });
 
@@ -183,7 +381,7 @@ describe('buildUserMessage', () => {
       }
     };
     const message = buildUserMessage(body);
-    expect(message).toContain('崇祯3年4月（第1回合）早朝');
+    expect(message).toContain('建炎3年4月（第1回合）早朝');
     expect(message).toContain('季节=春');
     expect(message).toContain('天气=晴');
     expect(message).toContain('新开档第一回合');
@@ -213,7 +411,7 @@ describe('buildUserMessage', () => {
       lastChoiceText: '加征商税'
     };
     const message = buildUserMessage(body);
-    expect(message).toContain('崇祯3年7月（第2回合）午后');
+    expect(message).toContain('建炎3年7月（第2回合）午后');
     expect(message).toContain('季节=夏');
     expect(message).toContain('天气=暴雨');
     expect(message).toContain('上一回合陛下选择了');

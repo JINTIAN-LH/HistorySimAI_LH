@@ -1,6 +1,6 @@
 import { getState } from "../state.js";
 import { buildMinisterChatRequestBody } from "./requestContext.js";
-import { getApiBase, postJsonAndReadText } from "./httpClient.js";
+import { buildLlmProxyHeaders, getApiBase, postJsonAndReadText } from "./httpClient.js";
 import { parseMinisterReplyPayload } from "./validators.js";
 
 export async function requestMinisterReply(ministerId, history) {
@@ -12,7 +12,9 @@ export async function requestMinisterReply(ministerId, history) {
   const url = `${apiBase}/api/chongzhen/ministerChat`;
 
   const body = buildMinisterChatRequestBody(state, ministerId, history);
-  const payloadText = await postJsonAndReadText(url, body, "requestMinisterReply");
+  const payloadText = await postJsonAndReadText(url, body, "requestMinisterReply", {
+    headers: buildLlmProxyHeaders(config),
+  });
   if (payloadText == null) return null;
 
   const parsed = parseMinisterReplyPayload(payloadText);

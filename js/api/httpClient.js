@@ -1,18 +1,62 @@
-export function getApiBase(config, logTag) {
-  const apiBase = (config?.apiBase || "").replace(/\/$/, "");
-  if (!apiBase) {
-    console.error(`${logTag} apiBase not configured`);
+function getBrowserFallbackApiBase() {
+  if (typeof window === "undefined" || !window.location) {
     return "";
   }
-  return apiBase;
+
+  const { origin, protocol, hostname, port } = window.location;
+  const safeOrigin = String(origin || "").replace(/\/$/, "");
+  const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
+
+  if (isLocalHost && port !== "3002") {
+    return `${protocol}//${hostname}:3002`;
+  }
+
+  return safeOrigin;
 }
 
-export async function postJsonAndReadText(url, payload, logTag) {
+export function getApiBase(config, logTag) {
+  const configuredApiBase = (config?.apiBase || "").replace(/\/$/, "");
+  if (configuredApiBase) {
+    return configuredApiBase;
+  }
+
+  const fallbackApiBase = getBrowserFallbackApiBase();
+  if (fallbackApiBase) {
+    return fallbackApiBase;
+  }
+
+  console.error(`${logTag} apiBase not configured`);
+  return "";
+}
+
+export function buildLlmProxyHeaders(config) {
+  const headers = {};
+
+  if (typeof config?.llmApiKey === "string" && config.llmApiKey.trim()) {
+    headers["X-LLM-API-Key"] = config.llmApiKey.trim();
+  }
+  if (typeof config?.llmApiBase === "string" && config.llmApiBase.trim()) {
+    headers["X-LLM-API-Base"] = config.llmApiBase.trim().replace(/\/$/, "");
+  }
+  if (typeof config?.llmModel === "string" && config.llmModel.trim()) {
+    headers["X-LLM-Model"] = config.llmModel.trim();
+  }
+  if (typeof config?.llmChatModel === "string" && config.llmChatModel.trim()) {
+    headers["X-LLM-Chat-Model"] = config.llmChatModel.trim();
+  }
+
+  return headers;
+}
+
+export async function postJsonAndReadText(url, payload, logTag, options = {}) {
   let res;
   try {
     res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
       body: JSON.stringify(payload),
     });
   } catch (e) {

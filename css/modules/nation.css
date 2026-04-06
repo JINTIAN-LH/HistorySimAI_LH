@@ -2,16 +2,19 @@
 
 /* 国家视图容器 */
 .nation-view {
-  padding: 12px;
+  padding: 0;
   height: 100%;
   box-sizing: border-box;
-  overflow-y: auto;
 }
 
 .nation-root {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.nation-page .view-title {
+  letter-spacing: 2px;
 }
 
 /* 国家概览 */

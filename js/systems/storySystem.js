@@ -12,6 +12,8 @@ import { normalizeAppointmentEffects } from "../utils/appointmentEffects.js";
 import { buildRigidStoryData } from "../rigid/moduleComposer.js";
 import { ensureRigidState, getRigidPresets } from "../rigid/engine.js";
 import { isRigidMode } from "../rigid/config.js";
+import { isMilitaryCombatChoice, runMilitarySystem } from "./militarySystem.js";
+import { createElement, createFeedCard, createSectionCard, createStatCard, createTag } from "../ui/viewPrimitives.js";
 
 let storyCache = { key: null, data: null };
 let lastAppliedKey = null;
@@ -1015,11 +1017,108 @@ function computeEffectDelta(prevEffects, nextEffects) {
 }
 
 function renderStoryLoading(container) {
+  const { mainTarget } = getStoryRenderTargets(container);
   const block = document.createElement("div");
   block.className = "edict-block story-loading";
   block.innerHTML = `<div class="story-loading-spinner"></div><div class="story-loading-text">剧情生成中……</div>`;
-  container.appendChild(block);
+  mainTarget.appendChild(block);
   return block;
+}
+
+function getStoryRenderTargets(container) {
+  const layout = container?._storyLayout || null;
+  return {
+    mainTarget: layout?.mainBody || container,
+    actionsTarget: layout?.actionsBody || null,
+    dataTarget: layout?.dataBody || null,
+  };
+}
+
+function resetStoryRenderTargets(container) {
+  const { mainTarget, actionsTarget, dataTarget } = getStoryRenderTargets(container);
+  cleanupDanmuLayer(container);
+  if (mainTarget) mainTarget.innerHTML = "";
+  if (actionsTarget) actionsTarget.innerHTML = "";
+  if (dataTarget) dataTarget.innerHTML = "";
+}
+
+function createStoryEmptyState(text) {
+  return createElement("div", { className: "empty-state news-empty", text });
+}
+
+function createStoryTag(value) {
+  if (!value) return null;
+  const className = value === "急"
+    ? "feed-card__tag--urgent"
+    : value === "重" || value === "重要"
+      ? "feed-card__tag--important"
+      : "feed-card__tag--normal";
+  return { text: value, className };
+}
+
+function renderStorySidePanels(container, state, phaseLabels) {
+  const { dataTarget } = getStoryRenderTargets(container);
+  if (!dataTarget) return;
+
+  const phaseKey = state.currentPhase || "morning";
+  const currentPhaseLabel = phaseLabels[phaseKey] || phaseKey;
+  const news = Array.isArray(state.newsToday) ? state.newsToday : [];
+  const publicOpinion = Array.isArray(state.publicOpinion) ? state.publicOpinion : [];
+
+  const metaRow = createElement("div", { className: "gameplay-page__meta-row" });
+  metaRow.appendChild(createTag(`第${state.currentYear || 1}年 ${state.currentMonth || 1}月`));
+  metaRow.appendChild(createTag(currentPhaseLabel));
+  if (state.weather) {
+    metaRow.appendChild(createTag(state.weather));
+  }
+  dataTarget.appendChild(metaRow);
+
+  const statsGrid = createElement("div", { className: "gameplay-page__stat-grid" });
+  [
+    createStatCard({ label: "待选诏令", value: String((state.currentStoryTurn?.data?.choices || []).length || 0), detail: "当前系统生成的可选旨意。" }),
+    createStatCard({ label: "奏折速报", value: String(news.length), detail: "当回合汇总的军国信息。" }),
+    createStatCard({ label: "民间回响", value: String(publicOpinion.length), detail: "本回合形成的舆论反馈。" }),
+    createStatCard({ label: "拟诏模式", value: "系统 + 自拟", detail: "可直接选择系统旨意，或亲笔自拟诏书。" }),
+  ].forEach((card) => statsGrid.appendChild(card));
+  dataTarget.appendChild(statsGrid);
+
+  const newsSection = createSectionCard({
+    title: "奏折速报",
+    hint: "把当回合最重要的军国消息固定到数据区，避免再漂浮在页面外层。",
+  });
+  if (!news.length) {
+    newsSection.body.appendChild(createStoryEmptyState("暂无奏报，推进剧情后将出现新的军国消息。"));
+  } else {
+    news.forEach((item) => {
+      const { card } = createFeedCard({
+        icon: item.icon || "📜",
+        title: item.title || "未命名奏报",
+        summary: item.summary || "",
+        tags: item.tag ? [createStoryTag(item.tag)] : [],
+      });
+      newsSection.body.appendChild(card);
+    });
+  }
+  dataTarget.appendChild(newsSection.section);
+
+  const opinionSection = createSectionCard({
+    title: "民间回响",
+    hint: "统一放剧情引发的即时舆情，便于主玩法页固定查看。",
+  });
+  if (!publicOpinion.length) {
+    opinionSection.body.appendChild(createStoryEmptyState("暂无民间回响。"));
+  } else {
+    publicOpinion.forEach((item) => {
+      const tone = item.type === "loyal" ? "拥戴" : item.type === "angry" ? "愤懑" : "中立";
+      const { card } = createFeedCard({
+        title: item.user || "百姓",
+        summary: item.text || "",
+        tags: [{ text: tone, className: "feed-card__tag--normal" }],
+      });
+      opinionSection.body.appendChild(card);
+    });
+  }
+  dataTarget.appendChild(opinionSection.section);
 }
 
 function cleanupDanmuLayer(container) {
@@ -1032,9 +1131,10 @@ function cleanupDanmuLayer(container) {
 
 function setupDanmuLayer(container) {
   cleanupDanmuLayer(container);
+  const { mainTarget } = getStoryRenderTargets(container);
   const danmuLayer = document.createElement("div");
   danmuLayer.className = "edict-danmu-layer";
-  container.insertBefore(danmuLayer, container.firstChild);
+  mainTarget.insertBefore(danmuLayer, mainTarget.firstChild);
   container._edictDanmuLayer = danmuLayer;
   return danmuLayer;
 }
@@ -1077,6 +1177,7 @@ function isQuarterSettlementMonth(state) {
 }
 
 function renderStoryHistory(container, history, phaseLabels, state, renderId) {
+  const { mainTarget } = getStoryRenderTargets(container);
   const quarterSettlementMonth = isQuarterSettlementMonth(state);
 
   for (let index = 0; index < history.length; index += 1) {
@@ -1098,21 +1199,21 @@ function renderStoryHistory(container, history, phaseLabels, state, renderId) {
     const label = document.createElement("div");
     label.className = "story-history-label";
     label.textContent = `第${year}年 ${month}月 · ${phaseLabel}`;
-    container.appendChild(label);
+    mainTarget.appendChild(label);
     
     const block = document.createElement("div");
     block.className = "edict-block story-history-block";
     const historyText = buildBlockText(data);
     renderPseudoLines(block, historyText);
     restoreHighlightsForTurn(block, parseInt(year, 10), parseInt(month, 10), phase, state);
-    container.appendChild(block);
+    mainTarget.appendChild(block);
     
     if (entry.chosenChoice && entry.chosenChoice.text) {
-      renderChosenChoice(container, entry.chosenChoice);
+      renderChosenChoice(mainTarget, entry.chosenChoice);
       const isLatestHistoryEntry = index === history.length - 1;
       const shouldSkipLatestDeltaInQuarter = quarterSettlementMonth && isLatestHistoryEntry;
       if (!shouldSkipLatestDeltaInQuarter) {
-        renderDeltaCard(container, entry.displayEffects || entry.effects, state, "本轮推演数值变动");
+        renderDeltaCard(mainTarget, entry.displayEffects || entry.effects, state, "本轮推演数值变动");
       }
     }
   }
@@ -1134,6 +1235,7 @@ function mergeQuarterDisplayEffectsDedup(baseEffects, quarterEffects) {
 }
 
 function renderStoryError(container, errorMessage, retryCallback) {
+  const { mainTarget } = getStoryRenderTargets(container);
   const block = document.createElement("div");
   block.className = "edict-block";
   block.textContent = errorMessage;
@@ -1144,7 +1246,7 @@ function renderStoryError(container, errorMessage, retryCallback) {
   retryBtn.addEventListener("click", retryCallback);
   
   block.appendChild(retryBtn);
-  container.appendChild(block);
+  mainTarget.appendChild(block);
 }
 
 function mergeRigidAndLLMStoryParagraphs(rigidParagraphs, llmParagraphs) {
@@ -1235,7 +1337,7 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
 
       renderStoryError(container, errorMessage, () => {
         storyCache = { key: null, data: null };
-        container.innerHTML = "";
+        resetStoryRenderTargets(container);
         renderStoryTurn(getState(), container, onChoice, options);
       });
       return null;
@@ -1305,7 +1407,30 @@ function createChoiceButton(choice, onChoice, disabled = false) {
       });
     }
     try {
-      await onChoice(choice.id, choice.text, choice.hint, choice.effects);
+      // 军事战斗拦截：若为进攻敌对势力的选项，先运行军事子系统再回归诏书流程
+      const currentState = getState();
+      if (isMilitaryCombatChoice(choice.id, choice.text, currentState)) {
+        const edictContainer = document.getElementById("main-view");
+        await new Promise((resolve) => {
+          runMilitarySystem(
+            edictContainer || document.body,
+            choice,
+            currentState,
+            (battleResult) => {
+              // 用战斗结果覆盖 choice 的 effects，再走正常 handleChoice
+              const patchedChoice = {
+                ...choice,
+                effects: battleResult.effectsPatch || choice.effects,
+              };
+              onChoice(patchedChoice.id, patchedChoice.text, patchedChoice.hint, patchedChoice.effects)
+                .then(resolve)
+                .catch(resolve);
+            }
+          );
+        });
+      } else {
+        await onChoice(choice.id, choice.text, choice.hint, choice.effects);
+      }
     } finally {
       storyChoiceSubmitting = false;
     }
@@ -1325,7 +1450,7 @@ function renderQuarterAgendaPanel(container, state, onChoice, options = {}) {
 
   const focus = state.currentQuarterFocus || {};
   const rerender = () => {
-    container.innerHTML = "";
+    resetStoryRenderTargets(container);
     renderStoryTurn(getState(), container, onChoice, options);
   };
 
@@ -1422,17 +1547,18 @@ function renderQuarterAgendaPanel(container, state, onChoice, options = {}) {
 }
 
 function renderCurrentTurn(container, data, state, phaseLabels, onChoice, options = {}) {
+  const { mainTarget, actionsTarget } = getStoryRenderTargets(container);
   const phaseKey = state.currentPhase || "morning";
   const currentPhaseLabel = phaseLabels[phaseKey] || phaseKey;
   
   const currentLabel = document.createElement("div");
   currentLabel.className = "story-history-label story-current-label";
   currentLabel.textContent = `当前 · 第${state.currentYear}年 ${state.currentMonth}月 · ${currentPhaseLabel}`;
-  container.appendChild(currentLabel);
+  mainTarget.appendChild(currentLabel);
   
   const currentWrap = document.createElement("div");
   currentWrap.className = "edict-current-wrap";
-  container.appendChild(currentWrap);
+  mainTarget.appendChild(currentWrap);
 
   const settlement = state.lastQuarterSettlement;
   if (
@@ -1442,7 +1568,7 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
   ) {
     const quarterNote = document.createElement("div");
     quarterNote.className = "story-history-label";
-    quarterNote.textContent = `季末结算 · 崇祯${settlement.year}年${settlement.month}月：国库 +${(settlement.effects?.treasury || 0).toLocaleString()} 两，粮储 +${(settlement.effects?.grain || 0).toLocaleString()} 石`;
+    quarterNote.textContent = `季末结算 · 建炎${settlement.year}年${settlement.month}月：国库 +${(settlement.effects?.treasury || 0).toLocaleString()} 两，粮储 +${(settlement.effects?.grain || 0).toLocaleString()} 石`;
     currentWrap.appendChild(quarterNote);
 
     const settlementDisplayEffects = {
@@ -1549,10 +1675,19 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
   });
   actionsWrap.appendChild(customBtn);
 
-  // 季度奏折面板后置到剧情与标注区域之后、选项按钮之前
-  if (quarterPanel) currentWrap.appendChild(quarterPanel);
-  
-  currentWrap.appendChild(actionsWrap);
+  const actionHost = actionsTarget || currentWrap;
+  if (actionsTarget) {
+    const actionMeta = createElement("div", { className: "gameplay-page__meta-row" });
+    actionMeta.appendChild(createTag(`系统旨意 ${(data.choices || []).length} 条`));
+    actionMeta.appendChild(createTag("自拟诏书已启用"));
+    if (Array.isArray(state.currentQuarterAgenda) && state.currentQuarterAgenda.length) {
+      actionMeta.appendChild(createTag(disableActions ? "先锁定季度议题" : "季度议题已解锁"));
+    }
+    actionHost.appendChild(actionMeta);
+  }
+
+  if (quarterPanel) actionHost.appendChild(quarterPanel);
+  actionHost.appendChild(actionsWrap);
 }
 
 export async function renderStoryTurn(state, container, onChoice, options = {}) {
@@ -1560,6 +1695,7 @@ export async function renderStoryTurn(state, container, onChoice, options = {}) 
   const renderId = options && options.renderId;
   if (renderId != null && container._storyRenderId !== renderId) return;
 
+  resetStoryRenderTargets(container);
   setupDanmuLayer(container);
 
   const config = state.config || {};
@@ -1609,10 +1745,12 @@ export async function renderStoryTurn(state, container, onChoice, options = {}) 
   }
 
   updateStoryState(data);
+  const latestState = getState();
+  renderStorySidePanels(container, latestState, phaseLabels);
 
   if (renderId != null && container._storyRenderId !== renderId) return;
 
-  renderCurrentTurn(container, data, state, phaseLabels, onChoice, options);
+  renderCurrentTurn(container, data, latestState, phaseLabels, onChoice, options);
 
   startDanmu(container);
 }

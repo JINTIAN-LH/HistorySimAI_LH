@@ -1,23 +1,38 @@
 :root {
   --color-accent: #8B0000;
   --color-accent-soft: #a52a2a;
+  --color-accent-fade: rgba(139, 0, 0, 0.12);
   --color-gold: #D4A017;
   --color-gold-soft: #c9a84c;
   --color-bg-main: #f5f0e8;
   --color-bg-dark: #1a1a2e;
   --color-bg-topbar: rgba(58, 18, 18, 0.96);
   --color-bg-bottombar: rgba(42, 22, 18, 0.96);
+  --color-surface-raised: rgba(255, 252, 245, 0.88);
+  --color-surface-strong: rgba(255, 255, 255, 0.94);
   --color-text-main: #2c1810;
   --color-text-sub: #7a6a5e;
   --color-text-light: #f5f0e8;
   --color-border-soft: #d4c4a8;
   --color-block-bg: #faf6ef;
   --shadow-soft: 0 6px 20px rgba(80, 40, 20, 0.25);
+  --shadow-focus: 0 0 0 3px rgba(139, 0, 0, 0.14);
   --color-heading-main: #8B0000;
   --color-heading-sub: #7a6a5e;
   --color-danger: #c0392b;
   --color-success: #27ae60;
   --color-warning: #e67e22;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.22s ease;
 }
 
 body {
@@ -29,7 +44,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
+  padding: 10px 16px;
   background: var(--color-bg-topbar);
   box-shadow: 0 2px 12px rgba(60, 20, 10, 0.4);
   z-index: 10;
@@ -45,12 +60,12 @@ body {
 }
 
 .topbar-subtitle {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--color-gold-soft);
 }
 
 #topbar-status.topbar-subtitle {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   width: 100%;
   flex-shrink: 0;
@@ -64,13 +79,13 @@ body {
 }
 
 .topbar-settings-btn {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 18px;
   background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(212, 160, 23, 0.3);
   color: var(--color-gold);
@@ -88,7 +103,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--color-gold-soft);
   position: relative;
 }
@@ -121,8 +136,8 @@ body {
 }
 
 .bottom-tab-icon {
-  font-size: 16px;
-  margin-bottom: 2px;
+  font-size: 20px;
+  margin-bottom: 4px;
 }
 
 .bottom-tab--active {
@@ -199,6 +214,76 @@ body {
   box-shadow: 0 1px 3px rgba(80, 40, 20, 0.2);
 }
 
+.topbar-goal-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+  min-width: 0;
+}
+
+.goal-tag {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 4px;
+  background: var(--color-accent);
+  color: #fff;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.topbar-goal-text {
+  font-size: 13px;
+  color: var(--color-gold-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+@media (max-width: 1199px) {
+  #topbar {
+    padding: 0 12px;
+  }
+
+  .topbar-subtitle {
+    font-size: 11px;
+  }
+
+  #topbar-status.topbar-subtitle {
+    font-size: 12px;
+  }
+
+  .topbar-settings-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+
+  .bottom-tab {
+    font-size: 11px;
+  }
+
+  .bottom-tab-icon {
+    font-size: 16px;
+    margin-bottom: 2px;
+  }
+
+  .goal-tag {
+    font-size: 10px;
+    padding: 1px 8px;
+  }
+
+  .topbar-goal-text {
+    font-size: 11px;
+  }
+}
+
 @media (max-width: 600px) {
   .edict-block {
     font-size: 14px;
@@ -218,36 +303,4 @@ body {
   .story-action-btn > span {
     font-size: 10px;
   }
-}
-
-.topbar-goal-bar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 0;
-  cursor: pointer;
-  user-select: none;
-  width: 100%;
-  min-width: 0;
-}
-
-.goal-tag {
-  flex-shrink: 0;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 8px;
-  border-radius: 4px;
-  background: var(--color-accent);
-  color: #fff;
-  line-height: 1.6;
-  white-space: nowrap;
-}
-
-.topbar-goal-text {
-  font-size: 11px;
-  color: var(--color-gold-soft);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
 }

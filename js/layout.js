@@ -6,6 +6,10 @@ export function initLayout() {
   const topbar = document.getElementById("topbar");
   const bottombar = document.getElementById("bottombar");
 
+  if (topbar?.dataset.uiShell === "react" || bottombar?.dataset.uiShell === "react") {
+    return;
+  }
+
   if (topbar) {
     topbar.innerHTML = "";
     const left = document.createElement("div");
@@ -117,7 +121,7 @@ export function updateTopbarByState(state) {
   const year = state.currentYear || 3;
   const month = state.currentMonth || 4;
 
-  el.textContent = `崇祯${year}年·${month}月·${phaseLabel}`;
+  el.textContent = `建炎${year}年·${month}月·${phaseLabel}`;
 
   const weatherEl = state.weather;
   if (weatherEl) {

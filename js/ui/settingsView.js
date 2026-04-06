@@ -1,69 +1,132 @@
 ﻿import { router } from "../router.js";
 import { getState, resetState, setState } from "../state.js";
-import { saveGame, clearGame, setSavedGameplayMode } from "../storage.js";
+import { saveGame, clearGame, setSavedGameplayMode, getSaveList, loadGame, applyLoadedGame, formatSaveTimestamp, MAX_MANUAL_SLOTS } from "../storage.js";
 import { updateTopbarByState, updateGoalBar } from "../layout.js";
+import { createActionButton, createButtonRow, createElement, createFoldPanel, createInfoLine, createSectionCard, createTag, createViewShell } from "./viewPrimitives.js";
 
 function renderSettingsView(container) {
   const state = getState();
-
-  const root = document.createElement("div");
-
-  const title = document.createElement("div");
-  title.style.fontSize = "16px";
-  title.style.fontWeight = "700";
-  title.style.color = "var(--color-text-main)";
-  title.style.marginBottom = "12px";
-  title.textContent = "设置";
-  root.appendChild(title);
-
-  const list = document.createElement("div");
-  list.className = "settings-list";
-
-  // 手动保存
-  const saveItem = document.createElement("div");
-  saveItem.className = "settings-item";
-  const saveLabel = document.createElement("span");
-  saveLabel.textContent = "手动保存（当前模式）";
-  const saveBtn = document.createElement("button");
-  saveBtn.type = "button";
-  saveBtn.textContent = "保存";
-  saveBtn.addEventListener("click", () => {
-    saveGame();
-    saveBtn.textContent = "已保存";
-    setTimeout(() => { saveBtn.textContent = "保存"; }, 1500);
+  const currentModeLabel = state.mode === "rigid_v1" ? "困难模式" : "经典模式";
+  const { root, content } = createViewShell({
+    className: "settings-view-root",
+    title: "设置",
+    subtitle: "统一存档、模式与运行信息入口，方便后续继续加玩法时复用同一管理面板。",
   });
-  saveItem.appendChild(saveLabel);
-  saveItem.appendChild(saveBtn);
-  list.appendChild(saveItem);
 
-  // 模式切换
-  const modeItem = document.createElement("div");
-  modeItem.className = "settings-item";
-  modeItem.style.flexDirection = "column";
-  modeItem.style.alignItems = "stretch";
-  modeItem.style.gap = "6px";
+  const list = createElement("div", { className: "settings-list" });
 
-  const modeLabel = document.createElement("div");
-  modeLabel.style.fontSize = "13px";
-  modeLabel.style.fontWeight = "600";
-  modeLabel.textContent = "玩法模式";
 
-  const modeHint = document.createElement("div");
-  modeHint.style.fontSize = "12px";
-  modeHint.style.color = "var(--color-text-sub)";
-  modeHint.textContent = `当前：${state.mode === "rigid_v1" ? "困难模式" : "经典模式"}`;
 
-  const modeBtns = document.createElement("div");
-  modeBtns.style.display = "flex";
-  modeBtns.style.gap = "8px";
+  // 存档列表与操作
+  const saves = getSaveList(state.mode).filter((save) => save.slotId.startsWith("manual_"));
+  const savesBySlot = new Map(saves.map((save) => [save.slotId, save]));
+  const currentSlotId = state.slotId || "manual_01";
+  const savesSection = createSectionCard({
+    title: `存档槽位（${currentModeLabel}）`,
+    hint: "按模式隔离存档。后续新增玩法页时，不需要再单独实现自己的读写入口。",
+  });
+  const savesDrawer = createFoldPanel({
+    className: "settings-slot-drawer",
+    title: `存档槽位列表（共 ${MAX_MANUAL_SLOTS} 个）`,
+    hint: `当前模式：${currentModeLabel}`,
+    open: true,
+  });
+  savesDrawer.header.classList.add("settings-slot-drawer__header");
+  savesDrawer.body.classList.add("settings-slot-drawer__body");
 
-  const classicBtn = document.createElement("button");
-  classicBtn.type = "button";
-  classicBtn.textContent = "经典";
+  for (let i = 1; i <= MAX_MANUAL_SLOTS; i++) {
+    const slotId = `manual_${String(i).padStart(2, "0")}`;
+    const slotLabel = `槽位${String(i).padStart(2, "0")}`;
+    const save = savesBySlot.get(slotId);
+    const isCurrentSlot = currentSlotId === slotId;
+    const row = createElement("div", { className: "settings-slot-row" });
+    const meta = createElement("div", { className: "settings-slot-meta" });
+    const titleRow = createElement("div", { className: "settings-slot-title" });
+    titleRow.appendChild(createElement("span", { text: slotLabel }));
+    if (isCurrentSlot) {
+      titleRow.appendChild(createTag("当前槽位"));
+    }
+    meta.appendChild(titleRow);
+    meta.appendChild(createElement("div", {
+      className: "settings-slot-desc",
+      text: save
+        ? `保存时间 ${formatSaveTimestamp(save.timestamp)} · 游戏时间 ${save.game_time || "-"}${save.player_progress ? ` · 进度 ${save.player_progress}` : ""}`
+        : "当前模式下为空槽位",
+    }));
+    const loadBtn = createActionButton({
+      label: "读取",
+      variant: "secondary",
+      block: false,
+    });
+    loadBtn.disabled = !save;
+    loadBtn.addEventListener("click", () => {
+      const loaded = loadGame(slotId, state.mode);
+      if (loaded) {
+        applyLoadedGame(loaded);
+        window.location.reload();
+      } else {
+        alert(`当前${currentModeLabel}下的该槽位存档读取失败或已损坏`);
+      }
+    });
+    row.appendChild(meta);
+    row.appendChild(loadBtn);
+    savesDrawer.body.appendChild(row);
+  }
+  savesSection.body.appendChild(savesDrawer.section);
 
-  const rigidBtn = document.createElement("button");
-  rigidBtn.type = "button";
-  rigidBtn.textContent = "困难";
+  const saveControl = createSectionCard({
+    title: "手动保存",
+    hint: "开发调试时可以固定写入目标槽位，方便反复验证同一阶段。",
+  });
+  const saveLabel = createElement("span", { className: "settings-slot-desc", text: `保存到当前${currentModeLabel}的指定槽位` });
+  const slotSelect = createElement("select", { className: "select-input" });
+  for (let i = 1; i <= MAX_MANUAL_SLOTS; i++) {
+    const opt = document.createElement("option");
+    opt.value = `manual_${String(i).padStart(2, "0")}`;
+    opt.textContent = `槽位${i}`;
+    slotSelect.appendChild(opt);
+  }
+  if (currentSlotId.startsWith("manual_")) {
+    slotSelect.value = currentSlotId;
+  }
+  const saveBtn = createActionButton({
+    label: "保存",
+    variant: "primary",
+    block: false,
+  });
+  saveBtn.addEventListener("click", () => {
+    saveGame({ slotId: slotSelect.value, mode: state.mode });
+    saveBtn.querySelector(".ui-btn__title").textContent = "已保存";
+    setTimeout(() => {
+      const titleEl = saveBtn.querySelector(".ui-btn__title");
+      if (titleEl) titleEl.textContent = "保存";
+    }, 1500);
+  });
+  const saveRow = createElement("div", { className: "settings-inline-row" });
+  saveRow.appendChild(saveLabel);
+  saveRow.appendChild(slotSelect);
+  saveRow.appendChild(saveBtn);
+  saveControl.body.appendChild(saveRow);
+  list.appendChild(savesSection.section);
+  list.appendChild(saveControl.section);
+
+  const modeSection = createSectionCard({
+    title: "玩法模式",
+    hint: `当前：${state.mode === "rigid_v1" ? "困难模式" : "经典模式"}`,
+  });
+  const modeBtns = createButtonRow();
+
+  const classicBtn = createActionButton({
+    label: "经典",
+    description: "更适合快速验证新玩法和数值调整。",
+    selected: state.mode === "classic",
+  });
+
+  const rigidBtn = createActionButton({
+    label: "困难",
+    description: "更严苛的节奏与约束链，适合验证长期玩法张力。",
+    selected: state.mode === "rigid_v1",
+  });
 
   const switchMode = (targetMode) => {
     if (state.mode === targetMode) return;
@@ -86,71 +149,54 @@ function renderSettingsView(container) {
 
   modeBtns.appendChild(classicBtn);
   modeBtns.appendChild(rigidBtn);
+  modeSection.body.appendChild(modeBtns);
+  list.appendChild(modeSection.section);
 
-  modeItem.appendChild(modeLabel);
-  modeItem.appendChild(modeHint);
-  modeItem.appendChild(modeBtns);
-  list.appendChild(modeItem);
-
-  // 清除存档（仅当前模式）
-  const clearItem = document.createElement("div");
-  clearItem.className = "settings-item";
-  const clearLabel = document.createElement("span");
-  clearLabel.textContent = "清除当前模式存档（重新开始）";
-  const clearBtn = document.createElement("button");
-  clearBtn.type = "button";
-  clearBtn.textContent = "清除";
-  clearBtn.style.color = "var(--color-danger)";
-  clearBtn.style.borderColor = "var(--color-danger)";
+  const clearSection = createSectionCard({
+    title: "数据操作",
+    hint: `清除当前${currentModeLabel}的当前槽位存档并从头开始。`,
+  });
+  const clearBtn = createActionButton({
+    label: "清除当前槽位",
+    description: "此操作不可恢复。仅影响当前模式下的当前槽位。",
+    variant: "danger",
+  });
   clearBtn.addEventListener("click", () => {
-    if (confirm("确定要清除当前模式存档吗？此操作不可恢复。")) {
-      clearGame(state.mode);
+    if (confirm(`确定要清除当前${currentModeLabel}下的当前槽位存档吗？此操作不可恢复。`)) {
+      clearGame({ slotId: currentSlotId, mode: state.mode });
       resetState();
       updateTopbarByState(getState());
       updateGoalBar(getState());
       window.location.reload();
     }
   });
-  clearItem.appendChild(clearLabel);
-  clearItem.appendChild(clearBtn);
-  list.appendChild(clearItem);
-
-  // 游戏状态信息
-  const infoItem = document.createElement("div");
-  infoItem.className = "settings-item";
-  infoItem.style.flexDirection = "column";
-  infoItem.style.alignItems = "flex-start";
-  infoItem.style.gap = "4px";
+  clearSection.body.appendChild(clearBtn);
+  list.appendChild(clearSection.section);
 
   const config = state.config || {};
   const phaseLabels = config.phaseLabels || { morning: "早朝", afternoon: "午后", evening: "夜间" };
   const phaseLabel = phaseLabels[state.currentPhase] || "";
+  const infoSection = createSectionCard({
+    title: "当前局面",
+    hint: "保留最常看的运行信息，避免调试时在多个面板来回切。",
+  });
+  infoSection.body.appendChild(createInfoLine("当前进度", `建炎${state.currentYear || 3}年${state.currentMonth || 4}月 · 第${state.currentDay || 1}日 · ${phaseLabel}`));
+  infoSection.body.appendChild(createInfoLine("国势摘要", `国库 ${(state.nation?.treasury || 0).toLocaleString()}两 · 民心 ${state.nation?.civilMorale || 0}`));
+  list.appendChild(infoSection.section);
 
-  const info1 = document.createElement("div");
-  info1.style.fontSize = "12px";
-  info1.style.color = "var(--color-text-sub)";
-  info1.textContent = `当前进度：崇祯${state.currentYear || 3}年${state.currentMonth || 4}月 · 第${state.currentDay || 1}日 · ${phaseLabel}`;
-  const info2 = document.createElement("div");
-  info2.style.fontSize = "12px";
-  info2.style.color = "var(--color-text-sub)";
-  info2.textContent = `国库：${(state.nation?.treasury || 0).toLocaleString()}两 · 民心：${state.nation?.civilMorale || 0}`;
-  infoItem.appendChild(info1);
-  infoItem.appendChild(info2);
-  list.appendChild(infoItem);
-
-  // 返回按钮
-  const backItem = document.createElement("div");
-  backItem.className = "settings-item";
-  const backBtn = document.createElement("button");
-  backBtn.type = "button";
-  backBtn.textContent = "返回诏书";
+  const footerActions = createElement("div", { className: "settings-footer-actions" });
+  const backBtn = createActionButton({
+    label: "返回诏书",
+    description: "回到主决策界面继续当前回合。",
+    variant: "primary",
+  });
   backBtn.addEventListener("click", () => {
     router.setView(router.VIEW_IDS.EDICT);
   });
-  backItem.appendChild(backBtn);
-  list.appendChild(backItem);
+  footerActions.appendChild(backBtn);
+  list.appendChild(footerActions);
 
-  root.appendChild(list);
+  content.appendChild(list);
   container.appendChild(root);
 }
 
@@ -159,5 +205,3 @@ export function registerSettingsView() {
     renderSettingsView(container);
   });
 }
-
-registerSettingsView();

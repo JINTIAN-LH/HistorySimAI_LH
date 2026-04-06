@@ -32,10 +32,10 @@ describe("rigid module template", () => {
     expect(modules[1].lines[2]).toContain("其八");
   });
 
-  it("contains six ministries + factory report + urgent military in module 3", () => {
+  it("contains six ministries + situational intelligence + urgent military in module 3", () => {
     const modules = composeRigidModules(buildRigid(), {});
     const joined = modules[2].lines.join("\n");
-    ["吏部", "户部", "礼部", "兵部", "刑部", "工部", "厂卫密报", "信息茧房矛盾", "紧急军情"].forEach((token) => {
+    ["吏部", "户部", "礼部", "兵部", "刑部", "工部", "行在密报", "信息茧房矛盾", "紧急军情"].forEach((token) => {
       expect(joined).toContain(token);
     });
   });
@@ -52,7 +52,7 @@ describe("rigid module template", () => {
         },
       ],
     });
-    expect(modules[5].lines[0]).toContain("崇祯");
+    expect(modules[5].lines[0]).toContain("建炎");
     expect(modules[5].lines[0]).toContain("召对迫使中枢在清议与效率间站队");
   });
 

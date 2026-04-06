@@ -5,18 +5,15 @@ on:
     branches: ["main", "dev"]
   pull_request:
     branches: ["main", "dev"]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  test:
-    name: Lint & Test
+  fleet:
+    name: Fleet Workflow
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ChongzhenSim
 
     steps:
       - name: Checkout
@@ -27,16 +24,45 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: ChongzhenSim/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install frontend dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: Install server dependencies
-        run: npm ci --prefix server
+      - name: Run Fleet workflow
+        id: fleet_run
+        continue-on-error: true
+        run: npm run fleet:run
 
-      - name: Run tests
-        run: npm test
+      - name: Publish Fleet PR summary
+        if: always()
+        run: |
+          if [ -f .fleet/reports/pr-summary.md ]; then
+            cat .fleet/reports/pr-summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "# Fleet PR Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "No Fleet summary was generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
-      - name: Build
-        run: npm run build
+      - name: Print Fleet failure diagnosis
+        if: always() && steps.fleet_run.outcome != 'success'
+        run: |
+          echo "Fleet workflow failed. Phase diagnosis:" >&2
+          if [ -f .fleet/reports/pr-summary.md ]; then
+            cat .fleet/reports/pr-summary.md >&2
+          else
+            echo "No Fleet summary was generated." >&2
+          fi
+
+      - name: Upload Fleet reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fleet-reports
+          path: .fleet/reports
+          if-no-files-found: ignore
+
+      - name: Fail workflow on Fleet errors
+        if: steps.fleet_run.outcome != 'success'
+        run: exit 1

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
+import { processCoreGameplayTurn, resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
 
 function createBaseState() {
   return {
@@ -54,6 +54,58 @@ describe("resolveHostileForcesAfterChoice", () => {
     expect(out.statePatch.hostileForces[0].power).toBeLessThan(70);
     expect(out.statePatch.systemNewsToday.some((item) => String(item.title || "").includes("军事开拓"))).toBe(true);
   });
+
+  it("should target peasant rebels when military text refers to 陕西流寇", () => {
+    const state = {
+      hostileForces: [
+        {
+          id: "hostile_后金",
+          name: "后金(清)",
+          leader: "皇太极",
+          status: "整军经武",
+          level: "critical",
+          power: 88,
+          isDefeated: false,
+          storylineTag: "后金(清)_线",
+        },
+        {
+          id: "hostile_农民军",
+          name: "农民军",
+          leader: "李自成等",
+          status: "蛰伏山中",
+          level: "high",
+          power: 72,
+          isDefeated: false,
+          storylineTag: "农民军_线",
+        },
+        {
+          id: "hostile_登州叛军",
+          name: "登州叛军",
+          leader: "孔有德",
+          status: "欠饷十月",
+          level: "high",
+          power: 72,
+          isDefeated: false,
+          storylineTag: "登州叛军_线",
+        },
+      ],
+      nation: {
+        borderThreat: 75,
+        militaryStrength: 60,
+      },
+      unlockedPolicies: [],
+      playerAbilities: { military: 0 },
+      systemNewsToday: [],
+      closedStorylines: [],
+    };
+
+    const out = resolveHostileForcesAfterChoice(state, "命洪承畴加紧围剿陕西流寇，同时开仓放粮赈济灾民", {}, 3, 5);
+
+    const byId = new Map(out.statePatch.hostileForces.map((item) => [item.id, item.power]));
+    expect(byId.get("hostile_农民军")).toBeLessThan(72);
+    expect(byId.get("hostile_后金")).toBe(88);
+    expect(byId.get("hostile_登州叛军")).toBe(72);
+  });
 });
 
 describe("scaleEffectsByExecution", () => {
@@ -93,5 +145,135 @@ describe("scaleEffectsByExecution", () => {
     expect(typeof scaled.treasury).toBe("number");
     expect(typeof scaled.civilMorale).toBe("number");
     expect(scaled.appointments).toEqual({ hubu_shangshu: "wen_tiren" });
+  });
+});
+
+describe("processCoreGameplayTurn balance corrections", () => {
+  it("should schedule a delayed downside for consultation-heavy choices", () => {
+    const out = processCoreGameplayTurn(
+      {
+        currentYear: 3,
+        currentMonth: 4,
+        prestige: 58,
+        factionSupport: { donglin: 48, eunuch: 52, neutral: 50, military: 46, imperial: 72 },
+        partyStrife: 62,
+        unrest: 18,
+        taxPressure: 52,
+        pendingConsequences: [],
+        currentQuarterAgenda: [],
+        currentQuarterFocus: null,
+        appointments: {},
+        characterStatus: {},
+        nation: {
+          treasury: 500000,
+          grain: 30000,
+          militaryStrength: 60,
+          civilMorale: 35,
+          borderThreat: 75,
+          disasterLevel: 70,
+          corruptionLevel: 80,
+        },
+        hostileForces: [],
+        unlockedPolicies: [],
+        playerAbilities: { politics: 0, military: 0, scholarship: 0, management: 0 },
+        systemPublicOpinion: [],
+        config: { balance: {} },
+      },
+      "召集内阁与六部堂官廷议，共商开源节流之策",
+      { civilMorale: 2, corruptionLevel: -3 },
+      3,
+      5
+    );
+
+    expect(out.statePatch.pendingConsequences.some((item) => item.id === "court_consultation_delay")).toBe(true);
+  });
+
+  it("should grow unsuppressed hostile forces on quarter turns", () => {
+    const out = processCoreGameplayTurn(
+      {
+        currentYear: 3,
+        currentMonth: 5,
+        prestige: 58,
+        factionSupport: { donglin: 48, eunuch: 52, neutral: 50, military: 46, imperial: 72 },
+        partyStrife: 62,
+        unrest: 26,
+        taxPressure: 52,
+        pendingConsequences: [],
+        currentQuarterAgenda: [],
+        currentQuarterFocus: null,
+        appointments: {},
+        characterStatus: {},
+        nation: {
+          treasury: 500000,
+          grain: 30000,
+          militaryStrength: 60,
+          civilMorale: 35,
+          borderThreat: 75,
+          disasterLevel: 70,
+          corruptionLevel: 80,
+        },
+        hostileForces: [
+          { id: "hostile_后金", name: "后金(清)", leader: "皇太极", power: 88, isDefeated: false },
+          { id: "hostile_农民军", name: "农民军", leader: "李自成等", power: 72, isDefeated: false },
+        ],
+        unlockedPolicies: [],
+        playerAbilities: { politics: 0, military: 0, scholarship: 0, management: 0 },
+        systemPublicOpinion: [],
+        config: { balance: {} },
+      },
+      "召集内阁与六部堂官廷议，共商开源节流之策",
+      { civilMorale: 2, corruptionLevel: -3 },
+      3,
+      6
+    );
+
+    const byId = new Map(out.statePatch.hostileForces.map((item) => [item.id, item.power]));
+    expect(byId.get("hostile_后金")).toBeGreaterThan(88);
+    expect(byId.get("hostile_农民军")).toBeGreaterThan(72);
+    expect(out.statePatch.systemNewsToday.some((item) => String(item.title || "").includes("趁隙坐大"))).toBe(true);
+  });
+
+  it("should not grow the hostile target that is actively being suppressed this quarter", () => {
+    const out = processCoreGameplayTurn(
+      {
+        currentYear: 3,
+        currentMonth: 5,
+        prestige: 58,
+        factionSupport: { donglin: 48, eunuch: 52, neutral: 50, military: 46, imperial: 72 },
+        partyStrife: 62,
+        unrest: 26,
+        taxPressure: 52,
+        pendingConsequences: [],
+        currentQuarterAgenda: [],
+        currentQuarterFocus: null,
+        appointments: {},
+        characterStatus: {},
+        nation: {
+          treasury: 500000,
+          grain: 30000,
+          militaryStrength: 60,
+          civilMorale: 35,
+          borderThreat: 75,
+          disasterLevel: 70,
+          corruptionLevel: 80,
+        },
+        hostileForces: [
+          { id: "hostile_后金", name: "后金(清)", leader: "皇太极", power: 88, isDefeated: false },
+          { id: "hostile_农民军", name: "农民军", leader: "李自成等", power: 72, isDefeated: false },
+        ],
+        unlockedPolicies: [],
+        playerAbilities: { politics: 0, military: 0, scholarship: 0, management: 0 },
+        systemPublicOpinion: [],
+        config: { balance: {} },
+      },
+      "命洪承畴加紧围剿陕西流寇，同时开仓放粮赈济灾民",
+      { civilMorale: 8, disasterLevel: -5 },
+      3,
+      6
+    );
+
+    const byId = new Map(out.statePatch.hostileForces.map((item) => [item.id, item.power]));
+    expect(byId.get("hostile_农民军")).toBe(72);
+    expect(byId.get("hostile_后金")).toBeGreaterThan(88);
   });
 });

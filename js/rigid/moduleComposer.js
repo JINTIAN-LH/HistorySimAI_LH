@@ -48,7 +48,7 @@ function formatHistoryEventLine(event) {
   if (!event) return "暂无";
   const eraYear = Math.max(1, (Number(event.trigger?.year) || 1627) - 1626);
   const month = Number(event.trigger?.month) || 1;
-  const base = `崇祯${eraYear}年${month}月 · ${event.name}`;
+  const base = `建炎${eraYear}年${month}月 · ${event.name}`;
   if (event.description) {
     return `${base}：${event.description}`;
   }
@@ -61,15 +61,15 @@ function buildInformationCocoonContradiction(rigidState) {
   const anxiety = Number(rigidState?.chongZhen?.anxiety) || 0;
 
   if (rebelScale >= 45) {
-    return "【信息茧房矛盾】六部称“流民已就抚、仓廪可支三月”；厂卫密报“乡勇哗散，饥民结队南下”。";
+    return "【信息茧房矛盾】六部称“流民已就抚、仓廪可支三月”；行在密报“乡勇哗散，饥民结队南下”。";
   }
   if (resistance >= 85) {
-    return "【信息茧房矛盾】六部称“百官多愿复议，朝务可复”；厂卫密报“串联已成，今日入朝者寥寥”。";
+    return "【信息茧房矛盾】六部称“百官多愿复议，朝务可复”；行在密报“串联已成，今日入朝者寥寥”。";
   }
   if (anxiety >= 70) {
-    return "【信息茧房矛盾】六部称“廷臣意见渐趋一致”；厂卫密报“言官夜聚抄录弹章，次日将群起攻讦”。";
+    return "【信息茧房矛盾】六部称“廷臣意见渐趋一致”；行在密报“言官夜聚抄录弹章，次日将群起攻讦”。";
   }
-  return "【信息茧房矛盾】六部称“漕运回稳、民情可安”；厂卫密报“河道督催受阻，沿线骚动未平”。";
+  return "【信息茧房矛盾】六部称“漕运回稳、民情可安”；行在密报“河道督催受阻，沿线骚动未平”。";
 }
 
 export function composeRigidModules(rigidState, context = {}) {
@@ -82,7 +82,7 @@ export function composeRigidModules(rigidState, context = {}) {
   const assassinateRisk = computeAssassinateRisk(rigidState.offendScores);
   const module1 = [
     `【财政】国库 ${formatNumber(rigidState.finance.treasury)} / 内帑 ${formatNumber(rigidState.finance.innerFund)} / 军饷拖欠 ${formatNumber(rigidState.finance.militaryArrears)} / 官俸拖欠 ${formatNumber(rigidState.finance.officialArrears)}`,
-    `【军事】辽东兵力 ${formatNumber(rigidState.military.liaoDongTroops)} / 军心 ${formatNumber(rigidState.military.liaoDongMorale)} / 流寇规模 ${formatNumber(rigidState.military.rebelScale)} / 后金态势 ${rigidState.military.qingTrend || "未知"}`,
+    `【军事】沿江兵力 ${formatNumber(rigidState.military.liaoDongTroops)} / 军心 ${formatNumber(rigidState.military.liaoDongMorale)} / 地方兵乱规模 ${formatNumber(rigidState.military.rebelScale)} / 金军态势 ${rigidState.military.qingTrend || "未知"}`,
     `【朝廷】权威 ${formatNumber(rigidState.court.authority)} / 党争 ${formatNumber(rigidState.court.factionFight)}（下限20） / 阻力 ${formatNumber(rigidState.court.resistance)}（下限15） / 封驳次数 ${formatNumber(rigidState.court.refuteTimes)}`,
     `【圣躬】焦虑 ${formatNumber(rigidState.chongZhen.anxiety)}（下限20） / 失眠 ${formatNumber(rigidState.chongZhen.insomnia)} / 暴露风险 ${formatNumber(rigidState.chongZhen.exposureRisk)} / 疑心 ${formatNumber(rigidState.chongZhen.distrust)}`,
   ];
@@ -97,12 +97,12 @@ export function composeRigidModules(rigidState, context = {}) {
     "【六部奏章】吏部：京察争执未息。",
     "【六部奏章】户部：请缓征并核减浮费。",
     "【六部奏章】礼部：请定名分以安士林。",
-    "【六部奏章】兵部：催补辽饷与边兵器械。",
+    "【六部奏章】兵部：催补江防军饷与守御器械。",
     "【六部奏章】刑部：请速断积案以平怨气。",
     "【六部奏章】工部：河工与城防并请增拨。",
-    "【厂卫密报】京师舆情波动，流言渐盛。",
+    "【行在密报】行在舆情波动，流言渐盛。",
     buildInformationCocoonContradiction(rigidState),
-    `【紧急军情】边报称敌情 ${rigidState.military.qingTrend || "未知"}。`,
+    `【紧急军情】江北边报称敌情 ${rigidState.military.qingTrend || "未知"}。`,
   ];
 
   const module4 = [
@@ -285,10 +285,10 @@ export function buildRigidStoryData(state, presets = []) {
 
   return {
     header: {
-      time: `崇祯${(rigid?.calendar?.year || 1627) - 1626}年${rigid?.calendar?.month || 8}月`,
+      time: `建炎${(rigid?.calendar?.year || 1627) - 1626}年${rigid?.calendar?.month || 8}月`,
       season: rigid?.calendar?.season || "秋",
       weather: state.weather || "阴",
-      location: "紫禁城",
+      location: "行在",
     },
     storyParagraphs: [...storyLead, ...storyParagraphs],
     choices,

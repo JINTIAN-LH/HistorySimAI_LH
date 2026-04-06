@@ -20,6 +20,16 @@
     "baseDamageMin": 4,
     "baseDamageMax": 22
   },
+  "hostileGrowth": {
+    "quarterlyBase": 2,
+    "yearEndBonus": 1,
+    "unrestThreshold": 24,
+    "unrestBonus": 1,
+    "borderThreatThreshold": 60,
+    "borderThreatBonus": 1,
+    "highPowerThreshold": 85,
+    "highPowerBonus": 0
+  },
   "partyStrife": {
     "currentWeight": 0.55,
     "spreadWeight": 0.5

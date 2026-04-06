@@ -1,0 +1,56 @@
+fleet_version: 1.0
+name: 网页游戏迁移工作流
+description: 默认加载的三段式工作流，面向浏览器文字策略模拟项目。
+default_workflow: true
+execution:
+  local_entry: npm run fleet:run
+  summary_entry: npm run fleet:summary
+  report_dir: .fleet/reports
+  ci_workflow: .github/workflows/ci.yml
+project:
+  type: browser-narrative-strategy-sim
+  architecture_source: server/web游戏架构.md
+  runtime_profile: ui-separated + system-core + fetch-data + express-server
+  selection_reason:
+    - 当前项目是回合制文字策略模拟，不需要强制切到 Phaser 或实时联机。
+    - 现有玩法核心在系统驱动状态机与叙事 UI，适合先完成 client/server 分层迁移。
+    - 优先保证存档、季度结算、剧情推进与移动端浏览体验稳定。
+agents:
+  - name: architect
+    path: .fleet/architect.agent.md
+    role: 架构迁移设计
+  - name: coder
+    path: .fleet/coder.agent.md
+    role: 分层改造与实现
+  - name: tester
+    path: .fleet/tester.agent.md
+    role: 体验回归验证
+workflow:
+  name: 架构迁移闭环
+  steps:
+    - id: architect
+      agent: architect
+      report: .fleet/reports/architect-report.md
+      task: 依据 web 游戏架构文档选择最贴合当前玩法的架构类型，并明确渐进迁移范围。
+    - id: coder
+      agent: coder
+      report: .fleet/reports/coder-report.md
+      task: 将项目迁移到 client/server 四层启动壳，保留现有系统逻辑与体验表现。
+    - id: tester
+      agent: tester
+      report: .fleet/reports/tester-report.md
+      task: 循环执行构建、单元测试和无头试玩，直到核心体验回归稳定。
+verification:
+  commands:
+    - npm run build
+    - npm test
+    - npm run verify:experience
+  release_gate:
+    - 构建通过
+    - 全量测试通过
+    - 多策略无头试玩一致性通过
+rules:
+  - 先做架构适配，再做入口迁移，避免直接重写玩法模块。
+  - 禁止为贴合文档而引入与当前玩法无关的重型依赖。
+  - 任一验证失败，必须回到实现阶段修复后再重跑验证。
+  - 输出以玩家体验稳定为首要目标，而不是目录形式上的完全一致。

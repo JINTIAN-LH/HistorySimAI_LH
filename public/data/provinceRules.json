@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "description": "各省动态规则配置。namePattern 为正则表达式字符串，按 regionRules 顺序匹配，states 按顺序命中后返回。",
+  "description": "各地动态规则配置。namePattern 为正则表达式字符串，按 regionRules 顺序匹配，states 按顺序命中后返回。",
   "regionRules": [
     {
-      "namePattern": "辽东",
+      "namePattern": "江淮|沿江",
       "default": {
         "threat": "critical",
-        "status": "后金压力犹存，关宁防线需持续戒备。"
+        "status": "金军压力犹存，沿江防线需持续戒备。"
       },
       "states": [
         {
@@ -15,7 +15,7 @@
             { "metric": "militaryStrength", "op": "<=", "value": 45 }
           ],
           "threat": "critical",
-          "status": "关宁防线告急，敌情频仍，需尽快补饷增援。"
+          "status": "沿江守线告急，敌情频仍，需尽快补充军饷与援军。"
         },
         {
           "whenAll": [
@@ -23,15 +23,15 @@
             { "metric": "militaryStrength", "op": ">=", "value": 65 }
           ],
           "threat": "medium",
-          "status": "边防暂稳，但仍需持续警戒后金动向。"
+          "status": "江防暂稳，但仍需持续警戒金军动向。"
         }
       ]
     },
     {
-      "namePattern": "陕西|河南",
+      "namePattern": "江淮|河南",
       "default": {
         "threat": "high",
-        "status": "灾情与流民问题仍需持续处置。"
+        "status": "兵火与流民问题仍需持续处置。"
       },
       "states": [
         {
@@ -41,7 +41,7 @@
             { "metric": "unrest", "op": ">=", "value": 30 }
           ],
           "threat": "high",
-          "status": "灾情与流民压力并存，若赈济不足将迅速恶化。"
+          "status": "兵火与流民压力并存，若赈济不足局势将迅速恶化。"
         },
         {
           "whenAll": [
@@ -49,7 +49,7 @@
             { "metric": "civilMorale", "op": ">=", "value": 55 }
           ],
           "threat": "medium",
-          "status": "灾情有所缓解，地方秩序逐步恢复。"
+          "status": "地方情势有所缓和，州县秩序正逐步恢复。"
         }
       ]
     },
@@ -57,7 +57,7 @@
       "namePattern": "山东",
       "default": {
         "threat": "medium",
-        "status": "军务可控，但需防局部哗变反复。"
+        "status": "军务尚可控，但仍需严防局部哗变反复。"
       },
       "states": [
         {
@@ -66,15 +66,15 @@
             { "metric": "unrest", "op": ">=", "value": 28 }
           ],
           "threat": "high",
-          "status": "军纪与饷银压力偏高，兵变隐患仍在。"
+          "status": "军纪与饷银压力偏高，兵变隐患依旧存在。"
         }
       ]
     },
     {
-      "namePattern": "江南|湖广",
+      "namePattern": "两浙|江南|湖广",
       "default": {
         "threat": "low",
-        "status": "税粮产出稳定，仍是朝廷主要财赋支撑。"
+        "status": "税粮产出稳定，仍是行在财政与粮运的主要支撑。"
       },
       "states": [
         {
@@ -83,7 +83,7 @@
             { "metric": "corruptionLevel", "op": ">=", "value": 70 }
           ],
           "threat": "medium",
-          "status": "赋税与漕运承压，财政回流效率下降。"
+          "status": "税赋与转运承压，财政回流效率明显下滑。"
         }
       ]
     },
@@ -91,7 +91,7 @@
       "namePattern": "四川",
       "default": {
         "threat": "low",
-        "status": "整体安稳，可作为战略后方调度区域。"
+        "status": "整体安稳，可作为战略后方与调度区域。"
       },
       "states": [
         {
@@ -99,7 +99,7 @@
             { "metric": "unrest", "op": ">=", "value": 35 }
           ],
           "threat": "medium",
-          "status": "地方治安波动，需要提前防范土司与流民联动。"
+          "status": "地方治安波动，需提前防范土司与流民联动。"
         }
       ]
     }

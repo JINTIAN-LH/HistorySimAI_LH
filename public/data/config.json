@@ -1,6 +1,8 @@
 {
   "totalDays": 30,
-  "gameTitle": "崇祯皇帝模拟器",
+  "gameTitle": "南宋中兴模拟器",
+  "worldVersion": "southern_song_v1",
+  "absoluteStartYear": 1129,
   "startYear": 3,
   "startMonth": 4,
   "storyMode": "llm",

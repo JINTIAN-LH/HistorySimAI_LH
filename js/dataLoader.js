@@ -1,3 +1,5 @@
+import { adaptWorldviewData } from "./worldview/worldviewAdapter.js";
+
 const cache = new Map();
 
 export async function loadJSON(path) {
@@ -8,7 +10,7 @@ export async function loadJSON(path) {
   if (!res.ok) {
     throw new Error(`加载 JSON 失败: ${path} (${res.status})`);
   }
-  const data = await res.json();
+  const data = adaptWorldviewData(path, await res.json());
   cache.set(path, data);
   return data;
 }

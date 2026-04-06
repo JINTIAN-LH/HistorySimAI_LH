@@ -1,4 +1,5 @@
 import { isWarriorCharacter } from "../utils/characterArchetype.js";
+import { getAbsoluteYearForEraYear } from "../utils/eraYear.js";
 
 export const KEJU_STAGE_LABELS = {
   idle: "未开科",
@@ -33,6 +34,23 @@ const GENERATED_FACTIONS = [
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function buildDepartmentModuleMap(positionsMeta) {
+  const departments = Array.isArray(positionsMeta?.departments) ? positionsMeta.departments : [];
+  return new Map(departments.map((item) => [item.id, item.moduleId]));
+}
+
+function filterVacanciesByModules(positionsMeta, appointments, allowedModules) {
+  const positions = Array.isArray(positionsMeta?.positions) ? positionsMeta.positions : [];
+  const moduleByDeptId = buildDepartmentModuleMap(positionsMeta);
+  const allowSet = new Set(allowedModules);
+
+  return positions.filter((pos) => {
+    if (!pos || !pos.id || appointments?.[pos.id]) return false;
+    const moduleId = moduleByDeptId.get(pos.department || "");
+    return allowSet.has(moduleId);
+  });
 }
 
 function computePublishedQuality(publishedList) {
@@ -120,15 +138,15 @@ export function generateRandomKejuCandidates(state, options = {}) {
   const count = Number.isInteger(options.count) ? options.count : 5;
   const currentYear = Number(state?.currentYear) || 1;
   const currentMonth = Number(state?.currentMonth) || 1;
-  const absoluteYear = 1627 + currentYear;
+  const absoluteYear = getAbsoluteYearForEraYear(currentYear, state?.config);
   const baseIndex = currentYear * 31 + currentMonth * 17;
 
   return Array.from({ length: count }, (_, idx) => {
     const factionInfo = GENERATED_FACTIONS[Math.floor(random() * GENERATED_FACTIONS.length)];
     const name = `${GENERATED_SURNAMES[(baseIndex + idx) % GENERATED_SURNAMES.length]}${GENERATED_GIVEN_NAMES[Math.floor(random() * GENERATED_GIVEN_NAMES.length)]}`;
     const courtesyName = GENERATED_GIVEN_NAMES[Math.floor(random() * GENERATED_GIVEN_NAMES.length)];
-    const birthYear = clamp(absoluteYear - 22 - Math.floor(random() * 14), 1450, 1700);
-    const deathYear = clamp(birthYear + 45 + Math.floor(random() * 20), birthYear + 35, 1700);
+    const birthYear = clamp(absoluteYear - 22 - Math.floor(random() * 14), absoluteYear - 90, absoluteYear - 18);
+    const deathYear = clamp(birthYear + 45 + Math.floor(random() * 20), birthYear + 35, absoluteYear + 70);
     return {
       id: `keju_generated_${currentYear}_${currentMonth}_${idx + 1}`,
       name,
@@ -248,9 +266,11 @@ export function resetKejuForNextCycle(kejuState, note = "本届科举已毕，�
 }
 
 export function buildKejuRecommendPositions(topCandidates, positionsMeta, appointments) {
-  const positions = Array.isArray(positionsMeta?.positions) ? positionsMeta.positions : [];
-  const vacancies = positions
-    .filter((pos) => pos && pos.id && !appointments?.[pos.id])
+  const vacancies = filterVacanciesByModules(
+    positionsMeta,
+    appointments,
+    ["neige", "liubu", "fasisi", "difang"]
+  )
     .sort((a, b) => {
       const importanceA = typeof a.importance === "number" ? a.importance : 0;
       const importanceB = typeof b.importance === "number" ? b.importance : 0;
@@ -319,15 +339,15 @@ export function generateRandomWujuCandidates(state, options = {}) {
   const count = Number.isInteger(options.count) ? options.count : 5;
   const currentYear = Number(state?.currentYear) || 1;
   const currentMonth = Number(state?.currentMonth) || 1;
-  const absoluteYear = 1627 + currentYear;
+  const absoluteYear = getAbsoluteYearForEraYear(currentYear, state?.config);
   const baseIndex = currentYear * 41 + currentMonth * 19;
 
   return Array.from({ length: count }, (_, idx) => {
     const factionInfo = GENERATED_FACTIONS[Math.floor(random() * GENERATED_FACTIONS.length)];
     const name = `${GENERATED_SURNAMES[(baseIndex + idx) % GENERATED_SURNAMES.length]}${GENERATED_GIVEN_NAMES[Math.floor(random() * GENERATED_GIVEN_NAMES.length)]}`;
     const courtesyName = GENERATED_GIVEN_NAMES[Math.floor(random() * GENERATED_GIVEN_NAMES.length)];
-    const birthYear = clamp(absoluteYear - 20 - Math.floor(random() * 12), 1450, 1700);
-    const deathYear = clamp(birthYear + 44 + Math.floor(random() * 20), birthYear + 35, 1700);
+    const birthYear = clamp(absoluteYear - 20 - Math.floor(random() * 12), absoluteYear - 90, absoluteYear - 18);
+    const deathYear = clamp(birthYear + 44 + Math.floor(random() * 20), birthYear + 35, absoluteYear + 70);
     return {
       id: `wuju_generated_${currentYear}_${currentMonth}_${idx + 1}`,
       name,
@@ -457,17 +477,11 @@ export function resetWujuForNextCycle(wujuState, note = "本届武举已毕，�
 }
 
 export function buildWujuRecommendPositions(topCandidates, positionsMeta, appointments) {
-  const positions = Array.isArray(positionsMeta?.positions) ? positionsMeta.positions : [];
-  const departments = Array.isArray(positionsMeta?.departments) ? positionsMeta.departments : [];
-  const moduleByDeptId = new Map(departments.map((item) => [item.id, item.moduleId]));
-  const allowModules = new Set(["neiting", "difang", "junshi"]);
-
-  const vacancies = positions
-    .filter((pos) => {
-      if (!pos || !pos.id || appointments?.[pos.id]) return false;
-      const moduleId = moduleByDeptId.get(pos.department || "");
-      return allowModules.has(moduleId);
-    })
+  const vacancies = filterVacanciesByModules(
+    positionsMeta,
+    appointments,
+    ["difang", "junshi"]
+  )
     .sort((a, b) => {
       const importanceA = typeof a.importance === "number" ? a.importance : 0;
       const importanceB = typeof b.importance === "number" ? b.importance : 0;

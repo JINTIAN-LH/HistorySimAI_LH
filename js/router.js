@@ -11,16 +11,30 @@ export const router = (() => {
 
   let currentView = VIEW_IDS.EDICT;
   let viewRenderers = {};
+  const viewSubscribers = new Set();
   const DEBOUNCE_MS = 400;
   let lastSetViewAt = 0;
 
-  function registerView(id, renderFn) {
-    viewRenderers[id] = renderFn;
+  function notifyViewSubscribers() {
+    viewSubscribers.forEach((listener) => {
+      try {
+        listener(currentView);
+      } catch (error) {
+        console.error("[router] subscriber failed", error);
+      }
+    });
+  }
+
+  function registerView(id, renderFn, options = {}) {
+    viewRenderers[id] = {
+      renderFn: typeof renderFn === "function" ? renderFn : null,
+      renderMode: options.renderMode === "react" ? "react" : "legacy",
+    };
   }
 
   function setView(id) {
-    const hasRenderer = !!viewRenderers[id];
-    if (!hasRenderer) return;
+    const viewDefinition = viewRenderers[id];
+    if (!viewDefinition) return;
     if (id === VIEW_IDS.EDICT) {
       const now = Date.now();
       if (currentView === VIEW_IDS.EDICT && now - lastSetViewAt < DEBOUNCE_MS) {
@@ -32,19 +46,18 @@ export const router = (() => {
     const previousView = currentView;
     currentView = id;
 
-    if (id !== VIEW_IDS.EDICT) {
-      const wrap = document.getElementById("edict-panels-wrap");
-      if (wrap) wrap.remove();
-    }
-
     const main = document.getElementById("main-view");
-    if (!main) return;
-    if (previousView === VIEW_IDS.EDICT && id !== VIEW_IDS.EDICT) {
+    if (main && previousView === VIEW_IDS.EDICT && id !== VIEW_IDS.EDICT) {
       saveEdictScrollTop(main.scrollTop);
     }
-    main.innerHTML = "";
-    viewRenderers[id](main);
+    if (main && viewDefinition.renderMode === "legacy") {
+      main.replaceChildren();
+      if (viewDefinition.renderFn) {
+        viewDefinition.renderFn(main);
+      }
+    }
     highlightBottomTab(id);
+    notifyViewSubscribers();
   }
 
   function highlightBottomTab(id) {
@@ -62,5 +75,23 @@ export const router = (() => {
     // bootstrap logic handled by main.js
   }
 
-  return { VIEW_IDS, registerView, setView, init };
+  function subscribeView(listener) {
+    if (typeof listener !== "function") {
+      return () => {};
+    }
+    viewSubscribers.add(listener);
+    return () => {
+      viewSubscribers.delete(listener);
+    };
+  }
+
+  function getCurrentView() {
+    return currentView;
+  }
+
+  function getViewRenderMode(id) {
+    return viewRenderers[id]?.renderMode || null;
+  }
+
+  return { VIEW_IDS, registerView, setView, init, subscribeView, getCurrentView, getViewRenderMode };
 })();

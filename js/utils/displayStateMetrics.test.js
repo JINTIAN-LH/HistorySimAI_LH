@@ -108,4 +108,22 @@ describe("displayStateMetrics", () => {
     expect(entries.find((item) => item.label === "免去 户部尚书")?.value).toBe("已生效");
     expect(entries.find((item) => item.label === "处置 温体仁")?.value).toBe("处死");
   });
+
+  it("should fall back to Chinese labels instead of raw ids", () => {
+    const entries = buildOutcomeDisplayEntries(
+      {
+        loyalty: { missing_minister: 3 },
+        appointments: { missing_position: "missing_minister" },
+        characterDeath: { another_missing_minister: "赐死" },
+      },
+      {
+        ministers: [],
+        positionsMeta: { positions: [] },
+      }
+    );
+
+    expect(entries.find((item) => item.label === "未署名臣僚 忠诚")?.value).toBe(3);
+    expect(entries.find((item) => item.label === "任命 未署名臣僚 -> 未明职司")?.value).toBe("已生效");
+    expect(entries.find((item) => item.label === "处置 未署名臣僚")?.value).toBe("赐死");
+  });
 });

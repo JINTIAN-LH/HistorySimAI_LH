@@ -165,6 +165,7 @@ export function resolveBattleRound(session, playerDecision, _injuryRoll = Math.r
     weather = "clear",                      // 扩展版本：天气
     commanderInjured = false,               // 扩展版本：主将是否负伤
     ammo = { firearm: 99, artillery: 99 },  // 扩展版本：弹药存量（默认不限）
+    lastChargeRound = 0,                    // 扩展版本：上次骑兵冲锋的回合（用于 chargeCooldown 判断）
     round,
   } = session;
 
@@ -209,8 +210,13 @@ export function resolveBattleRound(session, playerDecision, _injuryRoll = Math.r
 
     // 扩展版本：雪天骑兵速度 -40%（攻击力折减）
     if (isSnow && unit.id === "cavalry_guanning") atk *= 0.6;
-    // 骑兵冲锋 / 主将亲率均触发冲锋加成
-    if ((playerDecision === "charge" || isCommanderCharge) && unit.chargeBonus) atk *= unit.chargeBonus;
+    // 骑兵冲锋 / 主将亲率均触发冲锋加成（受 chargeCooldown 约束）
+    const isChargeCoolingDown = unit.chargeCooldown
+      ? lastChargeRound > 0 && (lastChargeRound + unit.chargeCooldown) > round
+      : false;
+    if ((playerDecision === "charge" || isCommanderCharge) && unit.chargeBonus && !isChargeCoolingDown) {
+      atk *= unit.chargeBonus;
+    }
     // 炮兵范围伤害
     if (unit.areaDamage) atk *= 1.3;
     // 兵种克制
@@ -228,10 +234,14 @@ export function resolveBattleRound(session, playerDecision, _injuryRoll = Math.r
     }
   });
 
-  // 敌方反击
+  // 敌方反击（简化规则：不跟踪弹药/冷却，但天气对火铳的影响对称适用）
   enemyUnits.forEach((eu) => {
     const unit = resolveUnitById(eu.unitId);
     const moraleMod = clamp(eu.morale / 100, 0.3, 1.0);
+
+    // 天气对称性：雨天敌方火铳同样哑火
+    if (isRain && unit.id === "firearm") return;
+
     let atk = unit.attack * moraleMod;
 
     if (unit.counters?.some((c) => playerUnitIds.includes(c))) atk *= 1.4;
@@ -274,7 +284,7 @@ export function resolveBattleRound(session, playerDecision, _injuryRoll = Math.r
   const playerTotalAlive = finalPlayer.reduce((s, u) => s + u.count, 0);
   const enemyTotalAlive = updatedEnemy.reduce((s, u) => s + u.count, 0);
 
-  // 胜败判断
+  // 胜败判断（双方同回合满足条件时，优先判玩家胜利——设计意图：同归于尽仍算克敌制胜）
   let outcome = "ongoing";
   if (enemyTotalAlive <= 0 || updatedEnemy.every((u) => u.morale < 20)) {
     outcome = "victory";
@@ -287,6 +297,9 @@ export function resolveBattleRound(session, playerDecision, _injuryRoll = Math.r
   // 扩展版本：主将负伤判定（commanderCharge 有 20% 概率）
   const commanderInjuredThisRound = isCommanderCharge && _injuryRoll < 0.20;
 
+  // 扩展版本：本回合是否触发了骑兵冲锋（用于 chargeCooldown 跟踪，冷却期内不计入）
+  const chargeUsedThisRound = playerDecision === "charge" || isCommanderCharge;
+
   return {
     updatedPlayer: finalPlayer,
     updatedEnemy,
@@ -294,6 +307,7 @@ export function resolveBattleRound(session, playerDecision, _injuryRoll = Math.r
     enemyDmgDealt: Math.round(actualEnemyDmg * 10),
     outcome,
     commanderInjuredThisRound,   // 扩展版本：本回合主将是否受伤
+    chargeUsedThisRound,          // 扩展版本：本回合是否使用了冲锋指令（供 session.lastChargeRound 更新）
     updatedAmmo,                  // 扩展版本：更新后的弹药存量
   };
 }
@@ -331,12 +345,12 @@ export function buildBattleEffectsPatch(battleResult, choice) {
       }
     }
     base.borderThreat = (base.borderThreat || 0) + 5;
-    base.militaryStrength = (base.militaryStrength || 0) - 3;
+    base.militaryStrength = (base.militaryStrength || 0) - 2;
   }
 
   // 兵员伤亡折算为 militaryStrength（仅施加惩罚，不截断正向加成）
   const casualtyRate = 1 - (battleResult.survivorRatio || 0.8);
-  const militaryPenalty = -Math.round(casualtyRate * 8);
+  const militaryPenalty = -Math.round(casualtyRate * 6);
   base.militaryStrength = Math.max(-20, (base.militaryStrength || 0) + militaryPenalty);
 
   // 融合版本：战后伤兵恢复期（重伤 30 天基准，轻伤按比例）
@@ -377,6 +391,9 @@ export function buildInitialSession(state, targetForce, choice) {
   const mil = state.playerAbilities?.military || 0;
   const baseCount = 5000 + mil * 500;
   const initialEnemyUnits = buildEnemyUnits(targetForce);
+  // 优先从 choice.text 推断天气，未命中时用 state.weather 兜底（避免全局天气与战场天气脱节）
+  const textWeather = deriveWeatherFromText(choice.text || "");
+  const sessionWeather = textWeather !== "clear" ? textWeather : deriveWeatherFromText(state.weather || "");
   return {
     initialPlayerCount: baseCount,
     initialEnemyCount: initialEnemyUnits.reduce((s, u) => s + u.count, 0),
@@ -384,8 +401,9 @@ export function buildInitialSession(state, targetForce, choice) {
     maxRounds: 3,
     formation: "phalanx",
     terrain: deriveTerrainFromText(choice.text || ""),
-    weather: deriveWeatherFromText(choice.text || ""),
+    weather: sessionWeather,
     commanderInjured: false,
+    lastChargeRound: 0,           // 扩展版本：上次骑兵冲锋回合（chargeCooldown 跟踪）
     ammo: { firearm: 3, artillery: 2 },
     targetId: targetForce.id,
     targetName: targetForce.name,
@@ -545,16 +563,24 @@ function renderBattlePhase(overlay, session, choice, state, targetForce, onCompl
 
   // 决策选项（扩展版本：新增主将亲率）
   inner.appendChild(el("div", "mil-section-label", "本回合指令"));
+  // 扩展版本：计算骑兵冲锋冷却状态（chargeCooldown:2）
+  const cavalryDef = UNIT_TYPES.find((u) => u.id === "cavalry_guanning");
+  const chargeCooldown = cavalryDef?.chargeCooldown || 0;
+  const chargeOnCooldown = chargeCooldown > 0 && session.lastChargeRound > 0
+    && (session.lastChargeRound + chargeCooldown) > session.round;
+  const chargeHint = chargeOnCooldown
+    ? `⏳ 冲锋冷却中（上次第${session.lastChargeRound}回合），下回合可用`
+    : "高伤害突破，若遇长枪方阵易受损";
   const decisions = [
     { id: "hold",            label: "🛡️ 坚守待机",    hint: "防御加强，等待战机，士气稳固" },
     { id: "advance",         label: "⚔️ 稳步推进",   hint: "均衡进攻，消耗敌力" },
-    { id: "charge",          label: "🐎 骑兵冲锋",    hint: "高伤害突破，若遇长枪方阵易受损" },
+    { id: "charge",          label: "🐎 骑兵冲锋",    hint: chargeHint },
     { id: "flank",           label: "🌀 侧翼包抄",    hint: "绕后打击，敌士气大损，但我方暴露" },
     {
       id: "commanderCharge",
       label: "🗡️ 主将亲率",
       hint: session.commanderInjured
-        ? "（主将已负伤，指挥效率 -50%）"
+        ? `（主将已负伤，指挥效率 -50%；全军士气仍+30${chargeCooldown > 0 ? "，受冲锋冷却影响" : ""}）`
         : "全军士气+30，有 20% 主将负伤风险",
     },
   ];
@@ -569,8 +595,9 @@ function renderBattlePhase(overlay, session, choice, state, targetForce, onCompl
       const roundResult = resolveBattleRound(session, d.id);
       session.playerUnits = roundResult.updatedPlayer;
       session.enemyUnits = roundResult.updatedEnemy;
-      // 扩展版本：更新主将状态与弹药
+      // 扩展版本：更新主将状态、弹药、骑兵冲锋冷却
       if (roundResult.commanderInjuredThisRound) session.commanderInjured = true;
+      if (roundResult.chargeUsedThisRound) session.lastChargeRound = session.round;
       if (roundResult.updatedAmmo) session.ammo = roundResult.updatedAmmo;
       session.roundHistory.push({
         round: session.round,

@@ -27,3 +27,13 @@ export function buildIdByName(ministers) {
   if (!Array.isArray(ministers)) return {};
   return Object.fromEntries(ministers.map((m) => [m.name || m.id, m.id]));
 }
+
+export function resolveCharacterDisplayName(nameById, id, fallback = "未署名臣僚") {
+  if (typeof id !== "string" || !id.trim()) return fallback;
+  return nameById?.[id] || fallback;
+}
+
+export function resolvePositionDisplayName(positionNameById, id, fallback = "未明职司") {
+  if (typeof id !== "string" || !id.trim()) return fallback;
+  return positionNameById?.[id] || fallback;
+}

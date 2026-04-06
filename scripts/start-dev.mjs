@@ -75,7 +75,7 @@ process.on("SIGINT", () => shutdown(0));
 process.on("SIGTERM", () => shutdown(0));
 
 console.log("[launcher] Starting HistorySimAI frontend and server...");
-console.log("[launcher] Frontend: http://localhost:5173");
+console.log("[launcher] Frontend: http://localhost:8080");
 console.log("[launcher] Server:   http://localhost:3002");
 
 spawnProcess("server", serverRoot, ["run", "start"], "33");

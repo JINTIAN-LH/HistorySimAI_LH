@@ -1,7 +1,7 @@
 import { buildStoryRequestBody } from "./requestContext.js";
-import { getApiBase, postJsonAndReadText } from "./httpClient.js";
+import { buildLlmProxyHeaders, getApiBase, postJsonAndReadText } from "./httpClient.js";
 import { normalizeStoryPayload, sanitizeStoryEffects } from "./validators.js";
-import { buildNameById } from "../utils/sharedConstants.js";
+import { buildNameById, resolveCharacterDisplayName } from "../utils/sharedConstants.js";
 
 function getRosterCharacters(state) {
   return Array.isArray(state?.allCharacters) && state.allCharacters.length
@@ -19,7 +19,9 @@ export async function requestStoryTurn(state, lastChoice) {
   const courtChatSummary = buildCourtChatSummary(state);
   if (courtChatSummary) body.courtChatSummary = courtChatSummary;
 
-  const raw = await postJsonAndReadText(url, body, "requestStoryTurn");
+  const raw = await postJsonAndReadText(url, body, "requestStoryTurn", {
+    headers: buildLlmProxyHeaders(config),
+  });
   if (raw == null) {
     return null;
   }
@@ -40,7 +42,7 @@ export async function requestStoryTurn(state, lastChoice) {
 
   const phaseKey = state.currentPhase || "morning";
   const phaseLabel = phaseKey === "morning" ? "早朝" : phaseKey === "afternoon" ? "午后" : "夜间";
-  const expectedTime = `崇祯${state.currentYear || 1}年${state.currentMonth || 1}月 ${phaseLabel}`;
+  const expectedTime = `建炎${state.currentYear || 1}年${state.currentMonth || 1}月 ${phaseLabel}`;
   const expectedSeason = getSeasonByMonth(state.currentMonth || 1);
   const expectedWeather = getSeasonalWeatherByState(state, expectedSeason);
   const header = { ...(normalized.header || {}) };
@@ -213,7 +215,7 @@ function buildCourtChatSummary(state) {
   let len = 0;
   for (const [ministerId, list] of Object.entries(courtChats)) {
     if (!Array.isArray(list) || list.length === 0) continue;
-    const name = nameById[ministerId] || ministerId;
+    const name = resolveCharacterDisplayName(nameById, ministerId);
     const recent = list.slice(-COURT_CHAT_TAKE_PER_MINISTER);
     for (const m of recent) {
       const role = m.from === "player" ? "陛下" : "臣";

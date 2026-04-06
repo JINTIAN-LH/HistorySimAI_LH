@@ -11,547 +11,192 @@ let provinceRulesCache = null;
 
 const DEFAULT_PROVINCE_RULES = {
   regionRules: [
-    {
-      namePattern: "辽东",
-      default: { threat: "critical", status: "后金压力犹存，关宁防线需持续戒备。" },
-      states: [
-        {
-          whenAny: [
-            { metric: "borderThreat", op: ">=", value: 75 },
-            { metric: "militaryStrength", op: "<=", value: 45 },
-          ],
-          threat: "critical",
-          status: "关宁防线告急，敌情频仍，需尽快补饷增援。",
-        },
-        {
-          whenAll: [
-            { metric: "borderThreat", op: "<=", value: 45 },
-            { metric: "militaryStrength", op: ">=", value: 65 },
-          ],
-          threat: "medium",
-          status: "边防暂稳，但仍需持续警戒后金动向。",
-        },
-      ],
-    },
-    {
-      namePattern: "陕西|河南",
-      default: { threat: "high", status: "灾情与流民问题仍需持续处置。" },
-      states: [
-        {
-          whenAny: [
-            { metric: "disasterLevel", op: ">=", value: 70 },
-            { metric: "civilMorale", op: "<=", value: 40 },
-            { metric: "unrest", op: ">=", value: 30 },
-          ],
-          threat: "high",
-          status: "灾情与流民压力并存，若赈济不足将迅速恶化。",
-        },
-        {
-          whenAll: [
-            { metric: "disasterLevel", op: "<=", value: 45 },
-            { metric: "civilMorale", op: ">=", value: 55 },
-          ],
-          threat: "medium",
-          status: "灾情有所缓解，地方秩序逐步恢复。",
-        },
-      ],
-    },
-    {
-      namePattern: "山东",
-      default: { threat: "medium", status: "军务可控，但需防局部哗变反复。" },
-      states: [
-        {
-          whenAny: [
-            { metric: "militaryStrength", op: "<=", value: 50 },
-            { metric: "unrest", op: ">=", value: 28 },
-          ],
-          threat: "high",
-          status: "军纪与饷银压力偏高，兵变隐患仍在。",
-        },
-      ],
-    },
-    {
-      namePattern: "江南|湖广",
-      default: { threat: "low", status: "税粮产出稳定，仍是朝廷主要财赋支撑。" },
-      states: [
-        {
-          whenAny: [
-            { metric: "treasury", op: "<=", value: 250000 },
-            { metric: "corruptionLevel", op: ">=", value: 70 },
-          ],
-          threat: "medium",
-          status: "赋税与漕运承压，财政回流效率下降。",
-        },
-      ],
-    },
-    {
-      namePattern: "四川",
-      default: { threat: "low", status: "整体安稳，可作为战略后方调度区域。" },
-      states: [
-        {
-          whenAny: [{ metric: "unrest", op: ">=", value: 35 }],
-          threat: "medium",
-          status: "地方治安波动，需要提前防范土司与流民联动。",
-        },
-      ],
-    },
+    { namePattern: "江淮|沿江", default: { threat: "critical", status: "金军压力犹存，沿江防线需持续戒备。" } },
+    { namePattern: "江淮|河南", default: { threat: "high", status: "兵火与流民问题仍需持续处置。" } },
+    { namePattern: "山东", default: { threat: "medium", status: "军务可控，但需防局部哗变反复。" } },
+    { namePattern: "两浙|江南|湖广", default: { threat: "low", status: "税粮产出稳定，仍是行在财政与粮运的主要支撑。" } },
+    { namePattern: "四川", default: { threat: "low", status: "整体安稳，可作为战略后方调度区域。" } },
   ],
 };
 
-function createFoldSection(title, renderBody) {
-  const section = document.createElement("div");
-  section.className = "fold-section";
+function createNode(tag, className = "", text = "") {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text) node.textContent = text;
+  return node;
+}
 
-  const header = document.createElement("div");
-  header.className = "fold-header";
-  const headerText = document.createElement("span");
-  headerText.textContent = title;
-  const arrow = document.createElement("span");
-  arrow.className = "fold-arrow";
-  arrow.textContent = "▶";
-  header.appendChild(headerText);
-  header.appendChild(arrow);
+function appendMetricGrid(parent, state, sectionName, title) {
+  const wrap = createNode("div", "nation-overview");
+  wrap.appendChild(createNode("div", "nation-overview-title", title));
+  const grid = createNode("div", "nation-stats-grid");
 
-  const body = document.createElement("div");
-  body.className = "fold-body";
+  getDisplayMetricsBySection(sectionName).forEach((metric) => {
+    const item = createNode("div", "nation-stat-item");
+    item.appendChild(createNode("div", "nation-stat-label", `${metric.icon} ${metric.label}`));
+    item.appendChild(createNode("div", "nation-stat-value", formatDisplayMetricValue(state, metric.key)));
 
-  header.addEventListener("click", () => {
-    section.classList.toggle("fold-section--open");
+    const bar = createNode("div", "nation-stat-bar");
+    const barInner = createNode(
+      "div",
+      `nation-stat-bar-inner ${getStatBarClass(getDisplayMetricBarValue(state, metric.key), metric.invert)}`
+    );
+    barInner.style.width = `${Math.min(100, getDisplayMetricBarValue(state, metric.key))}%`;
+    bar.appendChild(barInner);
+    item.appendChild(bar);
+    grid.appendChild(item);
   });
 
-  renderBody(body);
+  wrap.appendChild(grid);
+  parent.appendChild(wrap);
+}
 
+function createFoldSection(title, renderBody) {
+  const section = createNode("div", "fold-section");
+  const header = createNode("div", "fold-header");
+  header.appendChild(createNode("span", "", title));
+  header.appendChild(createNode("span", "fold-arrow", "▶"));
+  const body = createNode("div", "fold-body");
+  header.addEventListener("click", () => section.classList.toggle("fold-section--open"));
+  renderBody(body);
   section.appendChild(header);
   section.appendChild(body);
   return section;
 }
 
-function getProvinceRuntimeMetrics(state) {
-  const nation = state.nation || {};
+function createCard({ icon = "", title = "", summary = "" }) {
+  const card = createNode("div", "nation-card");
+  if (icon) {
+    card.appendChild(createNode("div", "nation-card-icon", icon));
+  }
+  const body = createNode("div", "nation-card-body");
+  body.appendChild(createNode("div", "nation-card-title", title));
+  if (summary) {
+    body.appendChild(createNode("div", "nation-card-summary", summary));
+  }
+  card.appendChild(body);
+  return { card, body };
+}
+
+function deriveProvinceRuntimeState(province) {
+  const rules = provinceRulesCache?.regionRules || DEFAULT_PROVINCE_RULES.regionRules;
+  const matched = rules.find((rule) => {
+    try {
+      return new RegExp(rule.namePattern).test(province?.name || "");
+    } catch {
+      return false;
+    }
+  });
   return {
-    unrest: state.unrest || 0,
-    civilMorale: nation.civilMorale || 50,
-    disasterLevel: nation.disasterLevel || 50,
-    borderThreat: nation.borderThreat || 50,
-    militaryStrength: nation.militaryStrength || 50,
-    treasury: nation.treasury || 0,
-    corruptionLevel: nation.corruptionLevel || 50,
+    threat: matched?.default?.threat || province?.threat || "medium",
+    status: matched?.default?.status || province?.status || "暂无情报",
   };
 }
 
-function evaluateProvinceCondition(condition, metrics) {
-  if (!condition || typeof condition !== "object") return false;
-  const { metric, op, value } = condition;
-  if (!metric || typeof op !== "string") return false;
-  const actual = metrics[metric];
-  if (typeof actual !== "number" || typeof value !== "number") return false;
-
-  if (op === ">") return actual > value;
-  if (op === ">=") return actual >= value;
-  if (op === "<") return actual < value;
-  if (op === "<=") return actual <= value;
-  if (op === "==") return actual === value;
-  if (op === "!=") return actual !== value;
-  return false;
+export function getProvinceRuntimeState(province) {
+  return deriveProvinceRuntimeState(province);
 }
 
-function evaluateProvinceStateRule(stateRule, metrics) {
-  if (!stateRule || typeof stateRule !== "object") return false;
-  const whenAll = Array.isArray(stateRule.whenAll) ? stateRule.whenAll : [];
-  const whenAny = Array.isArray(stateRule.whenAny) ? stateRule.whenAny : [];
-  if (!whenAll.length && !whenAny.length) return true;
-  const allPass = whenAll.every((c) => evaluateProvinceCondition(c, metrics));
-  const anyPass = whenAny.length ? whenAny.some((c) => evaluateProvinceCondition(c, metrics)) : true;
-  return allPass && anyPass;
+export function getNationInitData() {
+  return nationInitCache;
 }
 
-function matchProvinceRegionRule(provinceName, regionRule) {
-  if (!regionRule || typeof regionRule !== "object") return false;
-  const pattern = regionRule.namePattern;
-  if (typeof pattern !== "string" || !pattern.trim()) return false;
-  try {
-    const regexp = new RegExp(pattern);
-    return regexp.test(provinceName || "");
-  } catch {
-    return false;
-  }
+function rerender(container) {
+  container.innerHTML = "";
+  renderNationView(container);
 }
 
-function deriveProvinceRuntimeState(province, state) {
-  const metrics = getProvinceRuntimeMetrics(state);
-  const rulesSource = provinceRulesCache && Array.isArray(provinceRulesCache.regionRules)
-    ? provinceRulesCache
-    : DEFAULT_PROVINCE_RULES;
-  const regionRules = Array.isArray(rulesSource.regionRules) ? rulesSource.regionRules : [];
-
-  const matchedRegionRule = regionRules.find((rule) => matchProvinceRegionRule(province.name || "", rule));
-  if (!matchedRegionRule) {
-    return {
-      threat: province.threat || "medium",
-      status: province.status || "暂无情报",
-    };
-  }
-
-  const states = Array.isArray(matchedRegionRule.states) ? matchedRegionRule.states : [];
-  const matchedState = states.find((rule) => evaluateProvinceStateRule(rule, metrics));
-  if (matchedState) {
-    return {
-      threat: matchedState.threat || matchedRegionRule.default?.threat || province.threat || "medium",
-      status: matchedState.status || matchedRegionRule.default?.status || province.status || "暂无情报",
-    };
-  }
-
-  return {
-    threat: matchedRegionRule.default?.threat || province.threat || "medium",
-    status: matchedRegionRule.default?.status || province.status || "暂无情报",
-  };
-}
-
-function renderNationView(container) {
-  const state = getState();
-  const rigidMode = isRigidMode(state);
+function appendClassicSections(root, state, container) {
   const factionSupport = state.factionSupport || {};
   const quarterAgenda = state.currentQuarterAgenda || [];
   const provinceStats = state.provinceStats || {};
 
-  // Helper function to get metric definition from all sections
-  function getMetricDefinition(key) {
-    return getDisplayMetricsBySection("rigid").find(m => m.key === key) ||
-           getDisplayMetricsBySection("nation").find(m => m.key === key) ||
-           getDisplayMetricsBySection("governance").find(m => m.key === key);
-  }
-
-  const root = document.createElement("div");
-  root.className = "nation-root";
-
-  // ── 国家概况 / 崇祯·大明国势 ──
-  if (!rigidMode) {
-    // Classic mode: show nation overview + governance overview separately
-    const overview = document.createElement("div");
-    overview.className = "nation-overview";
-
-    const overviewTitle = document.createElement("div");
-    overviewTitle.className = "nation-overview-title";
-    overviewTitle.textContent = "大明国势";
-    overview.appendChild(overviewTitle);
-
-    const statsGrid = document.createElement("div");
-    statsGrid.className = "nation-stats-grid";
-
-    const stats = getDisplayMetricsBySection("nation").map((metric) => ({
-      label: metric.label,
-      icon: metric.icon,
-      value: formatDisplayMetricValue(state, metric.key),
-      barValue: getDisplayMetricBarValue(state, metric.key),
-      invert: metric.invert,
-    }));
-
-    stats.forEach((s) => {
-      const item = document.createElement("div");
-      item.className = "nation-stat-item";
-
-      const label = document.createElement("div");
-      label.className = "nation-stat-label";
-      label.textContent = `${s.icon} ${s.label}`;
-
-      const value = document.createElement("div");
-      value.className = "nation-stat-value";
-      value.textContent = s.value;
-
-      const bar = document.createElement("div");
-      bar.className = "nation-stat-bar";
-      const barInner = document.createElement("div");
-      barInner.className = "nation-stat-bar-inner " + getStatBarClass(s.barValue, s.invert);
-      barInner.style.width = Math.min(100, s.barValue) + "%";
-      bar.appendChild(barInner);
-
-      item.appendChild(label);
-      item.appendChild(value);
-      item.appendChild(bar);
-      statsGrid.appendChild(item);
-    });
-
-    overview.appendChild(statsGrid);
-    root.appendChild(overview);
-
-    const governance = document.createElement("div");
-    governance.className = "nation-overview";
-    const governanceTitle = document.createElement("div");
-    governanceTitle.className = "nation-overview-title";
-    governanceTitle.textContent = "朝局总览";
-    governance.appendChild(governanceTitle);
-
-    const governanceGrid = document.createElement("div");
-    governanceGrid.className = "nation-stats-grid";
-    getDisplayMetricsBySection("governance").map((metric) => ({
-      label: metric.label,
-      icon: metric.icon,
-      value: formatDisplayMetricValue(state, metric.key),
-      barValue: getDisplayMetricBarValue(state, metric.key),
-      invert: metric.invert,
-    })).forEach((s) => {
-      const item = document.createElement("div");
-      item.className = "nation-stat-item";
-      const label = document.createElement("div");
-      label.className = "nation-stat-label";
-      label.textContent = `${s.icon} ${s.label}`;
-      const value = document.createElement("div");
-      value.className = "nation-stat-value";
-      value.textContent = s.value;
-      const bar = document.createElement("div");
-      bar.className = "nation-stat-bar";
-      const barInner = document.createElement("div");
-      barInner.className = "nation-stat-bar-inner " + getStatBarClass(s.barValue, s.invert);
-      barInner.style.width = Math.min(100, s.barValue) + "%";
-      bar.appendChild(barInner);
-      item.appendChild(label);
-      item.appendChild(value);
-      item.appendChild(bar);
-      governanceGrid.appendChild(item);
-    });
-    governance.appendChild(governanceGrid);
-    root.appendChild(governance);
-  } else {
-    // Rigid mode: show merged "崇祯·大明国势" panel combining nation + governance + rigid metrics
-    const chongzhenOverview = document.createElement("div");
-    chongzhenOverview.className = "nation-overview";
-    const chongzhenTitle = document.createElement("div");
-    chongzhenTitle.className = "nation-overview-title";
-    chongzhenTitle.textContent = "崇祯·大明国势";
-    chongzhenOverview.appendChild(chongzhenTitle);
-
-    const chongzhenGrid = document.createElement("div");
-    chongzhenGrid.className = "nation-stats-grid";
-
-    // Define merged metrics: rigid finance + nation metrics + rigid others
-    const mergedMetricKeys = [
-      // 财务状况 (from rigid)
-      { key: "rigidTreasury", group: "财务状况", icon: "💰" },
-      { key: "rigidInnerFund", group: "财务状况", icon: "🪙" },
-      { key: "rigidMilitaryArrears", group: "财务状况", icon: "📉" },
-      { key: "rigidOfficialArrears", group: "财务状况", icon: "📜" },
-      // 国家形势 (from nation + governance)
-      { key: "civilMorale", group: "国家形势", icon: "👥" },
-      { key: "borderThreat", group: "国家形势", icon: "🛡️" },
-      { key: "disasterLevel", group: "国家形势", icon: "🌪️" },
-      { key: "corruptionLevel", group: "国家形势", icon: "🧾" },
-      // 军事力量 (rigid specific + classic overall military)
-      { key: "militaryStrength", group: "军事力量", icon: "🗡️" },
-      { key: "rigidLiaoDongTroops", group: "军事力量", icon: "⚔️" },
-      { key: "rigidLiaoDongMorale", group: "军事力量", icon: "🪖" },
-      { key: "rigidRebelScale", group: "军事力量", icon: "🚨" },
-      // 朝廷局势 (from rigid)
-      { key: "rigidAuthority", group: "朝廷局势", icon: "👑" },
-      { key: "rigidFactionFight", group: "朝廷局势", icon: "⚖️" },
-      { key: "rigidResistance", group: "朝廷局势", icon: "🧱" },
-      { key: "rigidRefuteTimes", group: "朝廷局势", icon: "📌" },
-      // 皇帝状态 (from rigid)
-      { key: "rigidAnxiety", group: "皇帝状态", icon: "😰" },
-      { key: "rigidInsomnia", group: "皇帝状态", icon: "🌙" },
-      { key: "rigidExposureRisk", group: "皇帝状态", icon: "🕵️" },
-      { key: "rigidAssassinateRisk", group: "皇帝状态", icon: "🗡️" },
-      { key: "rigidDistrust", group: "皇帝状态", icon: "🫥" },
-    ];
-
-    // Group and render metrics
-    let lastGroup = null;
-    mergedMetricKeys.forEach((item) => {
-      if (item.group !== lastGroup) {
-        lastGroup = item.group;
-        const groupContainer = document.createElement("div");
-        groupContainer.style.gridColumn = "1 / -1";
-        const groupHeader = document.createElement("div");
-        groupHeader.style.fontSize = "12px";
-        groupHeader.style.fontWeight = "bold";
-        groupHeader.style.color = "#888";
-        groupHeader.style.marginBottom = "8px";
-        groupHeader.style.paddingLeft = "8px";
-        groupHeader.textContent = lastGroup;
-        groupContainer.appendChild(groupHeader);
-        chongzhenGrid.appendChild(groupContainer);
-      }
-
-      const metric = getMetricDefinition(item.key);
-      if (!metric) return;
-
-      const statItem = document.createElement("div");
-      statItem.className = "nation-stat-item";
-
-      const label = document.createElement("div");
-      label.className = "nation-stat-label";
-      label.textContent = `${item.icon} ${metric.label}`;
-
-      const value = document.createElement("div");
-      value.className = "nation-stat-value";
-      value.textContent = formatDisplayMetricValue(state, item.key);
-
-      const bar = document.createElement("div");
-      bar.className = "nation-stat-bar";
-      const barInner = document.createElement("div");
-      barInner.className = "nation-stat-bar-inner " + getStatBarClass(getDisplayMetricBarValue(state, item.key), metric.invert);
-      barInner.style.width = Math.min(100, getDisplayMetricBarValue(state, item.key)) + "%";
-      bar.appendChild(barInner);
-
-      statItem.appendChild(label);
-      statItem.appendChild(value);
-      statItem.appendChild(bar);
-      chongzhenGrid.appendChild(statItem);
-    });
-
-    chongzhenOverview.appendChild(chongzhenGrid);
-    root.appendChild(chongzhenOverview);
-  }
-
-  const factionSection = createFoldSection("派系支持度", (body) => {
+  root.appendChild(createFoldSection("派系支持度", (body) => {
     (state.factions || []).forEach((faction) => {
-      const card = document.createElement("div");
-      card.className = "nation-card";
-      const icon = document.createElement("div");
-      icon.className = "nation-card-icon";
-      icon.textContent = "🏛️";
-      const cardBody = document.createElement("div");
-      cardBody.className = "nation-card-body";
-      const titleEl = document.createElement("div");
-      titleEl.className = "nation-card-title";
-      titleEl.textContent = `${faction.name} · ${factionSupport[faction.id] || 0}/100`;
-      const summaryEl = document.createElement("div");
-      summaryEl.className = "nation-card-summary";
-      summaryEl.textContent = faction.stance || faction.description || "";
-      cardBody.appendChild(titleEl);
-      cardBody.appendChild(summaryEl);
-      card.appendChild(icon);
-      card.appendChild(cardBody);
-      body.appendChild(card);
+      body.appendChild(createCard({
+        icon: "🏛️",
+        title: `${faction.name} · ${factionSupport[faction.id] || 0}/100`,
+        summary: faction.stance || faction.description || "",
+      }).card);
     });
-  });
-  root.appendChild(factionSection);
+  }));
 
-  if (!rigidMode) {
-  const agendaSection = createFoldSection("季度奏折", (body) => {
+  root.appendChild(createFoldSection("季度奏折", (body) => {
     if (!quarterAgenda.length) {
-      const empty = document.createElement("div");
-      empty.className = "nation-feed-empty";
-      empty.textContent = "当前无季度核心议题，推进至季度月后将生成 3-5 条时政议题。";
-      body.appendChild(empty);
+      body.appendChild(createNode("div", "nation-feed-empty", "当前无季度核心议题，推进至季度月后将生成 3-5 条时政议题。"));
       return;
     }
     quarterAgenda.forEach((item) => {
-      const card = document.createElement("div");
-      card.className = "nation-card";
-      const icon = document.createElement("div");
-      icon.className = "nation-card-icon";
-      icon.textContent = "📜";
-      const cardBody = document.createElement("div");
-      cardBody.className = "nation-card-body";
-      const titleEl = document.createElement("div");
-      titleEl.className = "nation-card-title";
-      titleEl.textContent = item.title;
-      const summaryEl = document.createElement("div");
-      summaryEl.className = "nation-card-summary";
-      summaryEl.textContent = `${item.summary} 关联：${(item.impacts || []).join("、")}`;
-      cardBody.appendChild(titleEl);
-      cardBody.appendChild(summaryEl);
-      card.appendChild(icon);
-      card.appendChild(cardBody);
-      body.appendChild(card);
+      body.appendChild(createCard({
+        icon: "📜",
+        title: item.title,
+        summary: `${item.summary} 关联：${(item.impacts || []).join("、")}`,
+      }).card);
     });
-  });
-  root.appendChild(agendaSection);
-  }
+  }));
 
-  if (!rigidMode) {
-    const abilitySection = createFoldSection(`皇帝能力（可用点数 ${state.abilityPoints || 0}）`, (body) => {
-    const abilityMeta = {
-      management: { label: "管理", desc: "提升季度财政与粮储效率。" },
-      military: { label: "军事", desc: "强化军事类诏书收益。" },
-      scholarship: { label: "学识", desc: "提高改革与农政收益。" },
-      politics: { label: "政治", desc: "提高执行率并缓和党争。" },
-    };
+  const abilityMeta = {
+    management: { label: "管理", desc: "提升季度财政与粮储效率。" },
+    military: { label: "军事", desc: "强化军事类诏书收益。" },
+    scholarship: { label: "学识", desc: "提高改革与农政收益。" },
+    politics: { label: "政治", desc: "提高执行率并缓和党争。" },
+  };
+  root.appendChild(createFoldSection(`皇帝能力（可用点数 ${state.abilityPoints || 0}）`, (body) => {
     PLAYER_ABILITY_KEYS.forEach((key) => {
-      const card = document.createElement("div");
-      card.className = "nation-card";
-      const cardBody = document.createElement("div");
-      cardBody.className = "nation-card-body";
-      const titleEl = document.createElement("div");
-      titleEl.className = "nation-card-title";
-      titleEl.textContent = `${abilityMeta[key].label} · Lv.${state.playerAbilities?.[key] || 0}`;
-      const summaryEl = document.createElement("div");
-      summaryEl.className = "nation-card-summary";
-      summaryEl.textContent = abilityMeta[key].desc;
-      cardBody.appendChild(titleEl);
-      cardBody.appendChild(summaryEl);
-      card.appendChild(cardBody);
+      const { card } = createCard({
+        title: `${abilityMeta[key].label} · Lv.${state.playerAbilities?.[key] || 0}`,
+        summary: abilityMeta[key].desc,
+      });
       if ((state.abilityPoints || 0) > 0) {
-        const btn = document.createElement("button");
+        const btn = createNode("button", "nation-mini-btn", "加点");
         btn.type = "button";
-        btn.className = "nation-mini-btn";
-        btn.textContent = "加点";
         btn.addEventListener("click", () => {
           const patch = spendAbilityPoint(getState(), key);
           if (!patch) return;
           setState(patch);
-          container.innerHTML = "";
-          renderNationView(container);
+          rerender(container);
         });
         card.appendChild(btn);
       }
       body.appendChild(card);
     });
-    });
-    root.appendChild(abilitySection);
-  }
+  }));
 
-  if (!rigidMode) {
-    const policies = getPolicyCatalog();
-    const policyTitleMap = Object.fromEntries(policies.map((item) => [item.id, item.title]));
-    const policySection = createFoldSection(`国策树（可用点数 ${state.policyPoints || 0}）`, (body) => {
-      policies.forEach((policy) => {
-        const unlocked = (state.unlockedPolicies || []).includes(policy.id);
-        const canUnlock = !unlocked && (state.policyPoints || 0) >= policy.cost && (policy.requires || []).every((id) => (state.unlockedPolicies || []).includes(id));
-        const card = document.createElement("div");
-        card.className = "nation-card";
-        const cardBody = document.createElement("div");
-        cardBody.className = "nation-card-body";
-        const titleEl = document.createElement("div");
-        titleEl.className = "nation-card-title";
-        titleEl.textContent = `${policy.branch} · ${policy.title}${unlocked ? "（已实施）" : ""}`;
-        const summaryEl = document.createElement("div");
-        summaryEl.className = "nation-card-summary";
-        const requiresText = (policy.requires || []).length
-          ? ` 前置：${(policy.requires || []).map((id) => policyTitleMap[id] || id).join("、")}`
-          : "";
-        summaryEl.textContent = `${policy.description} 消耗 ${policy.cost} 点。${requiresText}`;
-        cardBody.appendChild(titleEl);
-        cardBody.appendChild(summaryEl);
-        card.appendChild(cardBody);
-        if (!unlocked) {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "nation-mini-btn" + (canUnlock ? "" : " nation-mini-btn--disabled");
-          btn.textContent = canUnlock ? "实施" : "未满足";
-          btn.disabled = !canUnlock;
-          btn.addEventListener("click", () => {
-            const patch = unlockPolicy(getState(), policy.id);
-            if (!patch) return;
-            setState(patch);
-            container.innerHTML = "";
-            renderNationView(container);
-          });
-          card.appendChild(btn);
-        }
-        body.appendChild(card);
+  const policies = getPolicyCatalog();
+  const policyTitleMap = Object.fromEntries(policies.map((item) => [item.id, item.title]));
+  root.appendChild(createFoldSection(`国策树（可用点数 ${state.policyPoints || 0}）`, (body) => {
+    policies.forEach((policy) => {
+      const unlocked = (state.unlockedPolicies || []).includes(policy.id);
+      const canUnlock = !unlocked
+        && (state.policyPoints || 0) >= policy.cost
+        && (policy.requires || []).every((id) => (state.unlockedPolicies || []).includes(id));
+      const requiresText = (policy.requires || []).length
+        ? ` 前置：${(policy.requires || []).map((id) => policyTitleMap[id] || id).join("、")}`
+        : "";
+      const { card } = createCard({
+        title: `${policy.branch} · ${policy.title}${unlocked ? "（已实施）" : ""}`,
+        summary: `${policy.description} 消耗 ${policy.cost} 点。${requiresText}`,
       });
+      if (!unlocked) {
+        const btn = createNode("button", `nation-mini-btn${canUnlock ? "" : " nation-mini-btn--disabled"}`, canUnlock ? "实施" : "未满足");
+        btn.type = "button";
+        btn.disabled = !canUnlock;
+        btn.addEventListener("click", () => {
+          const patch = unlockPolicy(getState(), policy.id);
+          if (!patch) return;
+          setState(patch);
+          rerender(container);
+        });
+        card.appendChild(btn);
+      }
+      body.appendChild(card);
     });
-    root.appendChild(policySection);
-  }
+  }));
 
-  const customPolicySection = createFoldSection(`自定义国策（${Array.isArray(state.customPolicies) ? state.customPolicies.length : 0}）`, (body) => {
+  root.appendChild(createFoldSection(`自定义国策（${Array.isArray(state.customPolicies) ? state.customPolicies.length : 0}）`, (body) => {
     const customPolicies = Array.isArray(state.customPolicies) ? state.customPolicies : [];
     if (!customPolicies.length) {
-      const empty = document.createElement("div");
-      empty.className = "nation-feed-empty";
-      empty.textContent = "尚未设立自定义国策。可在自拟诏书中写入“设立某机构定为国策”自动收录。";
-      body.appendChild(empty);
+      body.appendChild(createNode("div", "nation-feed-empty", "尚未设立自定义国策。可在自拟诏书中写入“设立某机构定为国策”自动收录。"));
       return;
     }
     const categoryText = {
@@ -562,284 +207,139 @@ function renderNationView(container) {
       general: "综合微幅加成",
     };
     customPolicies.forEach((policy) => {
-      const card = document.createElement("div");
-      card.className = "nation-card";
-      const icon = document.createElement("div");
-      icon.className = "nation-card-icon";
-      icon.textContent = "🏛️";
-      const cardBody = document.createElement("div");
-      cardBody.className = "nation-card-body";
-      const titleEl = document.createElement("div");
-      titleEl.className = "nation-card-title";
-      titleEl.textContent = policy.name;
-      const summaryEl = document.createElement("div");
-      summaryEl.className = "nation-card-summary";
-      summaryEl.textContent = `${categoryText[policy.category] || categoryText.general} · 设立于崇祯${policy.createdYear || "?"}年${policy.createdMonth || "?"}月`;
-      cardBody.appendChild(titleEl);
-      cardBody.appendChild(summaryEl);
-      card.appendChild(icon);
-      card.appendChild(cardBody);
-      body.appendChild(card);
+      body.appendChild(createCard({
+        icon: "🏛️",
+        title: policy.name,
+        summary: `${categoryText[policy.category] || categoryText.general} · 设立于建炎${policy.createdYear || "?"}年${policy.createdMonth || "?"}月`,
+      }).card);
     });
-  });
-  root.appendChild(customPolicySection);
+  }));
 
-  // ── 各省情况(折叠) ──
-  if (nationInitCache && nationInitCache.provinces) {
-    const provinceSection = createFoldSection("各省概况", (body) => {
-      nationInitCache.provinces.forEach((p) => {
-        const runtime = deriveProvinceRuntimeState(p, state);
-        const card = document.createElement("div");
-        card.className = "nation-card";
-        card.style.padding = "8px";
-
-        const cardBody = document.createElement("div");
-        cardBody.className = "nation-card-body";
-        const titleEl = document.createElement("div");
-        titleEl.className = "nation-card-title";
-        titleEl.textContent = p.name;
-        const summaryEl = document.createElement("div");
-        summaryEl.className = "nation-card-summary";
-        summaryEl.textContent = runtime.status;
-
-        const threatTag = document.createElement("span");
-        threatTag.className = "nation-card-tag";
-        const threatMap = { critical: "nation-card-tag--urgent", high: "nation-card-tag--important", medium: "nation-card-tag--normal", low: "nation-card-tag--normal" };
-        const threatLabelMap = { critical: "危", high: "警", medium: "稳", low: "安" };
-        threatTag.classList.add(threatMap[runtime.threat] || "nation-card-tag--normal");
-        threatTag.textContent = threatLabelMap[runtime.threat] || "稳";
-
-        cardBody.appendChild(titleEl);
-        cardBody.appendChild(summaryEl);
-
-        const ps = provinceStats[p.name] || {};
-        const taxSilver = ps.taxSilver || 0;
-        const taxGrain = ps.taxGrain || 0;
-        const recruits = ps.recruits || 0;
-        const morale = ps.morale != null ? ps.morale : 50;
-        const corruption = ps.corruption != null ? ps.corruption : 50;
-        const disaster = ps.disaster != null ? ps.disaster : 50;
-
-        const statsRow = document.createElement("div");
-        statsRow.className = "province-stats-row";
-
-        function addTag(text, baseClass, extraClass) {
-          const tag = document.createElement("span");
-          tag.className = "province-tag " + baseClass + (extraClass ? " " + extraClass : "");
-          tag.textContent = text;
-          statsRow.appendChild(tag);
-        }
-
-        // 税收
-        addTag(
-          `税：${taxSilver.toLocaleString()}两 / ${taxGrain.toLocaleString()}石`,
-          "province-tag--income"
-        );
-
-        // 兵源
-        addTag(
-          `兵：${recruits.toLocaleString()}人`,
-          "province-tag--military"
-        );
-
-        // 民心（高好低差）
-        let moraleLevel = "province-tag--neutral";
-        if (morale >= 70) moraleLevel = "province-tag--good";
-        else if (morale <= 40) moraleLevel = "province-tag--bad";
-        addTag(`民心：${morale}/100`, "province-tag--morale", moraleLevel);
-
-        // 贪腐（低好高差）
-        let corrupLevel = "province-tag--neutral";
-        if (corruption >= 70) corrupLevel = "province-tag--bad";
-        else if (corruption <= 40) corrupLevel = "province-tag--good";
-        addTag(`贪腐：${corruption}/100`, "province-tag--corruption", corrupLevel);
-
-        // 天灾（低好高差）
-        let disasterLevel = "province-tag--neutral";
-        if (disaster >= 70) disasterLevel = "province-tag--bad";
-        else if (disaster <= 40) disasterLevel = "province-tag--good";
-        addTag(`天灾：${disaster}/100`, "province-tag--disaster", disasterLevel);
-
+  if (nationInitCache?.provinces) {
+    root.appendChild(createFoldSection("各省概况", (body) => {
+      nationInitCache.provinces.forEach((province) => {
+        const runtime = deriveProvinceRuntimeState(province);
+        const ps = provinceStats[province.name] || {};
+        const { card, body: cardBody } = createCard({
+          title: province.name,
+          summary: runtime.status,
+        });
+        const statsRow = createNode("div", "province-stats-row");
+        const tags = [
+          `税：${(ps.taxSilver || 0).toLocaleString()}两 / ${(ps.taxGrain || 0).toLocaleString()}石`,
+          `兵：${(ps.recruits || 0).toLocaleString()}人`,
+          `民心：${ps.morale ?? 50}/100`,
+          `贪腐：${ps.corruption ?? 50}/100`,
+          `天灾：${ps.disaster ?? 50}/100`,
+        ];
+        tags.forEach((text, index) => statsRow.appendChild(createNode("span", "province-tag", text)));
         cardBody.appendChild(statsRow);
-        card.appendChild(threatTag);
-        card.appendChild(cardBody);
         body.appendChild(card);
       });
-    });
-    root.appendChild(provinceSection);
+    }));
   }
+}
 
-  // ── 敌对/外部势力(折叠) ──
+function appendSharedSections(root, state) {
   const hostileForces = Array.isArray(state.hostileForces) && state.hostileForces.length
     ? state.hostileForces
-    : (nationInitCache && Array.isArray(nationInitCache.externalThreats) ? nationInitCache.externalThreats : []);
+    : (nationInitCache?.externalThreats || []);
+
   if (hostileForces.length) {
-    const threatSection = createFoldSection("敌对势力", (body) => {
-      hostileForces.forEach((t) => {
-        const power = typeof t.power === "number" ? Math.max(0, Math.min(100, t.power)) : 100;
-        const card = document.createElement("div");
-        card.className = "nation-card";
-        if (t.isDefeated) {
-          card.style.opacity = "0.82";
-          card.style.borderStyle = "dashed";
-        }
-
-        const icon = document.createElement("div");
-        icon.className = "nation-card-icon";
-        icon.textContent = "⚔️";
-
-        const cardBody = document.createElement("div");
-        cardBody.className = "nation-card-body";
-        const titleEl = document.createElement("div");
-        titleEl.className = "nation-card-title";
-        const defeatedText = t.isDefeated ? "（已灭亡）" : "";
-        titleEl.textContent = `${t.name}（${t.leader || "未知"}）${defeatedText}`;
-        const summaryEl = document.createElement("div");
-        summaryEl.className = "nation-card-summary";
-        const powerSummary = typeof power === "number" ? `势力值 ${power}/100` : "势力值未知";
-        const closureHint = t.isDefeated ? " · 相关故事线已闭锁" : "";
-        summaryEl.textContent = `${t.status || "暂无情报"} · ${powerSummary}${closureHint}`;
-        cardBody.appendChild(titleEl);
-        cardBody.appendChild(summaryEl);
-
-        const barWrap = document.createElement("div");
-        barWrap.className = "nation-stat-bar";
-        const barInner = document.createElement("div");
-        barInner.className = "nation-stat-bar-inner";
-        barInner.style.width = power + "%";
-        barWrap.appendChild(barInner);
-
-        const powerValueText = document.createElement("div");
-        powerValueText.className = "nation-stat-value";
-        powerValueText.textContent = `势力：${power}/100`;
-
-        cardBody.appendChild(powerValueText);
-        cardBody.appendChild(barWrap);
-
-        card.appendChild(icon);
-        card.appendChild(cardBody);
+    root.appendChild(createFoldSection("敌对势力", (body) => {
+      hostileForces.forEach((item) => {
+        const power = typeof item.power === "number" ? Math.max(0, Math.min(100, item.power)) : 100;
+        const { card, body: cardBody } = createCard({
+          icon: "⚔️",
+          title: `${item.name}（${item.leader || "未知"}）${item.isDefeated ? "（已灭亡）" : ""}`,
+          summary: `${item.status || "暂无情报"} · 势力值 ${power}/100${item.isDefeated ? " · 相关故事线已闭锁" : ""}`,
+        });
+        const value = createNode("div", "nation-stat-value", `势力：${power}/100`);
+        const bar = createNode("div", "nation-stat-bar");
+        const barInner = createNode("div", "nation-stat-bar-inner");
+        barInner.style.width = `${power}%`;
+        bar.appendChild(barInner);
+        cardBody.appendChild(value);
+        cardBody.appendChild(bar);
         body.appendChild(card);
       });
-    });
-    root.appendChild(threatSection);
+    }));
   }
 
-  // ── 天下大事 Feed ──
-  const feed = document.createElement("div");
-  feed.className = "nation-feed";
-
-  const feedHeader = document.createElement("div");
-  feedHeader.className = "nation-feed-header";
-  feedHeader.textContent = "天下大事";
-  feed.appendChild(feedHeader);
-
+  const feed = createNode("div", "nation-feed");
+  feed.appendChild(createNode("div", "nation-feed-header", "天下大事"));
   const news = state.newsToday || [];
   if (!news.length) {
-    const empty = document.createElement("div");
-    empty.className = "nation-feed-empty";
-    empty.textContent = "暂无奏报，推进剧情后将产生新的军国大事。";
-    feed.appendChild(empty);
+    feed.appendChild(createNode("div", "nation-feed-empty", "暂无奏报，推进剧情后将产生新的军国大事。"));
   } else {
     news.forEach((item) => {
-      const card = document.createElement("div");
-      card.className = "nation-card";
-
-      const icon = document.createElement("div");
-      icon.className = "nation-card-icon";
-      icon.textContent = item.icon || "📜";
-
-      const cardBody = document.createElement("div");
-      cardBody.className = "nation-card-body";
-
-      const tagRow = document.createElement("div");
-      tagRow.className = "nation-card-tag-row";
-      if (item.tag) {
-        const tag = document.createElement("span");
-        tag.className = "nation-card-tag";
-        if (item.tag === "急") tag.classList.add("nation-card-tag--urgent");
-        else if (item.tag === "重") tag.classList.add("nation-card-tag--important");
-        else tag.classList.add("nation-card-tag--normal");
-        tag.textContent = item.tag;
-        tagRow.appendChild(tag);
-      }
-      const titleSpan = document.createElement("span");
-      titleSpan.className = "nation-card-title";
-      titleSpan.textContent = item.title;
-      tagRow.appendChild(titleSpan);
-      cardBody.appendChild(tagRow);
-
-      if (item.summary) {
-        const summary = document.createElement("div");
-        summary.className = "nation-card-summary";
-        summary.textContent = item.summary;
-        cardBody.appendChild(summary);
-      }
-
-      card.appendChild(icon);
-      card.appendChild(cardBody);
-      feed.appendChild(card);
+      feed.appendChild(createCard({
+        icon: item.icon || "📜",
+        title: item.title,
+        summary: item.summary || "",
+      }).card);
     });
   }
-
   root.appendChild(feed);
 
-  // ── 民间舆论 ──
-  const opinions = document.createElement("div");
-  opinions.className = "nation-opinions";
-
-  const opinionsHeader = document.createElement("div");
-  opinionsHeader.className = "nation-opinions-header";
-  opinionsHeader.textContent = "民间舆论";
-  opinions.appendChild(opinionsHeader);
-
+  const opinions = createNode("div", "nation-opinions");
+  opinions.appendChild(createNode("div", "nation-opinions-header", "民间舆论"));
   const publicOpinion = state.publicOpinion || [];
   if (!publicOpinion.length) {
-    const empty = document.createElement("div");
-    empty.className = "nation-feed-empty";
-    empty.textContent = "暂无民间舆论。";
-    opinions.appendChild(empty);
+    opinions.appendChild(createNode("div", "nation-feed-empty", "暂无民间舆论。"));
   } else {
-    publicOpinion.forEach((c) => {
-      const item = document.createElement("div");
-      item.className = "nation-opinion-item";
-
-      const user = document.createElement("span");
-      const typeMap = { loyal: "nation-opinion-user--loyal", angry: "nation-opinion-user--angry", neutral: "nation-opinion-user--neutral" };
-      user.className = "nation-opinion-user " + (typeMap[c.type] || "nation-opinion-user--neutral");
-      user.textContent = c.user || "百姓";
-
-      const text = document.createElement("span");
-      text.className = "nation-opinion-text";
-      text.textContent = c.text || "";
-
-      item.appendChild(user);
-      item.appendChild(text);
-      opinions.appendChild(item);
+    publicOpinion.forEach((item) => {
+      const line = createNode("div", "nation-opinion-item");
+      const user = createNode(
+        "span",
+        `nation-opinion-user ${item.type === "loyal" ? "nation-opinion-user--loyal" : item.type === "angry" ? "nation-opinion-user--angry" : "nation-opinion-user--neutral"}`,
+        item.user || "百姓"
+      );
+      const text = createNode("span", "nation-opinion-text", item.text || "");
+      line.appendChild(user);
+      line.appendChild(text);
+      opinions.appendChild(line);
     });
   }
-
   root.appendChild(opinions);
+}
+
+export function renderNationView(container) {
+  const state = getState();
+  const root = createNode("div", "nation-root");
+
+  if (isRigidMode(state)) {
+    appendMetricGrid(root, state, "rigid", "建炎·南宋国势");
+  } else {
+    appendMetricGrid(root, state, "nation", "南宋国势");
+    appendMetricGrid(root, state, "governance", "朝局总览");
+    appendClassicSections(root, state, container);
+  }
+
+  appendSharedSections(root, state);
   container.appendChild(root);
+}
+
+export async function ensureNationViewDataLoaded() {
+  if (!nationInitCache) {
+    try {
+      nationInitCache = await loadJSON("data/nationInit.json");
+    } catch {
+      nationInitCache = {};
+    }
+  }
+  if (!provinceRulesCache) {
+    try {
+      provinceRulesCache = await loadJSON("data/provinceRules.json");
+    } catch {
+      provinceRulesCache = null;
+    }
+  }
 }
 
 export function registerNationView() {
   router.registerView("nation", async (container) => {
-    if (!nationInitCache) {
-      try {
-        nationInitCache = await loadJSON("data/nationInit.json");
-      } catch (e) {
-        nationInitCache = {};
-      }
-    }
-    if (!provinceRulesCache) {
-      try {
-        provinceRulesCache = await loadJSON("data/provinceRules.json");
-      } catch (e) {
-        provinceRulesCache = null;
-      }
-    }
+    await ensureNationViewDataLoaded();
     renderNationView(container);
   });
 }
-
-registerNationView();
