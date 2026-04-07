@@ -14,6 +14,12 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "http://127.0.0.1:8081",
   "http://127.0.0.1:3000",
   "http://127.0.0.1:3002",
+  "https://api.kurangames.com",
+  "https://funloom.kurangames.com",
+];
+
+const DEFAULT_ALLOWED_ORIGIN_PATTERNS = [
+  /^https:\/\/([a-z0-9-]+\.)?kurangames\.com$/i,
 ];
 
 const REQUEST_TIMEOUT_MS = 60000;
@@ -50,15 +56,41 @@ function extractHostname(input) {
   }
 }
 
+function normalizeAllowedOrigins(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value.split(",").map((item) => item.trim()).filter(Boolean);
+  }
+
+  return DEFAULT_ALLOWED_ORIGINS;
+}
+
+function isAllowedCorsOrigin(origin, allowedOrigins, allowedOriginPatterns) {
+  if (!origin) {
+    return true;
+  }
+
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+
+  return allowedOriginPatterns.some((pattern) => pattern.test(origin));
+}
+
 function createApp(options = {}) {
   const app = express();
   
-  const allowedOrigins = options.allowedOrigins || 
-    (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim()) : DEFAULT_ALLOWED_ORIGINS);
+  const allowedOrigins = normalizeAllowedOrigins(options.allowedOrigins || process.env.ALLOWED_ORIGINS);
+  const allowedOriginPatterns = Array.isArray(options.allowedOriginPatterns) && options.allowedOriginPatterns.length
+    ? options.allowedOriginPatterns
+    : DEFAULT_ALLOWED_ORIGIN_PATTERNS;
   
   app.use(cors({ 
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (isAllowedCorsOrigin(origin, allowedOrigins, allowedOriginPatterns)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));

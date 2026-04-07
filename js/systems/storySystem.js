@@ -1279,20 +1279,34 @@ function buildRigidStoryFallback(state) {
   );
 }
 
+export function buildStoryTemplatePaths(state, config = state?.config || {}) {
+  const year = state?.currentYear || 1;
+  const month = state?.currentMonth || 1;
+  const phaseKey = state?.currentPhase || "morning";
+  const rigidMode = isRigidMode(state);
+  const isFirstTurn = (state?.lastChoiceId == null)
+    && (!Array.isArray(state?.storyHistory) || state.storyHistory.length === 0);
+  const turnSnapshotPath = `data/story/year${year}_month${month}_${phaseKey}.json`;
+  const baselineTemplatePath = (rigidMode && isFirstTurn)
+    ? `data/story/hard_mode_day1_${phaseKey}.json`
+    : `data/story/day1_${phaseKey}.json`;
+
+  if (config.storyMode === "llm" && !isFirstTurn) {
+    return [turnSnapshotPath, baselineTemplatePath];
+  }
+
+  return [baselineTemplatePath];
+}
+
 async function loadStoryData(state, container, renderId, onChoice, options) {
   const year = state.currentYear || 1;
   const month = state.currentMonth || 1;
   const phaseKey = state.currentPhase || "morning";
-  const path = `data/story/year${year}_month${month}_${phaseKey}.json`;
   const cacheKey = `${year}_${month}_${phaseKey}`;
   const config = state.config || {};
   const rigidMode = isRigidMode(state);
   const isFirstTurn = (state.lastChoiceId == null) && (!Array.isArray(state.storyHistory) || state.storyHistory.length === 0);
-
-  // For hard mode first turn, use dedicated hard_mode_day1_morning.json instead of generic day1_morning.json
-  const templateFallbackPath = (rigidMode && isFirstTurn) 
-    ? `data/story/hard_mode_day1_${phaseKey}.json`
-    : `data/story/day1_${phaseKey}.json`;
+  const templatePaths = buildStoryTemplatePaths(state, config);
 
   if (state.currentStoryTurn && state.currentStoryTurn.key === cacheKey && state.currentStoryTurn.data) {
     storyCache = { key: cacheKey, data: state.currentStoryTurn.data };
@@ -1324,11 +1338,16 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
   }
 
   if (data == null) {
-    try {
-      // Template mode uses a curated baseline script by phase to avoid missing-file noise.
-      const templatePath = (config.storyMode === "llm" && !isFirstTurn) ? path : templateFallbackPath;
-      data = await loadJSON(templatePath);
-    } catch (_error) {
+    for (const templatePath of templatePaths) {
+      try {
+        data = await loadJSON(templatePath);
+        break;
+      } catch (_error) {
+        data = null;
+      }
+    }
+
+    if (data == null) {
       if (renderId != null && container._storyRenderId !== renderId) return null;
 
       const errorMessage = useLLM

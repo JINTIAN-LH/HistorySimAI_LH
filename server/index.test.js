@@ -163,6 +163,24 @@ describe('API Endpoints', () => {
     });
   });
 
+  describe('CORS', () => {
+    it('should allow kurangames production origins during preflight', async () => {
+      const { app } = createApp({
+        config: {},
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const res = await request(app)
+        .options('/api/chongzhen/story')
+        .set('Origin', 'https://api.kurangames.com')
+        .set('Access-Control-Request-Method', 'POST');
+
+      expect(res.status).toBe(204);
+      expect(res.headers['access-control-allow-origin']).toBe('https://api.kurangames.com');
+    });
+  });
+
   describe('POST /api/chongzhen/story', () => {
     it('should return 500 when LLM_API_KEY is not configured', async () => {
       const { app } = createApp({ 
