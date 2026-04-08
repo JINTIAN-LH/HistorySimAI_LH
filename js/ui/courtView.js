@@ -8,7 +8,7 @@ import { getApiBase, shouldUseLlmProxy } from "../api/httpClient.js";
 import { AVAILABLE_AVATAR_NAMES, buildNameById } from "../utils/sharedConstants.js";
 import { showError, showSuccess } from "../utils/toast.js";
 import { applyEffects as applyEffectsModule } from "../utils/effectsProcessor.js";
-import { normalizeAppointmentEffects } from "../utils/appointmentEffects.js";
+import { mergeDerivedAppointmentStateEffects, normalizeAppointmentEffects } from "../utils/appointmentEffects.js";
 import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot, hasOutcomeDisplayDelta, renderOutcomeDisplayCard } from "../utils/displayStateMetrics.js";
 import { KEJU_STAGE_LABELS, WUJU_STAGE_LABELS, advanceKejuSession, advanceWujuSession, appendTalentReserve, appendWujuTalentReserve, applyKejuAppointLoyaltyBonus, getKejuStateSnapshot, getSeasonLabelByMonth, getWujuStateSnapshot, mergeKejuState, mergeWujuState } from "../systems/kejuSystem.js";
 import { deriveCharacterArchetypes } from "../utils/characterArchetype.js";
@@ -452,6 +452,8 @@ export async function showKejuPanel() {
             showKejuPanel();
             return;
           }
+          const appointmentEffects = buildAppointmentOutcomeEffects(latestState, result?.appointments, result?.effects);
+          const nextNation = applyEffectsModule(latestState.nation || {}, appointmentEffects, latestState.loyalty || {}).nation;
           const appointmentPatch = buildAppointmentPatch(latestState, item.positionId, item.candidateId);
           const loyaltyWithBonus = applyKejuAppointLoyaltyBonus(latestState.loyalty || {}, item.candidateId, 6);
           const updatedReserve = reserveList.filter((entry) => entry.candidateId !== item.candidateId);
@@ -459,6 +461,7 @@ export async function showKejuPanel() {
           setState({
             ...appointmentPatch,
             ...promoteGeneratedCandidate(latestState, item.candidateId),
+            nation: nextNation,
             loyalty: loyaltyWithBonus,
             keju: mergeKejuState(getState(), {
               talentReserve: updatedReserve,
@@ -650,11 +653,14 @@ export async function showWujuPanel() {
           showError(`任命失败: ${result.error || "未知错误"}`);
           return;
         }
+        const appointmentEffects = buildAppointmentOutcomeEffects(latestState, result?.appointments, result?.effects);
+        const nextNation = applyEffectsModule(latestState.nation || {}, appointmentEffects, latestState.loyalty || {}).nation;
         const updatedReserve = reserveList.filter((entry) => entry.candidateId !== item.candidateId);
         const snapshot = getWujuStateSnapshot(getState());
         setState({
           ...buildAppointmentPatch(latestState, item.positionId, item.candidateId),
           ...promoteGeneratedCandidate(latestState, item.candidateId),
+          nation: nextNation,
           loyalty: applyKejuAppointLoyaltyBonus(latestState.loyalty || {}, item.candidateId, 8),
           wuju: mergeWujuState(getState(), {
             talentReserve: updatedReserve,
@@ -721,7 +727,7 @@ async function buildLocalAppointmentFallback(positionId, characterId, state) {
   if (!targetCharacter) {
     throw new Error("character not found");
   }
-  if (!getAliveStatus(state, characterId)) {
+  if (!isAliveCharacter(state, characterId)) {
     throw new Error("该角色已故，无法任命");
   }
 
@@ -763,6 +769,7 @@ async function buildLocalAppointmentFallback(positionId, characterId, state) {
       oldPosition,
     },
     appointments,
+    effects: buildAppointmentOutcomeEffects(state, appointments),
     localFallback: true,
   };
 }
@@ -1030,9 +1037,12 @@ async function showAppointmentDialogByPosition(positionId) {
       }
 
       const s = getState();
+      const appointmentEffects = buildAppointmentOutcomeEffects(s, result?.appointments, result?.effects);
+      const nextNation = applyEffectsModule(s.nation || {}, appointmentEffects, s.loyalty || {}).nation;
       setState({
         ...buildAppointmentPatch(s, positionId, selectedCharacter.id),
         ...promoteGeneratedCandidate(s, selectedCharacter.id),
+        nation: nextNation,
       });
       overlay.remove();
       rerenderCourtLegacyView();
@@ -1248,6 +1258,26 @@ function applyLocalAppointmentState(positionId, characterId) {
   }
   nextAppointments[positionId] = characterId;
   setState({ appointments: nextAppointments });
+}
+
+function buildAppointmentOutcomeEffects(state, appointmentsMap, baseEffects = null) {
+  const roster = getAllCharactersFromState(state);
+  const effects = baseEffects && typeof baseEffects === "object" && !Array.isArray(baseEffects)
+    ? { ...baseEffects }
+    : {};
+
+  if (appointmentsMap && typeof appointmentsMap === "object" && !Array.isArray(appointmentsMap)) {
+    effects.appointments = {
+      ...(effects.appointments && typeof effects.appointments === "object" ? effects.appointments : {}),
+      ...appointmentsMap,
+    };
+  }
+
+  return mergeDerivedAppointmentStateEffects(effects, {
+    positions: state.positionsMeta?.positions || positionsCache?.positions || [],
+    ministers: roster,
+    currentAppointments: state.appointments || {},
+  }) || effects;
 }
 
 function applyLocalAppointmentEffects(appointmentsMap) {
@@ -2347,16 +2377,18 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
       sourceEffects.appointments = { ...result.appointments };
     }
 
-    const hasEffects = hasOutcomeDisplayDelta(sourceEffects) || Object.keys(sourceEffects).length > 0;
+    const effectiveEffects = buildAppointmentOutcomeEffects(before, sourceEffects.appointments, sourceEffects);
+
+    const hasEffects = hasOutcomeDisplayDelta(effectiveEffects) || Object.keys(effectiveEffects).length > 0;
     if (!hasEffects) {
       deltaPanel.innerHTML = "";
       return;
     }
 
-    const { nation: nextNation, loyalty: nextLoyalty } = applyEffectsModule(before.nation || {}, sourceEffects, before.loyalty || {});
+    const { nation: nextNation, loyalty: nextLoyalty } = applyEffectsModule(before.nation || {}, effectiveEffects, before.loyalty || {});
     setState({ nation: nextNation, loyalty: nextLoyalty });
 
-    const appointmentsChanged = applyLocalAppointmentEffects(sourceEffects.appointments);
+    const appointmentsChanged = applyLocalAppointmentEffects(effectiveEffects.appointments);
     const after = getState();
     const afterSnapshot = captureDisplayStateSnapshot(after);
     const delta = buildOutcomeDisplayDelta(beforeSnapshot, afterSnapshot);
@@ -2604,9 +2636,12 @@ async function showAppointmentDialogAsync(position, state) {
       }
 
       const s = getState();
+      const appointmentEffects = buildAppointmentOutcomeEffects(s, result?.appointments, result?.effects);
+      const nextNation = applyEffectsModule(s.nation || {}, appointmentEffects, s.loyalty || {}).nation;
       setState({
         ...buildAppointmentPatch(s, position.id, selectedCharacter.id),
         ...promoteGeneratedCandidate(s, selectedCharacter.id),
+        nation: nextNation,
       });
       overlay.remove();
       const container = document.getElementById("view-container");

@@ -1,3 +1,6 @@
+import { getConfiguredWorldVersion } from "../worldVersion.js";
+import { adaptPolicyCatalogData } from "../worldview/southernSongAdapter.js";
+
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
@@ -247,7 +250,21 @@ function hasPolicy(unlockedPolicies, policyId) {
   return normalizeUnlockedPolicies(unlockedPolicies).includes(policyId);
 }
 
-export function getPolicyCatalog() {
+function resolvePolicyCatalogWorldVersion(source) {
+  if (typeof source === "string") {
+    return getConfiguredWorldVersion({ worldVersion: source });
+  }
+  if (source && typeof source === "object") {
+    return getConfiguredWorldVersion(source.config || { worldVersion: source.worldVersion });
+  }
+  return getConfiguredWorldVersion();
+}
+
+export function getPolicyCatalog(source) {
+  const worldVersion = resolvePolicyCatalogWorldVersion(source);
+  if (worldVersion === "southern_song_v1") {
+    return adaptPolicyCatalogData(POLICY_CATALOG);
+  }
   return POLICY_CATALOG;
 }
 
@@ -580,36 +597,57 @@ function buildHostileAliases(force) {
   return Array.from(aliases).filter(Boolean);
 }
 
-export function initializeHostileForces(currentState, nationInit) {
-  const existing = Array.isArray(currentState.hostileForces) ? currentState.hostileForces : [];
-  if (existing.length) {
-    return existing.map((item, idx) => ({
-      id: item.id || toHostileId(item.name, idx),
-      name: item.name || `敌对势力${idx + 1}`,
-      leader: item.leader || "未知",
-      status: item.status || "暂无情报",
-      level: item.level || "high",
-      power: clamp(typeof item.power === "number" ? item.power : 60, 0, 100),
-      isDefeated: !!item.isDefeated,
-      storylineTag: item.storylineTag || buildStorylineTag(item.name),
-      defeatedYear: item.defeatedYear || null,
-      defeatedMonth: item.defeatedMonth || null,
-    }));
-  }
-
-  const base = Array.isArray(nationInit?.externalThreats) ? nationInit.externalThreats : [];
-  return base.map((item, idx) => ({
-    id: toHostileId(item.name, idx),
+function normalizeHostileForce(item, idx) {
+  return {
+    id: item.id || toHostileId(item.name, idx),
     name: item.name || `敌对势力${idx + 1}`,
     leader: item.leader || "未知",
     status: item.status || "暂无情报",
     level: item.level || "high",
-    power: HOSTILE_LEVEL_POWER[item.level] || 66,
-    isDefeated: false,
+    power: clamp(typeof item.power === "number" ? item.power : (HOSTILE_LEVEL_POWER[item.level] || 66), 0, 100),
+    isDefeated: !!item.isDefeated,
+    storylineTag: item.storylineTag || buildStorylineTag(item.name),
+    defeatedYear: item.defeatedYear || null,
+    defeatedMonth: item.defeatedMonth || null,
+  };
+}
+
+export function initializeHostileForces(currentState, nationInit) {
+  const existing = Array.isArray(currentState.hostileForces) ? currentState.hostileForces : [];
+  const base = Array.isArray(nationInit?.externalThreats) ? nationInit.externalThreats : [];
+  const normalizedBase = base.map((item, idx) => normalizeHostileForce({
+    ...item,
+    id: toHostileId(item.name, idx),
     storylineTag: buildStorylineTag(item.name),
+    isDefeated: false,
     defeatedYear: null,
     defeatedMonth: null,
-  }));
+  }, idx));
+
+  if (!existing.length) {
+    return normalizedBase;
+  }
+
+  const existingById = new Map();
+  const existingByName = new Map();
+  existing.forEach((item, idx) => {
+    const normalized = normalizeHostileForce(item, idx);
+    existingById.set(normalized.id, normalized);
+    existingByName.set(normalized.name, normalized);
+  });
+
+  return normalizedBase.map((baseItem, idx) => {
+    const matched = existingById.get(baseItem.id) || existingByName.get(baseItem.name);
+    if (!matched) return baseItem;
+    return normalizeHostileForce({
+      ...baseItem,
+      power: matched.power,
+      isDefeated: matched.isDefeated,
+      status: matched.status || baseItem.status,
+      defeatedYear: matched.defeatedYear,
+      defeatedMonth: matched.defeatedMonth,
+    }, idx);
+  });
 }
 
 function applyLegacyExternalPowersCompat(currentState, hostileForces, closedStorylines) {
@@ -831,10 +869,35 @@ function buildQuarterAgenda(state) {
     .slice()
     .sort((a, b) => (a.dueSerial || 0) - (b.dueSerial || 0))
     .find((item) => (item.dueSerial || 0) <= currentSerial + 3);
+  const worldVersion = getConfiguredWorldVersion(state.config || { worldVersion: state.worldVersion });
+
+  const adaptAgendaCopy = (id, title, summary) => {
+    if (worldVersion !== "southern_song_v1") {
+      return { title, summary };
+    }
+
+    const mapped = {
+      relief_shaanxi: {
+        title: "州郡赈灾与安民",
+        summary: "粮储或民心偏低，应优先稳住流民、灾情与州郡秩序。",
+      },
+      frontier_defense: {
+        title: "江防补饷与边备",
+        summary: "江淮军务承压，若军饷与转运失衡，将直接冲击沿江守备。",
+      },
+      faction_conflict: {
+        title: "平抑朝争",
+        summary: "朝争已接近失控，需通过调岗、封驳与节制言路同步收束。",
+      },
+    };
+
+    return mapped[id] || { title, summary };
+  };
 
   const pushAgenda = (id, title, summary, impacts, severity = "重") => {
     if (agenda.some((item) => item.id === id)) return;
-    agenda.push({ id, title, summary, impacts, severity });
+    const adapted = adaptAgendaCopy(id, title, summary);
+    agenda.push({ id, title: adapted.title, summary: adapted.summary, impacts, severity });
   };
 
   const effectsToImpacts = (effects) => {
@@ -1198,6 +1261,17 @@ function parseHostileDamageFromEffects(effects) {
   return map;
 }
 
+function parseBattleOutcomeFromEffects(effects) {
+  const battleOutcome = effects?.battleOutcome;
+  if (!battleOutcome || typeof battleOutcome !== "object" || Array.isArray(battleOutcome)) return null;
+  if (battleOutcome.outcome !== "victory" && battleOutcome.outcome !== "defeat") return null;
+  return {
+    outcome: battleOutcome.outcome,
+    targetId: typeof battleOutcome.targetId === "string" ? battleOutcome.targetId : null,
+    hostilePowerDelta: typeof battleOutcome.hostilePowerDelta === "number" ? battleOutcome.hostilePowerDelta : 0,
+  };
+}
+
 function isMilitaryFailureText(choiceText, effects) {
   const text = String(choiceText || "");
   const failPattern = /失败|失利|受挫|战败|无功而返|久攻不下|折损|败退|反扑|溃退|被击退/;
@@ -1310,9 +1384,10 @@ export function resolveHostileForcesAfterChoice(state, choiceText, effects, year
   const tags = parseChoiceTags(choiceText);
   const nextHostiles = hostileForces.map((item) => ({ ...item }));
   const damageMap = parseHostileDamageFromEffects(effects);
+  const explicitBattleOutcome = parseBattleOutcomeFromEffects(effects);
   const inferredTargets = extractHostileTargetsFromText(choiceText, nextHostiles);
 
-  if (!Object.keys(damageMap).length && !tags.military && !inferredTargets.length) {
+  if (!Object.keys(damageMap).length && !tags.military && !inferredTargets.length && !explicitBattleOutcome) {
     return null;
   }
 
@@ -1328,16 +1403,20 @@ export function resolveHostileForcesAfterChoice(state, choiceText, effects, year
   let prestigeDelta = 0;
   const news = [];
   const defeatedTags = [];
-  const failureByText = isMilitaryFailureText(choiceText, effects);
+  const failureByText = explicitBattleOutcome ? false : isMilitaryFailureText(choiceText, effects);
 
   nextHostiles.forEach((force) => {
     if (force.isDefeated) return;
     let damage = 0;
+    const isExplicitTarget = !!(explicitBattleOutcome && explicitBattleOutcome.targetId === force.id);
 
     for (const [key, value] of Object.entries(damageMap)) {
       if (key === force.id || key === force.name || key === force.leader) {
         damage += value;
       }
+    }
+    if (explicitBattleOutcome && isExplicitTarget) {
+      damage = explicitBattleOutcome.hostilePowerDelta;
     }
     if (!damage && inferredTargets.includes(force.id)) {
       damage = baseDamage;
@@ -1345,10 +1424,14 @@ export function resolveHostileForcesAfterChoice(state, choiceText, effects, year
     if (!damage) return;
 
     const failByDamage = damage < 0;
-    const actualFail = failByDamage || failureByText;
+    const actualFail = explicitBattleOutcome
+      ? explicitBattleOutcome.outcome === "defeat"
+      : (failByDamage || failureByText);
 
     if (actualFail) {
-      const rebound = Math.max(2, Math.round(Math.abs(damage) * 0.7));
+      const rebound = explicitBattleOutcome
+        ? Math.max(2, Math.round(Math.abs(explicitBattleOutcome.hostilePowerDelta || damage)))
+        : Math.max(2, Math.round(Math.abs(damage) * 0.7));
       force.power = clamp((force.power || 0) + rebound, 0, 100);
       force.status = `朝廷攻势受挫，${force.name}趁势反扑，势力值升至 ${force.power}/100。`;
       effectsPatch.borderThreat = (effectsPatch.borderThreat || 0) + Math.max(2, Math.round(rebound / 3));

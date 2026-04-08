@@ -1,3 +1,5 @@
+import { getPersistentLocalItem, setPersistentLocalItem } from "./persistentBrowserStorage.js";
+
 const PLAYER_RUNTIME_CONFIG_STORAGE_KEY = "history_sim_player_llm_config_v1";
 
 const DEFAULT_LLM_API_BASE = "https://open.bigmodel.cn/api/paas/v4";
@@ -30,7 +32,7 @@ export function getPlayerRuntimeConfig() {
     return normalizeRuntimeConfig(null);
   }
 
-  const raw = window.localStorage.getItem(PLAYER_RUNTIME_CONFIG_STORAGE_KEY);
+  const raw = getPersistentLocalItem(PLAYER_RUNTIME_CONFIG_STORAGE_KEY);
   if (!raw) {
     return normalizeRuntimeConfig(null);
   }
@@ -52,7 +54,7 @@ export function savePlayerRuntimeConfig(nextValues) {
     throw new Error("当前浏览器不支持本地存储，无法保存玩家模型配置。");
   }
 
-  window.localStorage.setItem(PLAYER_RUNTIME_CONFIG_STORAGE_KEY, JSON.stringify(normalized));
+  setPersistentLocalItem(PLAYER_RUNTIME_CONFIG_STORAGE_KEY, JSON.stringify(normalized));
   return normalized;
 }
 

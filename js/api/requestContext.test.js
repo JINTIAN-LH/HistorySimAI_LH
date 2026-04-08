@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStoryRequestBody } from "./requestContext.js";
+import { buildSharedContextFromState, buildStoryRequestBody } from "./requestContext.js";
 import { createDefaultRigidState, DEFAULT_RIGID_INITIAL, RIGID_MODE_ID } from "../rigid/config.js";
 
 describe("buildStoryRequestBody", () => {
@@ -45,5 +45,16 @@ describe("buildStoryRequestBody", () => {
     expect(body.rigid.lastOutputModules).toHaveLength(2);
     expect(body.rigid.lastOutputModules[0].title).toBe("叙事正文");
     expect(body.lastChoiceText).toBe("bar");
+  });
+
+  it("uses worldview-mapped policy titles in shared context", () => {
+    const ctx = buildSharedContextFromState({
+      unlockedPolicies: ["politics_east_factory", "diplomacy_macao"],
+      worldVersion: "southern_song_v1",
+      config: { worldVersion: "southern_song_v1" },
+    });
+
+    expect(ctx.unlockedPolicyTitles).toEqual(["察事耳目收束", "海商互市"]);
+    expect(ctx.unlockedPolicyTitleMap?.politics_east_factory).toBe("察事耳目收束");
   });
 });

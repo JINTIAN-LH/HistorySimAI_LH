@@ -3,6 +3,7 @@ import {
   adaptCharactersData,
   adaptCourtChatsData,
   adaptFactionsData,
+  adaptPolicyCatalogData,
   adaptPositionsData,
 } from "./worldviewAdapter.js";
 
@@ -41,5 +42,17 @@ describe("worldviewAdapter", () => {
     expect(positions.departments[0].name).toBe("御史台");
     expect(positions.positions[0].id).toBe("neige_shoufu");
     expect(positions.positions[0].name).toBe("右相");
+  });
+
+  it("should remap policy tree display copy into Southern Song worldview while preserving ids", () => {
+    const policies = adaptPolicyCatalogData([
+      { id: "politics_east_factory", title: "东厂职能收缩", description: "防止厂卫滥权。" },
+      { id: "diplomacy_macao", title: "澳门通商", description: "获取火器与技术。" },
+    ]);
+
+    expect(policies[0].id).toBe("politics_east_factory");
+    expect(policies[0].title).toBe("察事耳目收束");
+    expect(policies[1].title).toBe("海商互市");
+    expect(policies[1].description).toContain("南海");
   });
 });

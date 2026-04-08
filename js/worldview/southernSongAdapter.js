@@ -2,6 +2,7 @@ export {
   adaptCharactersData,
   adaptCourtChatsData,
   adaptFactionsData,
+  adaptPolicyCatalogData,
   adaptPositionsData,
   adaptWorldviewData,
   defaultWorldviewOverrides,

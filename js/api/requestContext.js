@@ -2,10 +2,6 @@ import { getPolicyCatalog } from "../systems/coreGameplaySystem.js";
 import { buildStoryFactsFromState } from "../utils/storyFacts.js";
 import { isRigidMode } from "../rigid/config.js";
 
-const POLICY_TITLE_BY_ID = new Map(
-  getPolicyCatalog().map((item) => [String(item.id || ""), String(item.title || item.id || "")])
-);
-
 function setOptionalArray(target, key, value, { requireNonEmpty = false } = {}) {
   if (!Array.isArray(value)) return;
   if (requireNonEmpty && value.length === 0) return;
@@ -17,25 +13,32 @@ function setOptionalObject(target, key, value) {
   target[key] = value;
 }
 
-function resolveUnlockedPolicyTitles(unlockedPolicies) {
+function buildPolicyTitleById(state) {
+  return new Map(
+    getPolicyCatalog(state).map((item) => [String(item.id || ""), String(item.title || item.id || "")])
+  );
+}
+
+function resolveUnlockedPolicyTitles(unlockedPolicies, policyTitleById) {
   if (!Array.isArray(unlockedPolicies)) return [];
   return unlockedPolicies
     .filter((id) => typeof id === "string" && id.trim())
-    .map((id) => POLICY_TITLE_BY_ID.get(id) || id);
+    .map((id) => policyTitleById.get(id) || id);
 }
 
-function resolveUnlockedPolicyTitleMap(unlockedPolicies) {
+function resolveUnlockedPolicyTitleMap(unlockedPolicies, policyTitleById) {
   if (!Array.isArray(unlockedPolicies)) return {};
   const out = {};
   unlockedPolicies.forEach((id) => {
     if (typeof id !== "string" || !id.trim()) return;
-    out[id] = POLICY_TITLE_BY_ID.get(id) || id;
+    out[id] = policyTitleById.get(id) || id;
   });
   return out;
 }
 
 export function buildSharedContextFromState(state, { compact = false } = {}) {
   const ctx = {};
+  const policyTitleById = buildPolicyTitleById(state);
 
   if (state.currentQuarterFocus) {
     ctx.currentQuarterFocus = state.currentQuarterFocus;
@@ -48,8 +51,8 @@ export function buildSharedContextFromState(state, { compact = false } = {}) {
 
   setOptionalObject(ctx, "playerAbilities", state.playerAbilities);
   setOptionalArray(ctx, "unlockedPolicies", state.unlockedPolicies, { requireNonEmpty: compact });
-  setOptionalArray(ctx, "unlockedPolicyTitles", resolveUnlockedPolicyTitles(state.unlockedPolicies), { requireNonEmpty: compact });
-  setOptionalObject(ctx, "unlockedPolicyTitleMap", resolveUnlockedPolicyTitleMap(state.unlockedPolicies));
+  setOptionalArray(ctx, "unlockedPolicyTitles", resolveUnlockedPolicyTitles(state.unlockedPolicies, policyTitleById), { requireNonEmpty: compact });
+  setOptionalObject(ctx, "unlockedPolicyTitleMap", resolveUnlockedPolicyTitleMap(state.unlockedPolicies, policyTitleById));
 
   return ctx;
 }

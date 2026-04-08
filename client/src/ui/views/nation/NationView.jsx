@@ -8,5 +8,5 @@ async function renderLegacyNationView(container, useLegacyLayout) {
 }
 
 export function NationView({ useLegacyLayout = false }) {
-  return <LegacyViewMount renderView={(container) => renderLegacyNationView(container, useLegacyLayout)} />;
+  return <LegacyViewMount className="nation-view" renderView={(container) => renderLegacyNationView(container, useLegacyLayout)} />;
 }

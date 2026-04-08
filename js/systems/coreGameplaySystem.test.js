@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { processCoreGameplayTurn, resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
+import { getPolicyCatalog, initializeHostileForces, processCoreGameplayTurn, refreshQuarterAgendaByState, resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
 
 function createBaseState() {
   return {
@@ -105,6 +105,82 @@ describe("resolveHostileForcesAfterChoice", () => {
     expect(byId.get("hostile_农民军")).toBeLessThan(72);
     expect(byId.get("hostile_后金")).toBe(88);
     expect(byId.get("hostile_登州叛军")).toBe(72);
+  });
+});
+
+describe("initializeHostileForces", () => {
+  it("filters out stale hostiles that are no longer present in current world data", () => {
+    const out = initializeHostileForces(
+      {
+        hostileForces: [
+          {
+            id: "hostile_登州叛军",
+            name: "登州叛军",
+            leader: "孔有德",
+            power: 72,
+            isDefeated: false,
+          },
+          {
+            id: "hostile_金军",
+            name: "金军",
+            leader: "完颜兀术",
+            power: 81,
+            isDefeated: false,
+          },
+        ],
+      },
+      {
+        externalThreats: [
+          { name: "金军", leader: "完颜兀术", status: "南压江淮", level: "critical" },
+          { name: "地方叛军", leader: "张用等", status: "聚众作乱", level: "high" },
+          { name: "洞庭水寇", leader: "杨么", status: "盘踞湖湘", level: "high" },
+        ],
+      }
+    );
+
+    expect(out.some((item) => item.name === "登州叛军")).toBe(false);
+    expect(out.find((item) => item.name === "金军")?.power).toBe(81);
+    expect(out.some((item) => item.name === "洞庭水寇")).toBe(true);
+  });
+});
+
+describe("refreshQuarterAgendaByState worldview mapping", () => {
+  it("maps Chongzhen-era quarterly agenda copy into Southern Song worldview", () => {
+    const out = refreshQuarterAgendaByState({
+      currentYear: 1,
+      currentMonth: 3,
+      worldVersion: "southern_song_v1",
+      config: { worldVersion: "southern_song_v1" },
+      currentQuarterFocus: null,
+      factions: [],
+      nation: {
+        treasury: 300000,
+        grain: 20000,
+        civilMorale: 45,
+        militaryStrength: 55,
+        borderThreat: 72,
+      },
+      hostileForces: [],
+      pendingConsequences: [],
+      storyHistory: [],
+      lastChoiceText: "",
+      unrest: 30,
+      partyStrife: 78,
+    });
+
+    const titles = out.currentQuarterAgenda.map((item) => item.title);
+    expect(titles).toContain("州郡赈灾与安民");
+    expect(titles).toContain("江防补饷与边备");
+    expect(titles).toContain("平抑朝争");
+    expect(titles.join(" ")).not.toMatch(/陕西|关宁|党争/);
+  });
+
+  it("maps policy tree display copy into Southern Song worldview", () => {
+    const policies = getPolicyCatalog({ worldVersion: "southern_song_v1", config: { worldVersion: "southern_song_v1" } });
+
+    expect(policies.find((item) => item.id === "politics_east_factory")?.title).toBe("察事耳目收束");
+    expect(policies.find((item) => item.id === "diplomacy_macao")?.title).toBe("海商互市");
+    expect(policies.find((item) => item.id === "diplomacy_rome")?.description).toContain("诸蕃");
   });
 });
 

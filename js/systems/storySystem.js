@@ -9,7 +9,7 @@ import { computeCustomPolicyQuarterBonus, getPolicyBonusSummary } from "./coreGa
 import { AVAILABLE_AVATAR_NAMES, buildNameById } from "../utils/sharedConstants.js";
 import { applyEffects as applyEffectsModule } from "../utils/effectsProcessor.js";
 import { DISPLAY_STATE_METRICS, buildOutcomeDisplayDelta, captureDisplayStateSnapshot, hasOutcomeDisplayDelta, mergeOutcomeDisplayDelta, renderOutcomeDisplayCard } from "../utils/displayStateMetrics.js";
-import { normalizeAppointmentEffects } from "../utils/appointmentEffects.js";
+import { mergeDerivedAppointmentStateEffects, normalizeAppointmentEffects } from "../utils/appointmentEffects.js";
 import { buildRigidStoryData } from "../rigid/moduleComposer.js";
 import { ensureRigidState, getRigidPresets } from "../rigid/engine.js";
 import { isRigidMode } from "../rigid/config.js";
@@ -694,18 +694,23 @@ function applyEffects(effects) {
     positions: s.positionsMeta?.positions || [],
     ministers: roster,
   }) || effects;
+  const effectiveEffects = mergeDerivedAppointmentStateEffects(normalizedEffects, {
+    positions: s.positionsMeta?.positions || [],
+    ministers: roster,
+    currentAppointments: s.appointments || {},
+  }) || normalizedEffects;
   const ministers = Array.isArray(roster) ? roster : [];
   const ministerNameById = buildNameById(ministers);
   const storylineTagsToClose = [];
   
-  const { nation: newNation, loyalty: newLoyalty } = applyEffectsModule(s.nation || {}, normalizedEffects, s.loyalty || {});
+  const { nation: newNation, loyalty: newLoyalty } = applyEffectsModule(s.nation || {}, effectiveEffects, s.loyalty || {});
   setState({ nation: newNation, loyalty: newLoyalty });
 
-  if (normalizedEffects.appointments && typeof normalizedEffects.appointments === "object" && !Array.isArray(normalizedEffects.appointments)) {
+  if (effectiveEffects.appointments && typeof effectiveEffects.appointments === "object" && !Array.isArray(effectiveEffects.appointments)) {
     const currentState = getState();
     const beforeAppointments = { ...(currentState.appointments || {}) };
     const appointments = { ...beforeAppointments };
-    for (const [positionId, characterId] of Object.entries(normalizedEffects.appointments)) {
+    for (const [positionId, characterId] of Object.entries(effectiveEffects.appointments)) {
       if (typeof positionId !== "string" || typeof characterId !== "string") continue;
       if (currentState.characterStatus?.[characterId]?.isAlive === false) continue;
       for (const [posId, charId] of Object.entries(appointments)) {
@@ -727,11 +732,11 @@ function applyEffects(effects) {
     setState({ appointments });
   }
 
-  if (Array.isArray(normalizedEffects.appointmentDismissals) && normalizedEffects.appointmentDismissals.length) {
+  if (Array.isArray(effectiveEffects.appointmentDismissals) && effectiveEffects.appointmentDismissals.length) {
     const currentState = getState();
     const appointments = { ...(currentState.appointments || {}) };
     const dismissSet = new Set(
-      normalizedEffects.appointmentDismissals
+      effectiveEffects.appointmentDismissals
         .filter((id) => typeof id === "string" && id.trim())
         .map((id) => id.trim())
     );
@@ -748,10 +753,10 @@ function applyEffects(effects) {
     }
   }
 
-  if (normalizedEffects.characterDeath && typeof normalizedEffects.characterDeath === "object") {
+  if (effectiveEffects.characterDeath && typeof effectiveEffects.characterDeath === "object") {
     const currentState = getState();
     const characterStatus = { ...(currentState.characterStatus || {}) };
-    for (const [characterId, reason] of Object.entries(normalizedEffects.characterDeath)) {
+    for (const [characterId, reason] of Object.entries(effectiveEffects.characterDeath)) {
       if (typeof characterId !== "string") continue;
       characterStatus[characterId] = {
         isAlive: false,
@@ -761,7 +766,7 @@ function applyEffects(effects) {
       storylineTagsToClose.push(buildMinisterStorylineTag(characterId, ministerNameById[characterId]));
     }
     const appointments = { ...(currentState.appointments || {}) };
-    for (const characterId of Object.keys(normalizedEffects.characterDeath)) {
+    for (const characterId of Object.keys(effectiveEffects.characterDeath)) {
       for (const [posId, charId] of Object.entries(appointments)) {
         if (charId === characterId) {
           delete appointments[posId];
@@ -1816,7 +1821,7 @@ function showCustomEdictPanel(onChoice, state) {
 
   const fields = [
     { id: "ce-neizhi", label: "内政", placeholder: "如：减免赋税、整顿吏治..." },
-    { id: "ce-junshi", label: "军事", placeholder: "如：增兵辽东、加强城防..." },
+    { id: "ce-junshi", label: "军事", placeholder: "如：增援江防、加强城防..." },
     { id: "ce-waijiao", label: "外交", placeholder: "如：遣使议和、联络蒙古..." },
     { id: "ce-qita", label: "其他", placeholder: "如：祭天祈福、下罪己诏..." },
   ];

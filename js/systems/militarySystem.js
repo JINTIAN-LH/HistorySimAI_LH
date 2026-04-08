@@ -133,6 +133,19 @@ function resolveFormationById(id) {
   return FORMATIONS.find((f) => f.id === id) || FORMATIONS[0];
 }
 
+function buildBattleScale(state, targetForce) {
+  const nationStrength = clamp(state?.nation?.militaryStrength || 50, 20, 100);
+  const hostileStrength = clamp(targetForce?.power || 50, 10, 100);
+  const militaryAbility = clamp(state?.playerAbilities?.military || 0, 0, 10);
+
+  return {
+    playerBaseCount: Math.round(2200 + nationStrength * 50 + militaryAbility * 450),
+    enemyBaseCount: Math.round(2000 + hostileStrength * 52 + Math.max(0, hostileStrength - nationStrength) * 18),
+    playerMoraleBias: clamp(Math.round((nationStrength - hostileStrength) * 0.35 + militaryAbility * 3), -12, 15),
+    enemyMoraleBias: clamp(Math.round((hostileStrength - nationStrength) * 0.25), -8, 12),
+  };
+}
+
 /** 判断一次选择是否应触发军事系统 */
 export function isMilitaryCombatChoice(choiceId, choiceText, state) {
   const activeHostiles = (state.hostileForces || []).filter((f) => !f.isDefeated);
@@ -321,14 +334,20 @@ export function buildBattleEffectsPatch(battleResult, choice) {
     ...(src.hostileDamage ? { hostileDamage: { ...src.hostileDamage } } : {}),
   };
 
+  let hostilePowerDelta = 0;
+
   if (battleResult.outcome === "victory") {
     const damageBonus = Math.min(20, 8 + Math.round(battleResult.playerMoraleAvg / 10));
     if (base.hostileDamage && typeof base.hostileDamage === "object") {
       for (const key of Object.keys(base.hostileDamage)) {
         base.hostileDamage[key] = (base.hostileDamage[key] || 0) + damageBonus;
       }
+      if (battleResult.targetId && typeof base.hostileDamage[battleResult.targetId] === "number") {
+        hostilePowerDelta = base.hostileDamage[battleResult.targetId];
+      }
     } else if (battleResult.targetId) {
       base.hostileDamage = { [battleResult.targetId]: damageBonus + 8 };
+      hostilePowerDelta = base.hostileDamage[battleResult.targetId];
     }
     base.borderThreat = (base.borderThreat || 0) - 4;
     base.civilMorale = (base.civilMorale || 0) + 3;
@@ -344,6 +363,7 @@ export function buildBattleEffectsPatch(battleResult, choice) {
         base.hostileDamage[key] = Math.max(0, (base.hostileDamage[key] || 0) - 6);
       }
     }
+    hostilePowerDelta = -Math.max(3, Math.round((1 - (battleResult.survivorRatio || 0.8)) * 8 + Math.max(0, 55 - (battleResult.playerMoraleAvg || 50)) / 10));
     base.borderThreat = (base.borderThreat || 0) + 5;
     base.militaryStrength = (base.militaryStrength || 0) - 2;
   }
@@ -355,6 +375,15 @@ export function buildBattleEffectsPatch(battleResult, choice) {
 
   // 融合版本：战后伤兵恢复期（重伤 30 天基准，轻伤按比例）
   base.recoveryDays = Math.round(casualtyRate * 30);
+  base.battleOutcome = {
+    type: "military",
+    outcome: battleResult.outcome,
+    targetId: battleResult.targetId || null,
+    targetName: battleResult.targetName || null,
+    hostilePowerDelta,
+    survivorRatio: battleResult.survivorRatio || 0,
+    playerMoraleAvg: battleResult.playerMoraleAvg || 0,
+  };
 
   return base;
 }
@@ -388,9 +417,9 @@ export function runMilitarySystem(container, choice, state, onComplete) {
 }
 
 export function buildInitialSession(state, targetForce, choice) {
-  const mil = state.playerAbilities?.military || 0;
-  const baseCount = 5000 + mil * 500;
-  const initialEnemyUnits = buildEnemyUnits(targetForce);
+  const scale = buildBattleScale(state, targetForce);
+  const baseCount = scale.playerBaseCount;
+  const initialEnemyUnits = buildEnemyUnits(targetForce, scale.enemyBaseCount, scale.enemyMoraleBias);
   // 优先从 choice.text 推断天气，未命中时用 state.weather 兜底（避免全局天气与战场天气脱节）
   const textWeather = deriveWeatherFromText(choice.text || "");
   const sessionWeather = textWeather !== "clear" ? textWeather : deriveWeatherFromText(state.weather || "");
@@ -408,10 +437,10 @@ export function buildInitialSession(state, targetForce, choice) {
     targetId: targetForce.id,
     targetName: targetForce.name,
     playerUnits: [
-      { unitId: "infantry_spear", count: Math.round(baseCount * 0.5), morale: 75 },
-      { unitId: "cavalry_guanning", count: Math.round(baseCount * 0.2), morale: 80 },
-      { unitId: "firearm", count: Math.round(baseCount * 0.2), morale: 65 },
-      { unitId: "artillery", count: Math.round(baseCount * 0.1), morale: 60 },
+      { unitId: "infantry_spear", count: Math.round(baseCount * 0.5), morale: clamp(75 + scale.playerMoraleBias, 35, 95) },
+      { unitId: "cavalry_guanning", count: Math.round(baseCount * 0.2), morale: clamp(80 + scale.playerMoraleBias, 35, 98) },
+      { unitId: "firearm", count: Math.round(baseCount * 0.2), morale: clamp(65 + scale.playerMoraleBias, 30, 92) },
+      { unitId: "artillery", count: Math.round(baseCount * 0.1), morale: clamp(60 + scale.playerMoraleBias, 30, 90) },
     ],
     enemyUnits: initialEnemyUnits,
     roundHistory: [],
@@ -431,12 +460,14 @@ export function deriveWeatherFromText(text) {
   return "clear";
 }
 
-export function buildEnemyUnits(force) {
-  const base = clamp(force.power || 50, 10, 100) * 50;
+export function buildEnemyUnits(force, baseCount = null, moraleBias = 0) {
+  const base = typeof baseCount === "number"
+    ? Math.max(1500, Math.round(baseCount))
+    : clamp(force.power || 50, 10, 100) * 50;
   return [
-    { unitId: "infantry_spear", count: Math.round(base * 0.6), morale: 65 },
-    { unitId: "cavalry_guanning", count: Math.round(base * 0.25), morale: 70 },
-    { unitId: "firearm", count: Math.round(base * 0.15), morale: 55 },
+    { unitId: "infantry_spear", count: Math.round(base * 0.6), morale: clamp(65 + moraleBias, 30, 95) },
+    { unitId: "cavalry_guanning", count: Math.round(base * 0.25), morale: clamp(70 + moraleBias, 30, 96) },
+    { unitId: "firearm", count: Math.round(base * 0.15), morale: clamp(55 + moraleBias, 25, 90) },
   ];
 }
 
@@ -688,7 +719,7 @@ function renderSummaryPhase(overlay, session, outcome, choice, state, targetForc
 
   // 影响预示
   const effectsPatch = buildBattleEffectsPatch(
-    { outcome, survivorRatio, playerMoraleAvg, targetId: targetForce.id, enemyKilled },
+    { outcome, survivorRatio, playerMoraleAvg, targetId: targetForce.id, targetName: targetForce.name, enemyKilled },
     choice
   );
   const impactLines = buildImpactLines(effectsPatch, isVictory);

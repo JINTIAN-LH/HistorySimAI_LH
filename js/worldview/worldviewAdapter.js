@@ -88,6 +88,11 @@ export function adaptPositionsData(data, worldviewOverrides = defaultWorldviewOv
   };
 }
 
+export function adaptPolicyCatalogData(data, worldviewOverrides = defaultWorldviewOverrides) {
+  const resolvedOverrides = resolveWorldviewOverrides(worldviewOverrides);
+  return applyOverrideList(data, resolvedOverrides.policies || {});
+}
+
 export function adaptWorldviewData(path, data, worldviewOverrides = defaultWorldviewOverrides) {
   if (!path || !data) return data;
   if (path.endsWith("data/characters.json")) return adaptCharactersData(data, worldviewOverrides);

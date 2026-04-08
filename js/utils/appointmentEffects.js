@@ -146,6 +146,105 @@ export function normalizeAppointmentEffects(effects, context = {}) {
   return next;
 }
 
+function buildPositionById(positions) {
+  const map = new Map();
+  (Array.isArray(positions) ? positions : []).forEach((position) => {
+    const id = normalizeString(position?.id);
+    if (!id) return;
+    map.set(id, position);
+  });
+  return map;
+}
+
+function isMilitaryPosition(position) {
+  if (!position || typeof position !== "object") return false;
+  const department = normalizeString(position.department);
+  if (department === "bingbu" || department === "military") return true;
+  const text = compactText(`${position.name || ""}${position.description || ""}`);
+  return /(军务|军事|总兵|督师|统兵|边防|江防|防务|都督|制置使|安抚使|兵马|戍守)/.test(text);
+}
+
+function getMilitaryPositionScore(position) {
+  const importance = Number(position?.importance || 0);
+  if (importance >= 10) return 6;
+  if (importance >= 8) return 5;
+  if (importance >= 6) return 4;
+  if (importance >= 4) return 3;
+  return 2;
+}
+
+function scoreMilitaryAppointments(appointments, positionById) {
+  let score = 0;
+  Object.entries(buildCurrentHolderByPosition(appointments)).forEach(([positionId, characterId]) => {
+    if (!positionId || !characterId) return;
+    const position = positionById.get(positionId);
+    if (!isMilitaryPosition(position)) return;
+    score += getMilitaryPositionScore(position);
+  });
+  return score;
+}
+
+function applyAppointmentMutations(currentAppointments, effects) {
+  const nextAppointments = buildCurrentHolderByPosition(currentAppointments);
+
+  if (Array.isArray(effects?.appointmentDismissals)) {
+    effects.appointmentDismissals.forEach((positionId) => {
+      const id = normalizeString(positionId);
+      if (!id) return;
+      delete nextAppointments[id];
+    });
+  }
+
+  if (effects?.appointments && typeof effects.appointments === "object" && !Array.isArray(effects.appointments)) {
+    Object.entries(effects.appointments).forEach(([positionId, characterId]) => {
+      const posId = normalizeString(positionId);
+      const charId = normalizeString(characterId);
+      if (!posId || !charId) return;
+
+      Object.entries(nextAppointments).forEach(([existingPosId, holderId]) => {
+        if (holderId === charId && existingPosId !== posId) {
+          delete nextAppointments[existingPosId];
+        }
+      });
+
+      nextAppointments[posId] = charId;
+    });
+  }
+
+  return nextAppointments;
+}
+
+export function deriveAppointmentStateEffects(effects, context = {}) {
+  if (!effects || typeof effects !== "object" || Array.isArray(effects)) return null;
+
+  const normalized = normalizeAppointmentEffects(effects, context) || effects;
+  const positionById = buildPositionById(context.positions || []);
+  if (!positionById.size) return null;
+
+  const beforeAppointments = buildCurrentHolderByPosition(context.currentAppointments);
+  const afterAppointments = applyAppointmentMutations(beforeAppointments, normalized);
+  const beforeScore = scoreMilitaryAppointments(beforeAppointments, positionById);
+  const afterScore = scoreMilitaryAppointments(afterAppointments, positionById);
+  const militaryStrength = afterScore - beforeScore;
+
+  if (!militaryStrength) return null;
+  return { militaryStrength };
+}
+
+export function mergeDerivedAppointmentStateEffects(effects, context = {}) {
+  if (!effects || typeof effects !== "object" || Array.isArray(effects)) return effects;
+  const derived = deriveAppointmentStateEffects(effects, context);
+  if (!derived) return effects;
+
+  const merged = { ...effects };
+  Object.entries(derived).forEach(([key, value]) => {
+    if (typeof value !== "number") return;
+    if (typeof merged[key] === "number") merged[key] += value;
+    else merged[key] = value;
+  });
+  return merged;
+}
+
 export function deriveAppointmentEffectsFromText(edictText, context = {}) {
   const text = compactText(edictText);
   if (!text) return null;

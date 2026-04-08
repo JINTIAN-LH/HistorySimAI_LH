@@ -720,5 +720,207 @@
       "name": "内侍省都知",
       "description": "内侍省长官，掌禁中传宣与机要。"
     }
+  },
+  "policies": {
+    "civil_light_tax": {
+      "title": "和籴减赋",
+      "description": "减轻和籴与杂敛，缓和州县民困。"
+    },
+    "civil_tax_reform": {
+      "title": "经界核赋",
+      "description": "清丈田亩与户籍，稳住东南税基。"
+    },
+    "civil_canal": {
+      "title": "漕纲整饬",
+      "description": "整肃江淮漕路与转运仓场，确保行在粮运。"
+    },
+    "civil_salt_iron": {
+      "title": "盐榷整顿",
+      "description": "平衡官榷与商运，稳住盐利收入。"
+    },
+    "civil_port_office": {
+      "title": "市舶扩榷",
+      "description": "整顿泉州、明州等市舶体系，扩大海贸税课。"
+    },
+    "civil_remove_mining_tax": {
+      "title": "榷务苛敛裁减",
+      "description": "裁减扰民苛敛，缓和州县与商民矛盾。"
+    },
+    "civil_royal_allowance_cut": {
+      "title": "宗室岁赐节减",
+      "description": "节减宗室供赐，把财力优先投向军国急务。"
+    },
+    "civil_post_optimization": {
+      "title": "驿传裁并",
+      "description": "精简驿传冗费，同时保留军情急递。"
+    },
+    "civil_tea_horse": {
+      "title": "茶马互市",
+      "description": "整顿茶马交易，换取边马与西线补给。"
+    },
+    "civil_salt_ticket": {
+      "title": "折帛转输法",
+      "description": "优化转输与折帛制度，引导商力补给边防。"
+    },
+    "civil_reserve_granary": {
+      "title": "常平义仓扩设",
+      "description": "扩充常平与义仓体系，以备荒年赈济。"
+    },
+    "civil_paper_money": {
+      "title": "会子整顿",
+      "description": "整顿会子发行与流通，稳住市场信用。"
+    },
+    "military_border_defense": {
+      "title": "江防固守",
+      "description": "强化沿江守备，提升边防与水陆协同收益。"
+    },
+    "military_firearms": {
+      "title": "神臂火器整饬",
+      "description": "改良弓弩与火器配备，增强军阵杀伤。"
+    },
+    "military_capital_drill": {
+      "title": "殿前诸军整训",
+      "description": "整顿宿卫与殿前诸军，恢复中枢战斗力。"
+    },
+    "military_recruit": {
+      "title": "诸军募补法",
+      "description": "规范募补与训练，提高兵员素质。"
+    },
+    "military_wagon": {
+      "title": "车船协同战法",
+      "description": "整合车战、舟师与步骑协同，对抗强敌突击。"
+    },
+    "military_navy": {
+      "title": "水师扩建",
+      "description": "扩充沿江沿海水师，巩固江面控制力。"
+    },
+    "military_fort": {
+      "title": "江防寨堡修筑",
+      "description": "在沿江险要增修寨堡与烽堠，稳固防线。"
+    },
+    "military_command": {
+      "title": "宣抚统军归一",
+      "description": "理顺宣抚、都统与地方兵权，统一战区号令。"
+    },
+    "military_tuntian": {
+      "title": "军屯复置",
+      "description": "恢复屯田制度，减轻前线军粮压力。"
+    },
+    "military_workshop": {
+      "title": "军器监扩造",
+      "description": "集中扩建军器作坊，保障甲械与火器供给。"
+    },
+    "politics_balance": {
+      "title": "中枢持衡",
+      "description": "调和主战与主和诸论，稳住中枢行政效率。"
+    },
+    "politics_memorial": {
+      "title": "台谏封驳整肃",
+      "description": "整顿章奏与封驳程序，遏制朝政失序。"
+    },
+    "politics_limit_cabinet": {
+      "title": "三省制衡复振",
+      "description": "分明中书门下与枢密权责，避免政令壅滞。"
+    },
+    "politics_censorate": {
+      "title": "御史台整饬",
+      "description": "整饬台谏风气，减少以风闻相攻的内耗。"
+    },
+    "politics_assessment": {
+      "title": "考课法严行",
+      "description": "严格考核守令与监司实绩，提高施政约束。"
+    },
+    "politics_limit_eunuch": {
+      "title": "内侍预政约束",
+      "description": "限制内侍越职干预外朝政务。"
+    },
+    "politics_royal_rule": {
+      "title": "宗室任使节制",
+      "description": "规范宗室授任与干政边界，减轻掣肘。"
+    },
+    "politics_viceroy": {
+      "title": "宣抚安抚分统",
+      "description": "明确宣抚与安抚职责，稳住军政协同。"
+    },
+    "politics_east_factory": {
+      "title": "察事耳目收束",
+      "description": "收束禁中耳目与察事权限，防止近习滥权。"
+    },
+    "politics_south_study": {
+      "title": "经筵近臣班值",
+      "description": "建立经筵与近臣班值机制，强化机要议政。"
+    },
+    "tech_agri": {
+      "title": "占城稻推广",
+      "description": "推广良种与复种法，提升粮食储备。"
+    },
+    "tech_engineering": {
+      "title": "营造水工统筹",
+      "description": "统筹河渠、城防与营造工程，提高长期效率。"
+    },
+    "tech_calendar": {
+      "title": "历算修定",
+      "description": "整修历法与观测制度，提升国家授时能力。"
+    },
+    "tech_firearm_theory": {
+      "title": "军器图谱研究",
+      "description": "整理军器技术图谱，改良操练与铸造理论。"
+    },
+    "tech_water": {
+      "title": "圩田水利推广",
+      "description": "兴修圩田、水闸与沟渠，兼顾治水与农产。"
+    },
+    "tech_ship": {
+      "title": "海舟修造法",
+      "description": "改进海船与江船修造技术，提升航运能力。"
+    },
+    "tech_medicine": {
+      "title": "方书疫法整理",
+      "description": "整理医书与防疫经验，提升州县应疫能力。"
+    },
+    "tech_math": {
+      "title": "算学书院设立",
+      "description": "设立算学教育与测算人才培养体系。"
+    },
+    "diplomacy_mongol": {
+      "title": "联夏制金",
+      "description": "联络西北势力牵制金廷，争取边局回旋。"
+    },
+    "diplomacy_korea": {
+      "title": "高丽通使",
+      "description": "稳住与高丽往来，避免其进一步倒向强敌。"
+    },
+    "diplomacy_macao": {
+      "title": "海商互市",
+      "description": "借南海海商网络引入资财、军需与航海知识。"
+    },
+    "diplomacy_japan": {
+      "title": "日本互市重启",
+      "description": "恢复对日海上贸易，拓展铜材与商路来源。"
+    },
+    "diplomacy_rome": {
+      "title": "远海诸蕃通问",
+      "description": "遣使联络南海与西洋诸蕃，争取更广外援与贸易。"
+    },
+    "diplomacy_southwest": {
+      "title": "西南溪峒安抚",
+      "description": "安抚西南溪峒与边郡，稳住后方秩序。"
+    },
+    "people_epidemic": {
+      "title": "州县疫局",
+      "description": "设立州县防疫与施药体系，应对疫病流行。"
+    },
+    "people_refugee": {
+      "title": "流民屯垦",
+      "description": "安置流民于屯垦区，恢复生产与编户。"
+    },
+    "people_charity_granary": {
+      "title": "义仓常平普及",
+      "description": "普设义仓与常平仓，强化基层赈济能力。"
+    },
+    "alt_nanyang_colony": {
+      "title": "南海经略计划",
+      "description": "以海贸与航路经营破局，开辟海外财源与战略纵深。"
+    }
   }
 }

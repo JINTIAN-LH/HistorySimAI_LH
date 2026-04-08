@@ -9,7 +9,7 @@
   "provinces": [
     { "name": "两浙", "status": "行在初定，粮价飞涨，流民不断南涌", "threat": "medium", "taxSilver": 8000, "taxGrain": 6000, "recruits": 8000, "morale": 40, "corruption": 70, "disaster": 60 },
     { "name": "江淮", "status": "兵火未息，溃兵与叛军时聚时散", "threat": "high", "taxSilver": 3000, "taxGrain": 2000, "recruits": 5000, "morale": 30, "corruption": 75, "disaster": 80 },
-    { "name": "山东", "status": "登州兵变隐患，孔有德部欠饷", "threat": "high", "taxSilver": 4000, "taxGrain": 2500, "recruits": 6000, "morale": 35, "corruption": 80, "disaster": 65 },
+    { "name": "山东", "status": "金军南压后秩序未复，州县流民与溃兵并起", "threat": "high", "taxSilver": 4000, "taxGrain": 2500, "recruits": 6000, "morale": 35, "corruption": 80, "disaster": 65 },
     { "name": "辽东", "status": "后金虎视眈眈，关宁防线承压", "threat": "critical", "taxSilver": 2000, "taxGrain": 1500, "recruits": 9000, "morale": 45, "corruption": 60, "disaster": 55 },
     { "name": "河南", "status": "灾荒蔓延，流民四散", "threat": "high", "taxSilver": 2500, "taxGrain": 2200, "recruits": 4000, "morale": 32, "corruption": 78, "disaster": 75 },
     { "name": "江南", "status": "赋税重镇，漕运受阻", "threat": "medium", "taxSilver": 12000, "taxGrain": 8000, "recruits": 7000, "morale": 55, "corruption": 65, "disaster": 50 },
@@ -19,6 +19,6 @@
   "externalThreats": [
     { "name": "金军", "leader": "完颜兀术", "status": "铁骑南压，随时可能再渡江而来", "level": "critical" },
     { "name": "地方叛军", "leader": "张用等", "status": "乘朝局未稳聚众作乱，窥伺州县", "level": "high" },
-    { "name": "登州叛军", "leader": "孔有德", "status": "欠饷十月，怨气冲天", "level": "high" }
+    { "name": "洞庭水寇", "leader": "杨么", "status": "啸聚湖湘水泽，劫掠漕运商旅，裹挟流民壮大", "level": "high" }
   ]
 }

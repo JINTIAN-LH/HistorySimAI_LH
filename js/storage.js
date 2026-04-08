@@ -2,6 +2,7 @@
 import { updateTopbarByState, updateMinisterTabBadge } from "./layout.js";
 import { getConfiguredWorldVersion } from "./worldVersion.js";
 import { mergePlayerRuntimeConfig, stripPlayerRuntimeConfig } from "./playerRuntimeConfig.js";
+import { getPersistentLocalItem, removePersistentLocalItem, setPersistentLocalItem } from "./persistentBrowserStorage.js";
 
 
 const STORAGE_KEY_PREFIX = "chongzhen_sim_save_v2"; // v2: 多槽位+结构升级
@@ -70,14 +71,14 @@ function readScopedSave(slotId, mode) {
   if (!canUseStorage()) return null;
   const safeSlotId = normalizeSlotId(slotId);
   const safeMode = normalizeMode(mode);
-  const raw = window.localStorage.getItem(getSaveKey(safeMode, safeSlotId));
+  const raw = getPersistentLocalItem(getSaveKey(safeMode, safeSlotId));
   return readSaveObject(raw, safeSlotId, safeMode);
 }
 
 function readLegacySave(slotId, mode = null) {
   if (!canUseStorage()) return null;
   const safeSlotId = normalizeSlotId(slotId);
-  const raw = window.localStorage.getItem(getLegacySaveKey(safeSlotId));
+  const raw = getPersistentLocalItem(getLegacySaveKey(safeSlotId));
   return readSaveObject(raw, safeSlotId, mode);
 }
 
@@ -86,8 +87,8 @@ function migrateLegacySave(slotId, mode, saveObj) {
   const safeSlotId = normalizeSlotId(slotId);
   const safeMode = normalizeMode(mode);
   const payload = JSON.stringify(saveObj);
-  window.localStorage.setItem(getSaveKey(safeMode, safeSlotId), payload);
-  window.localStorage.removeItem(getLegacySaveKey(safeSlotId));
+  setPersistentLocalItem(getSaveKey(safeMode, safeSlotId), payload);
+  removePersistentLocalItem(getLegacySaveKey(safeSlotId));
 }
 
 export function formatGameTimeFromState(state) {
@@ -109,12 +110,12 @@ export function formatSaveTimestamp(timestampSeconds) {
 
 export function setActiveSaveSlot(slotId, mode = getSavedGameplayMode()) {
   if (!canUseStorage()) return;
-  window.localStorage.setItem(getActiveSlotKey(mode), normalizeSlotId(slotId));
+  setPersistentLocalItem(getActiveSlotKey(mode), normalizeSlotId(slotId));
 }
 
 export function getActiveSaveSlot(mode = getSavedGameplayMode()) {
   if (!canUseStorage()) return "manual_01";
-  return normalizeSlotId(window.localStorage.getItem(getActiveSlotKey(mode)));
+  return normalizeSlotId(getPersistentLocalItem(getActiveSlotKey(mode)));
 }
 
 function getLatestManualSlotIdByMode(mode) {
@@ -138,13 +139,13 @@ export function resolveInitialLoadSlotId(mode = getSavedGameplayMode()) {
 export function setStorageMode(mode) {
   if (!canUseStorage()) return;
   const safeMode = normalizeMode(mode);
-  window.localStorage.setItem(STORAGE_MODE_KEY, safeMode);
+  setPersistentLocalItem(STORAGE_MODE_KEY, safeMode);
 }
 
 // Get the storage mode from localStorage
 export function getStorageMode() {
   if (!canUseStorage()) return DEFAULT_MODE;
-  const mode = window.localStorage.getItem(STORAGE_MODE_KEY);
+  const mode = getPersistentLocalItem(STORAGE_MODE_KEY);
   return typeof mode === "string" && mode ? mode : DEFAULT_MODE;
 }
 
@@ -191,8 +192,8 @@ export function saveGame(opts = {}) {
       ai_visible_data
     };
     const payload = JSON.stringify(saveObj);
-    window.localStorage.setItem(getSaveKey(mode, slotId), payload);
-    window.localStorage.removeItem(getLegacySaveKey(slotId));
+    setPersistentLocalItem(getSaveKey(mode, slotId), payload);
+    removePersistentLocalItem(getLegacySaveKey(slotId));
     setState({ slotId });
     setSavedGameplayMode(mode);
     setActiveSaveSlot(slotId, mode);
@@ -242,10 +243,10 @@ export function clearGame(opts = {}) {
   const slotId = normalizeSlotId(opts.slotId);
   const targetMode = normalizeMode(opts.mode || getSavedGameplayMode());
   if (!canUseStorage()) return;
-  window.localStorage.removeItem(getSaveKey(targetMode, slotId));
+  removePersistentLocalItem(getSaveKey(targetMode, slotId));
   const legacySave = readLegacySave(slotId, targetMode);
   if (legacySave) {
-    window.localStorage.removeItem(getLegacySaveKey(slotId));
+    removePersistentLocalItem(getLegacySaveKey(slotId));
   }
   if (getActiveSaveSlot(targetMode) === slotId) {
     setActiveSaveSlot("manual_01", targetMode);
@@ -264,9 +265,9 @@ export function autoSaveIfEnabled() {
 // 工具函数：获取下一个自动存档槽位
 function getNextAutoSlotId() {
   // 简单循环 auto_01 ~ auto_10
-  let idx = Number(localStorage.getItem("czsim_auto_idx") || 1);
+  let idx = Number(getPersistentLocalItem("czsim_auto_idx") || 1);
   idx = (idx % MAX_AUTO_SLOTS) + 1;
-  localStorage.setItem("czsim_auto_idx", idx);
+  setPersistentLocalItem("czsim_auto_idx", String(idx));
   return `auto_${String(idx).padStart(2, "0")}`;
 }
 

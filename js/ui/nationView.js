@@ -162,7 +162,7 @@ function appendClassicSections(root, state, container) {
     });
   }));
 
-  const policies = getPolicyCatalog();
+  const policies = getPolicyCatalog(state);
   const policyTitleMap = Object.fromEntries(policies.map((item) => [item.id, item.title]));
   root.appendChild(createFoldSection(`国策树（可用点数 ${state.policyPoints || 0}）`, (body) => {
     policies.forEach((policy) => {

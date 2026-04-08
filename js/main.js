@@ -10,6 +10,7 @@ import { buildStoryFactsFromState } from "./utils/storyFacts.js";
 import { createDefaultRigidState, DEFAULT_RIGID_INITIAL, DEFAULT_RIGID_TRIGGERS } from "./rigid/config.js";
 import { getConfiguredWorldVersion, isSaveCompatibleWithWorld } from "./worldVersion.js";
 import { mergePlayerRuntimeConfig } from "./playerRuntimeConfig.js";
+import { hydratePersistentLocalStorage } from "./persistentBrowserStorage.js";
 
 function normalizeCharacterId(rawId, aliasToCanonical) {
   if (typeof rawId !== "string") return "";
@@ -217,6 +218,7 @@ function shouldShowStartView() {
 
 export async function bootstrap() {
   const bootstrapConfig = await loadJSON("data/config.json").catch(() => ({}));
+  await hydratePersistentLocalStorage();
   initLayout();
   const preferredMode = getSavedGameplayMode();
 

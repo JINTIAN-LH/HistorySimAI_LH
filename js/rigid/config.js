@@ -39,7 +39,7 @@ export const DEFAULT_RIGID_TRIGGERS = {
 export const DEFAULT_DECISION_PRESETS = [
   {
     id: "rigid_rectify_military_pay",
-    text: "整饬辽饷，优先补发军饷",
+    text: "整饬江防军饷，优先补发军饷",
     hint: "稳军心但得罪文官与地方",
     type: "finance",
     reformLevel: "major",

@@ -479,6 +479,21 @@ describe("buildBattleEffectsPatch", () => {
     expect(patch.hostileDamage).toBeDefined();
     expect(patch.hostileDamage.wu_sangui).toBeGreaterThan(0);
   });
+
+  it("adds explicit battleOutcome metadata for downstream resolution", () => {
+    const patch = buildBattleEffectsPatch(
+      { outcome: "defeat", survivorRatio: 0.45, playerMoraleAvg: 38, targetId: "li_zicheng", targetName: "李自成" },
+      { effects: {} }
+    );
+
+    expect(patch.battleOutcome).toMatchObject({
+      type: "military",
+      outcome: "defeat",
+      targetId: "li_zicheng",
+      targetName: "李自成",
+    });
+    expect(patch.battleOutcome.hostilePowerDelta).toBeLessThan(0);
+  });
 });
 
 /* ──────────────────────────────────────────────
@@ -536,20 +551,18 @@ describe("循环验证 — 胜利削减敌对势力值", () => {
 });
 
 describe("循环验证 — 失败对势力值的影响", () => {
-  it("失败后 effectsPatch.borderThreat > 2 触发 isMilitaryFailureText，敌对势力反弹", () => {
+  it("失败后显式 battleOutcome 驱动敌对势力反扑", () => {
     const state = makeFullState(60);
     const choice = { effects: { hostileDamage: { li_zicheng: 10 } } };
     const effectsPatch = buildBattleEffectsPatch(
       { outcome: "defeat", survivorRatio: 0.5, playerMoraleAvg: 40, targetId: "li_zicheng" },
       choice
     );
-    // defeat 产生 borderThreat +5，resolveHostileForcesAfterChoice 中
-    // isMilitaryFailureText 检测到 borderThreat > 2 → 触发反弹路径
     expect(effectsPatch.borderThreat).toBeGreaterThan(2);
+    expect(effectsPatch.battleOutcome.outcome).toBe("defeat");
 
     const out = resolveHostileForcesAfterChoice(state, "出师征讨李自成", effectsPatch, 15, 3);
     expect(out).not.toBeNull();
-    // 反弹：damage=4，rebound=max(2,round(4*0.7))=3 → power = 60 + 3 = 63
     expect(out.statePatch.hostileForces[0].power).toBeGreaterThan(60);
   });
 
@@ -766,6 +779,21 @@ describe("扩展版本 — buildInitialSession 含天气字段", () => {
     expect(session.initialEnemyCount).toBeGreaterThan(0);
     const enemyTotal = session.enemyUnits.reduce((s, u) => s + u.count, 0);
     expect(session.initialEnemyCount).toBe(enemyTotal);
+  });
+
+  it("builds forces from real military comparison instead of fixed player advantage", () => {
+    const strongState = { ...makeBaseState(), nation: { borderThreat: 50, militaryStrength: 82 } };
+    const weakState = { ...makeBaseState(), nation: { borderThreat: 50, militaryStrength: 38 } };
+    const strongSession = buildInitialSession(strongState, { id: "jinjun", name: "金军", power: 45 }, { text: "出征征讨", effects: {} });
+    const weakSession = buildInitialSession(weakState, { id: "jinjun", name: "金军", power: 88 }, { text: "出征征讨", effects: {} });
+
+    const strongPlayer = strongSession.playerUnits.reduce((sum, unit) => sum + unit.count, 0);
+    const strongEnemy = strongSession.enemyUnits.reduce((sum, unit) => sum + unit.count, 0);
+    const weakPlayer = weakSession.playerUnits.reduce((sum, unit) => sum + unit.count, 0);
+    const weakEnemy = weakSession.enemyUnits.reduce((sum, unit) => sum + unit.count, 0);
+
+    expect(strongPlayer).toBeGreaterThan(strongEnemy);
+    expect(weakPlayer).toBeLessThan(weakEnemy);
   });
 });
 
