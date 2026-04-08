@@ -7,6 +7,6 @@ async function renderLegacyCourtView(container, useLegacyLayout) {
   await renderCourtInteractiveView(container, { useLegacyLayout });
 }
 
-export function CourtView({ useLegacyLayout = false }) {
+export function CourtView({ useLegacyLayout = true }) {
   return <LegacyViewMount id="court-legacy-root" renderView={(container) => renderLegacyCourtView(container, useLegacyLayout)} />;
 }

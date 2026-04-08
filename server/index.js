@@ -19,6 +19,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
 ];
 
 const DEFAULT_ALLOWED_ORIGIN_PATTERNS = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i,
   /^https:\/\/([a-z0-9-]+\.)?kurangames\.com$/i,
 ];
 
@@ -57,15 +58,26 @@ function extractHostname(input) {
 }
 
 function normalizeAllowedOrigins(value) {
+  const merged = new Set(DEFAULT_ALLOWED_ORIGINS);
+
   if (Array.isArray(value)) {
-    return value.map((item) => String(item || "").trim()).filter(Boolean);
+    value
+      .map((item) => String(item || "").trim())
+      .filter(Boolean)
+      .forEach((item) => merged.add(item));
+    return Array.from(merged);
   }
 
   if (typeof value === "string") {
-    return value.split(",").map((item) => item.trim()).filter(Boolean);
+    value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .forEach((item) => merged.add(item));
+    return Array.from(merged);
   }
 
-  return DEFAULT_ALLOWED_ORIGINS;
+  return Array.from(merged);
 }
 
 function isAllowedCorsOrigin(origin, allowedOrigins, allowedOriginPatterns) {

@@ -4,7 +4,7 @@ import { updateMinisterTabBadge, updateTopbarByState } from "../layout.js";
 import { loadJSON } from "../dataLoader.js";
 import { getLoyaltyTags, getLoyaltyStage, getLoyaltyColor, getFactionClass } from "../systems/courtSystem.js";
 import { requestMinisterReply } from "../api/ministerChat.js";
-import { getApiBase } from "../api/httpClient.js";
+import { getApiBase, shouldUseLlmProxy } from "../api/httpClient.js";
 import { AVAILABLE_AVATAR_NAMES, buildNameById } from "../utils/sharedConstants.js";
 import { showError, showSuccess } from "../utils/toast.js";
 import { applyEffects as applyEffectsModule } from "../utils/effectsProcessor.js";
@@ -45,6 +45,22 @@ const COURT_SWIPE_HINT_STORAGE_KEY = "courtSwipeHintSeenV1";
 
 function useLegacyLayoutForContainer(container) {
   return container?.dataset?.legacyLayout === "true";
+}
+
+function getCourtRenderContainer(preferredContainer = null) {
+  return document.getElementById("court-legacy-root")
+    || preferredContainer
+    || document.getElementById("main-view")
+    || document.getElementById("view-container");
+}
+
+function rerenderCourtLegacyView(preferredContainer = null) {
+  const container = getCourtRenderContainer(preferredContainer);
+  if (!container) return;
+  container.innerHTML = "";
+  renderCourtInteractiveView(container, {
+    useLegacyLayout: useLegacyLayoutForContainer(container) || container.id === "court-legacy-root",
+  });
 }
 
 export async function ensureCourtViewDataLoaded() {
@@ -691,44 +707,105 @@ function resolveApiUrl(pathname) {
   return `${apiBase}${pathname}`;
 }
 
-async function requestAppoint(positionId, characterId) {
-  const state = getState();
-  const response = await fetch(resolveApiUrl("/api/chongzhen/appoint"), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+function buildAppointRequestState(state) {
+  return {
+    appointments: state.appointments || {},
+    characterStatus: state.characterStatus || {},
+    extraCharacters: getAllCharactersFromState(state).map((item) => ({ ...item })),
+  };
+}
+
+async function buildLocalAppointmentFallback(positionId, characterId, state) {
+  const roster = getAllCharactersFromState(state);
+  const targetCharacter = roster.find((item) => item?.id === characterId);
+  if (!targetCharacter) {
+    throw new Error("character not found");
+  }
+  if (!getAliveStatus(state, characterId)) {
+    throw new Error("该角色已故，无法任命");
+  }
+
+  if (!positionsCache) {
+    try {
+      positionsCache = await loadJSON("data/positions.json");
+    } catch (_error) {
+      positionsCache = { positions: [], departments: [], modules: [] };
+    }
+  }
+
+  const positions = positionsCache?.positions || [];
+  const targetPosition = positions.find((item) => item?.id === positionId);
+  if (!targetPosition) {
+    throw new Error("position not found");
+  }
+
+  const appointments = { ...(state.appointments || {}) };
+  const oldHolder = appointments[positionId];
+  let oldPosition;
+
+  for (const [posId, holderId] of Object.entries(appointments)) {
+    if (holderId === characterId && posId !== positionId) {
+      oldPosition = posId;
+      delete appointments[posId];
+    }
+  }
+
+  appointments[positionId] = characterId;
+
+  return {
+    success: true,
+    appointment: {
       positionId,
       characterId,
-      state: {
-        appointments: state.appointments || {},
-        characterStatus: state.characterStatus || {},
-        extraCharacters: [
-          ...((state.keju?.generatedCandidates || []).map((item) => ({ ...item }))),
-          ...((state.wuju?.generatedCandidates || []).map((item) => ({ ...item }))),
-        ],
-      },
-    }),
-  });
+      positionName: targetPosition.name || positionId,
+      characterName: targetCharacter.name || characterId,
+      oldHolder,
+      oldPosition,
+    },
+    appointments,
+    localFallback: true,
+  };
+}
 
-  const text = await response.text();
-  let data = null;
+async function requestAppoint(positionId, characterId) {
+  const state = getState();
+  const requestState = buildAppointRequestState(state);
+  const localFallbackResult = await buildLocalAppointmentFallback(positionId, characterId, state);
+
   try {
-    data = text ? JSON.parse(text) : null;
-  } catch (_e) {
-    data = null;
-  }
+    const response = await fetch(resolveApiUrl("/api/chongzhen/appoint"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        positionId,
+        characterId,
+        state: requestState,
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error(data?.error || text || `HTTP ${response.status}`);
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch (_error) {
+      data = null;
+    }
+
+    if (!response.ok) {
+      const serverError = data?.error || text || `HTTP ${response.status}`;
+      console.warn("requestAppoint falling back to local apply", serverError);
+      return localFallbackResult;
+    }
+
+    return data || localFallbackResult;
+  } catch (error) {
+    console.warn("requestAppoint fetch failed, applying local fallback", error);
+    return localFallbackResult;
   }
-  return data || { success: true };
 }
 
 function rerenderCourtMainView() {
-  const container = document.getElementById("court-legacy-root") || document.getElementById("main-view") || document.getElementById("view-container");
-  if (!container) return;
-  container.innerHTML = "";
-  renderCourtInteractiveView(container, { useLegacyLayout: useLegacyLayoutForContainer(container) });
+  rerenderCourtLegacyView();
 }
 
 function closeInlineAppointPanel() {
@@ -958,11 +1035,7 @@ async function showAppointmentDialogByPosition(positionId) {
         ...promoteGeneratedCandidate(s, selectedCharacter.id),
       });
       overlay.remove();
-      const container = document.getElementById("main-view") || document.getElementById("view-container");
-      if (container) {
-        container.innerHTML = "";
-        renderCourtInteractiveView(container, { useLegacyLayout: useLegacyLayoutForContainer(container) });
-      }
+      rerenderCourtLegacyView();
     } catch (e) {
       showError(`任命失败: ${e.message}`);
     } finally {
@@ -1137,11 +1210,7 @@ async function showAppointmentDialogByMinister(ministerId) {
 
       setState(patch);
       overlay.remove();
-      const container = document.getElementById("main-view") || document.getElementById("view-container");
-      if (container) {
-        container.innerHTML = "";
-        renderCourtInteractiveView(container, { useLegacyLayout: useLegacyLayoutForContainer(container) });
-      }
+      rerenderCourtLegacyView();
     } catch (e) {
       showError(`调整失败: ${e.message}`);
     } finally {
@@ -1476,11 +1545,7 @@ async function showPositionSelectDialog(minister, state) {
         ...promoteGeneratedCandidate(s, minister.id),
       });
       overlay.remove();
-      const container = document.getElementById("main-view") || document.getElementById("view-container");
-      if (container) {
-        container.innerHTML = "";
-        renderCourtInteractiveView(container, { useLegacyLayout: useLegacyLayoutForContainer(container) });
-      }
+      rerenderCourtLegacyView();
     } catch (e) {
       showError(`调整失败: ${e.message}`);
     } finally {
@@ -2316,7 +2381,7 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
     rerenderThread();
 
     const config = getState().config || {};
-    const useLLM = config.storyMode === "llm" && (config.apiBase || "").trim().length > 0;
+    const useLLM = shouldUseLlmProxy(config, "courtViewMinisterChat");
 
     sendingFlags[ministerId] = true;
     sendBtn.disabled = true;

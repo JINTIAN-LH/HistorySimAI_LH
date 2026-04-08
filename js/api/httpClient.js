@@ -1,3 +1,7 @@
+function isLoopbackHost(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1";
+}
+
 function getBrowserFallbackApiBase() {
   if (typeof window === "undefined" || !window.location) {
     return "";
@@ -5,18 +9,44 @@ function getBrowserFallbackApiBase() {
 
   const { origin, protocol, hostname, port } = window.location;
   const safeOrigin = String(origin || "").replace(/\/$/, "");
-  const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
+  const isLocalHost = isLoopbackHost(hostname);
 
   if (isLocalHost && port !== "3002") {
-    return `${protocol}//${hostname}:3002`;
+    return safeOrigin;
   }
 
   return safeOrigin;
 }
 
+function shouldUseBrowserProxyForConfiguredBase(configuredApiBase) {
+  if (typeof window === "undefined" || !window.location || !configuredApiBase) {
+    return false;
+  }
+
+  if (!isLoopbackHost(window.location.hostname)) {
+    return false;
+  }
+
+  try {
+    const targetUrl = new URL(configuredApiBase);
+    if (isLoopbackHost(targetUrl.hostname)) {
+      return false;
+    }
+    return /(^|\.)onrender\.com$/i.test(targetUrl.hostname);
+  } catch (_error) {
+    return false;
+  }
+}
+
 export function getApiBase(config, logTag) {
   const configuredApiBase = (config?.apiBase || "").replace(/\/$/, "");
   if (configuredApiBase) {
+    if (shouldUseBrowserProxyForConfiguredBase(configuredApiBase)) {
+      const fallbackApiBase = getBrowserFallbackApiBase();
+      if (fallbackApiBase) {
+        return fallbackApiBase;
+      }
+    }
     return configuredApiBase;
   }
 
@@ -27,6 +57,10 @@ export function getApiBase(config, logTag) {
 
   console.error(`${logTag} apiBase not configured`);
   return "";
+}
+
+export function shouldUseLlmProxy(config, logTag) {
+  return (config?.storyMode || "template") === "llm" && !!getApiBase(config, logTag);
 }
 
 export function buildLlmProxyHeaders(config) {

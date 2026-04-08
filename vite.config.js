@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 const resolvePath = (relativePath) => fileURLToPath(new URL(relativePath, import.meta.url));
+const devApiProxyTarget = process.env.DEV_API_PROXY_TARGET || 'https://historysimai-lh.onrender.com';
 
 export default defineConfig({
   base: './',
@@ -27,8 +28,9 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:3002',
-        changeOrigin: true
+        target: devApiProxyTarget,
+        changeOrigin: true,
+        secure: true
       }
     }
   },

@@ -179,6 +179,23 @@ describe('API Endpoints', () => {
       expect(res.status).toBe(204);
       expect(res.headers['access-control-allow-origin']).toBe('https://api.kurangames.com');
     });
+
+    it('should still allow localhost preflight when ALLOWED_ORIGINS is customized', async () => {
+      const { app } = createApp({
+        config: {},
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+        allowedOrigins: ['https://historysimai-lh.onrender.com'],
+      });
+
+      const res = await request(app)
+        .options('/api/chongzhen/story')
+        .set('Origin', 'http://localhost:8080')
+        .set('Access-Control-Request-Method', 'POST');
+
+      expect(res.status).toBe(204);
+      expect(res.headers['access-control-allow-origin']).toBe('http://localhost:8080');
+    });
   });
 
   describe('POST /api/chongzhen/story', () => {

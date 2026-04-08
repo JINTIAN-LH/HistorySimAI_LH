@@ -1,6 +1,7 @@
 import { loadJSON } from "../dataLoader.js";
 import { getState, setState } from "../state.js";
 import { updateMinisterTabBadge } from "../layout.js";
+import { shouldUseLlmProxy } from "../api/httpClient.js";
 import { requestStoryTurn } from "../api/llmStory.js";
 import { sanitizeStoryEffects } from "../api/validators.js";
 import { startDanmuForEdict, stopDanmu } from "./danmuSystem.js";
@@ -1317,7 +1318,7 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
     return storyCache.data;
   }
 
-  const useLLM = !isFirstTurn && config.storyMode === "llm" && (config.apiBase || "").trim().length > 0;
+  const useLLM = !isFirstTurn && shouldUseLlmProxy(config, "loadStoryData");
   let data = null;
 
   if (useLLM) {

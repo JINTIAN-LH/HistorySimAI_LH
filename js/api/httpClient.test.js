@@ -1,4 +1,4 @@
-import { buildLlmProxyHeaders, getApiBase } from "./httpClient.js";
+import { buildLlmProxyHeaders, getApiBase, shouldUseLlmProxy } from "./httpClient.js";
 
 describe("getApiBase", () => {
   afterEach(() => {
@@ -19,7 +19,20 @@ describe("getApiBase", () => {
       },
     });
 
-    expect(getApiBase({}, "test")).toBe("http://localhost:3002");
+    expect(getApiBase({}, "test")).toBe("http://localhost:8080");
+  });
+
+  it("uses the local browser origin as proxy when localhost config points to a remote api", () => {
+    vi.stubGlobal("window", {
+      location: {
+        origin: "http://localhost:8080",
+        protocol: "http:",
+        hostname: "localhost",
+        port: "8080",
+      },
+    });
+
+    expect(getApiBase({ apiBase: "https://historysimai-lh.onrender.com/" }, "test")).toBe("http://localhost:8080");
   });
 
   it("falls back to the current origin for non-local browser hosts", () => {
@@ -33,6 +46,32 @@ describe("getApiBase", () => {
     });
 
     expect(getApiBase({}, "test")).toBe("https://example.com");
+  });
+
+  it("treats browser origin fallback as a valid llm proxy base", () => {
+    vi.stubGlobal("window", {
+      location: {
+        origin: "https://example.com",
+        protocol: "https:",
+        hostname: "example.com",
+        port: "",
+      },
+    });
+
+    expect(shouldUseLlmProxy({ storyMode: "llm" }, "test")).toBe(true);
+  });
+
+  it("does not enable llm proxy outside llm story mode", () => {
+    vi.stubGlobal("window", {
+      location: {
+        origin: "https://example.com",
+        protocol: "https:",
+        hostname: "example.com",
+        port: "",
+      },
+    });
+
+    expect(shouldUseLlmProxy({ storyMode: "template" }, "test")).toBe(false);
   });
 
   it("builds request-scoped llm proxy headers from player runtime config", () => {
