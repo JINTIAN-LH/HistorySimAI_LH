@@ -2,7 +2,7 @@
 
 ## 2026-04-13: perf: split react views and trim initial build chunks
 
-**Commit Hash**: (pending)
+**Commit Hash**: `1b25a2b`
 
 ### 改动摘要
 
