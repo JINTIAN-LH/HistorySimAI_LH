@@ -259,13 +259,47 @@ function scrollEdictToLatest(target) {
   });
 }
 
+function normalizePolicyText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function consumePendingPolicyEdictChoiceText(state, choiceText) {
+  const baseChoiceText = normalizePolicyText(choiceText);
+  const pendingPolicyEdict = normalizePolicyText(state?.policyDiscussion?.pendingIssuedEdict?.content);
+  if (!pendingPolicyEdict) {
+    return {
+      choiceText: baseChoiceText,
+      consumed: false,
+    };
+  }
+
+  return {
+    choiceText: baseChoiceText ? `${baseChoiceText}\n【问政】${pendingPolicyEdict}` : `【问政】${pendingPolicyEdict}`,
+    consumed: true,
+  };
+}
+
+function clearPendingPolicyEdictState() {
+  const policyDiscussion = getState().policyDiscussion || {};
+  if (!policyDiscussion.pendingIssuedEdict) return;
+  setState({
+    policyDiscussion: {
+      ...policyDiscussion,
+      pendingIssuedEdict: null,
+    },
+  });
+}
+
 async function handleChoice(choiceId, choiceText, choiceHint, effects) {
+  const preparedChoice = consumePendingPolicyEdictChoiceText(getState(), choiceText);
+  const effectiveChoiceText = preparedChoice.choiceText;
+
   if (isRigidMode(getState())) {
     const beforeRigidState = getState();
     const historyKey = `${beforeRigidState.currentYear || 1}_${beforeRigidState.currentMonth || 1}_${beforeRigidState.currentPhase || "morning"}`;
 
     if (choiceId === "custom_edict") {
-      const newlyFound = extractCustomPoliciesFromEdict(choiceText || "", beforeRigidState.currentYear, beforeRigidState.currentMonth);
+      const newlyFound = extractCustomPoliciesFromEdict(effectiveChoiceText || "", beforeRigidState.currentYear, beforeRigidState.currentMonth);
       if (newlyFound.length) {
         const mergedPolicies = mergeCustomPolicies(beforeRigidState.customPolicies, newlyFound);
         const fresh = mergedPolicies.filter((item) => !(beforeRigidState.customPolicies || []).some((old) => old.id === item.id));
@@ -284,7 +318,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
 
     const positionsMeta = await getPositionsMeta();
     const roster = getAllCharacters(beforeRigidState);
-    const derivedAppointmentEffects = deriveAppointmentEffectsFromText(choiceText || "", {
+    const derivedAppointmentEffects = deriveAppointmentEffectsFromText(effectiveChoiceText || "", {
       positions: positionsMeta?.positions || [],
       ministers: roster,
       currentAppointments: beforeRigidState.appointments || {},
@@ -305,7 +339,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
       rigidAppliedEffects = base;
     }
 
-    const estimatedRigidEffects = estimateEffectsFromEdict(`${choiceText || ""}\n${choiceHint || ""}`);
+    const estimatedRigidEffects = estimateEffectsFromEdict(`${effectiveChoiceText || ""}\n${choiceHint || ""}`);
     rigidAppliedEffects = mergeMissingEstimatedEffects(rigidAppliedEffects, estimatedRigidEffects);
 
     const normalizedRigidEffects = rigidAppliedEffects
@@ -316,7 +350,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
       : rigidAppliedEffects;
     const guardedRigidEffects = normalizedRigidEffects ? sanitizeStoryEffects(normalizedRigidEffects) : normalizedRigidEffects;
 
-    const rigidResult = runRigidTurn(getState(), { choiceId, choiceText, choiceHint, effects: guardedRigidEffects || effects });
+    const rigidResult = runRigidTurn(getState(), { choiceId, choiceText: effectiveChoiceText, choiceHint, effects: guardedRigidEffects || effects });
     const systemNewsPatch = rigidResult.rejected
       ? {
         systemNewsToday: [
@@ -333,17 +367,18 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     setState({
       ...rigidResult.statePatch,
       lastChoiceId: choiceId,
-      lastChoiceText: choiceText || "",
+      lastChoiceText: effectiveChoiceText || "",
       lastChoiceHint: choiceHint || null,
       currentStoryTurn: null,
       ...systemNewsPatch,
     });
+    if (preparedChoice.consumed && !rigidResult.rejected) clearPendingPolicyEdictState();
     if (guardedRigidEffects) applyEffects(guardedRigidEffects);
 
     const beforeHostiles = Array.isArray(getState().hostileForces) ? getState().hostileForces.map((item) => ({ ...item })) : [];
     const rigidHostileTurn = resolveHostileForcesAfterChoice(
       getState(),
-      choiceText || "",
+      effectiveChoiceText || "",
       guardedRigidEffects || {},
       getState().currentYear,
       getState().currentMonth
@@ -378,7 +413,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     const afterRigidState = getState();
     const rigidDisplayDelta = computeRigidSettlementDelta(beforeRigidState, afterRigidState);
 
-    pushCurrentTurnToHistory(beforeRigidState, { text: choiceText || "", hint: choiceHint ?? undefined }, rigidDisplayDelta);
+    pushCurrentTurnToHistory(beforeRigidState, { text: effectiveChoiceText || "", hint: choiceHint ?? undefined }, rigidDisplayDelta);
 
     const historyAfterTurn = Array.isArray(getState().storyHistory) ? [...getState().storyHistory] : [];
     const targetIndex = historyAfterTurn.findIndex((entry) => entry?.key === historyKey);
@@ -416,7 +451,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
   const positionsMeta = await getPositionsMeta();
 
   if (choiceId === "custom_edict") {
-    const newlyFound = extractCustomPoliciesFromEdict(choiceText || "", state.currentYear, state.currentMonth);
+    const newlyFound = extractCustomPoliciesFromEdict(effectiveChoiceText || "", state.currentYear, state.currentMonth);
     if (newlyFound.length) {
       const mergedPolicies = mergeCustomPolicies(state.customPolicies, newlyFound);
       const fresh = mergedPolicies.filter((item) => !(state.customPolicies || []).some((old) => old.id === item.id));
@@ -436,12 +471,12 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
   let appliedEffects = effects;
   const isLLMStoryMode = (state.config?.storyMode || "template") === "llm";
   if (choiceId === "custom_edict" && !effects && !isLLMStoryMode) {
-    const estimated = estimateEffectsFromEdict(choiceText || "");
+    const estimated = estimateEffectsFromEdict(effectiveChoiceText || "");
     if (estimated) appliedEffects = estimated;
   }
 
   const roster = getAllCharacters(state);
-  const derivedAppointmentEffects = deriveAppointmentEffectsFromText(choiceText || "", {
+  const derivedAppointmentEffects = deriveAppointmentEffectsFromText(effectiveChoiceText || "", {
     positions: positionsMeta?.positions || [],
     ministers: roster,
     currentAppointments: state.appointments || {},
@@ -462,7 +497,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     appliedEffects = base;
   }
 
-  const estimatedClassicEffects = estimateEffectsFromEdict(`${choiceText || ""}\n${choiceHint || ""}`);
+  const estimatedClassicEffects = estimateEffectsFromEdict(`${effectiveChoiceText || ""}\n${choiceHint || ""}`);
   appliedEffects = mergeMissingEstimatedEffects(appliedEffects, estimatedClassicEffects);
 
   const normalizedAppointmentEffects = appliedEffects
@@ -473,20 +508,21 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     : appliedEffects;
 
   const progressedEffects = normalizedAppointmentEffects
-    ? applyProgressionToChoiceEffects(normalizedAppointmentEffects, state, choiceText || "")
+    ? applyProgressionToChoiceEffects(normalizedAppointmentEffects, state, effectiveChoiceText || "")
     : normalizedAppointmentEffects;
   const effectiveEffects = progressedEffects ? scaleEffectsByExecution(progressedEffects, state) : progressedEffects;
   const guardedEffects = effectiveEffects ? sanitizeStoryEffects(effectiveEffects) : effectiveEffects;
   if (guardedEffects) applyEffects(guardedEffects);
 
-  pushCurrentTurnToHistory(state, { text: choiceText || "", hint: choiceHint ?? undefined }, guardedEffects);
+  pushCurrentTurnToHistory(state, { text: effectiveChoiceText || "", hint: choiceHint ?? undefined }, guardedEffects);
 
   setState({
     lastChoiceId: choiceId,
-    lastChoiceText: choiceText || "",
+    lastChoiceText: effectiveChoiceText || "",
     lastChoiceHint: choiceHint || null,
     currentStoryTurn: null,
   });
+  if (preparedChoice.consumed) clearPendingPolicyEdictState();
 
   let nextMonth = (state.currentMonth || 1) + 1;
   let nextYear = state.currentYear || 1;
@@ -502,11 +538,11 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     currentPhase: "morning",
   });
 
-  const coreTurn = processCoreGameplayTurn(getState(), choiceText || "", guardedEffects, nextYear, nextMonth);
+  const coreTurn = processCoreGameplayTurn(getState(), effectiveChoiceText || "", guardedEffects, nextYear, nextMonth);
   setState(coreTurn.statePatch);
   if (coreTurn.consequenceEffects) applyEffects(coreTurn.consequenceEffects);
 
-  const hostileTurn = resolveHostileForcesAfterChoice(getState(), choiceText || "", guardedEffects || {}, nextYear, nextMonth);
+  const hostileTurn = resolveHostileForcesAfterChoice(getState(), effectiveChoiceText || "", guardedEffects || {}, nextYear, nextMonth);
   if (hostileTurn) {
     setState(hostileTurn.statePatch);
     if (hostileTurn.effectsPatch) applyEffects(hostileTurn.effectsPatch);

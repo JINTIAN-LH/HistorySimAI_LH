@@ -1,5 +1,6 @@
 import { isWarriorCharacter } from "../utils/characterArchetype.js";
 import { getAbsoluteYearForEraYear } from "../utils/eraYear.js";
+import { getCandidateCharactersFromState, normalizeCandidateCharacter } from "../utils/characterRegistry.js";
 
 export const KEJU_STAGE_LABELS = {
   idle: "未开科",
@@ -90,7 +91,7 @@ export function mergeKejuState(state, partial) {
 
 function getKejuSourceCharacters(characters, state) {
   const snapshot = getKejuStateSnapshot(state);
-  return [...(Array.isArray(characters) ? characters : []), ...snapshot.generatedCandidates];
+  return [...(Array.isArray(characters) ? characters : []), ...getCandidateCharactersFromState(state), ...snapshot.generatedCandidates];
 }
 
 export function buildKejuCandidatePool(characters, state, options = {}) {
@@ -148,7 +149,8 @@ export function generateRandomKejuCandidates(state, options = {}) {
     const birthYear = clamp(absoluteYear - 22 - Math.floor(random() * 14), absoluteYear - 90, absoluteYear - 18);
     const deathYear = clamp(birthYear + 45 + Math.floor(random() * 20), birthYear + 35, absoluteYear + 70);
     return {
-      id: `keju_generated_${currentYear}_${currentMonth}_${idx + 1}`,
+      ...normalizeCandidateCharacter({
+        id: `keju_generated_${currentYear}_${currentMonth}_${idx + 1}`,
       name,
       courtesyName,
       birthYear,
@@ -165,7 +167,8 @@ export function generateRandomKejuCandidates(state, options = {}) {
       summary: `${name}，字${courtesyName}，少有文名，因本届科举脱颖而出，正待朝廷擢用。`,
       attitude: "重视名节与治绩，希望借由科举入朝建功立业。",
       openingLine: "臣新登科第，愿尽愚忠，以报朝廷知遇。",
-    };
+        source: "imperial_exam",
+      }, { source: "imperial_exam", factionLabel: factionInfo.label }) };
   });
 }
 
@@ -349,7 +352,8 @@ export function generateRandomWujuCandidates(state, options = {}) {
     const birthYear = clamp(absoluteYear - 20 - Math.floor(random() * 12), absoluteYear - 90, absoluteYear - 18);
     const deathYear = clamp(birthYear + 44 + Math.floor(random() * 20), birthYear + 35, absoluteYear + 70);
     return {
-      id: `wuju_generated_${currentYear}_${currentMonth}_${idx + 1}`,
+      ...normalizeCandidateCharacter({
+        id: `wuju_generated_${currentYear}_${currentMonth}_${idx + 1}`,
       name,
       courtesyName,
       birthYear,
@@ -367,7 +371,8 @@ export function generateRandomWujuCandidates(state, options = {}) {
       summary: `${name}，字${courtesyName}，少习骑射，勇于临阵，因武举应试获荐。`,
       attitude: "主张强军练兵，重赏军功，先安边后治内。",
       openingLine: "陛下，边患未已，愿以武职效命疆场。",
-    };
+        source: "military_exam",
+      }, { source: "military_exam", factionLabel: factionInfo.label }) };
   });
 }
 

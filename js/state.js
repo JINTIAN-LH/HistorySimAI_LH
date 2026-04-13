@@ -1,5 +1,6 @@
 import { createDefaultRigidState, DEFAULT_RIGID_INITIAL } from "./rigid/config.js";
 import { DEFAULT_WORLD_VERSION } from "./worldVersion.js";
+import { getCandidateCharactersFromState, getKnownCharactersFromState } from "./utils/characterRegistry.js";
 
 const initialState = {
   schemaVersion: 2,
@@ -27,6 +28,7 @@ const initialState = {
   },
 
   allCharacters: [],
+  candidateCharacters: [],
   ministers: [],
   factions: [],
   loyalty: {},
@@ -110,6 +112,19 @@ const initialState = {
   goals: [],
   trackedGoalId: null,
 
+  talent: {
+    pool: [],
+    interactionHistory: {},
+    recruiting: false,
+  },
+
+  policyDiscussion: {
+    activeSession: null,
+    sessionHistory: [],
+    asking: false,
+    pendingIssuedEdict: null,
+  },
+
   gameStarted: false,
   mode: "classic",
   rigid: createDefaultRigidState(DEFAULT_RIGID_INITIAL),
@@ -132,15 +147,42 @@ function notifyStateListeners() {
   });
 }
 
-function deriveCourtMinistersFromState(nextState) {
-  const allCharacters = Array.isArray(nextState.allCharacters) && nextState.allCharacters.length
-    ? nextState.allCharacters
-    : Array.isArray(nextState.ministers)
-      ? nextState.ministers
-      : [];
-  const appointments = nextState.appointments && typeof nextState.appointments === "object"
+function syncCandidateCharacters(nextState) {
+  return getCandidateCharactersFromState(nextState);
+}
+
+function sanitizeAppointments(nextState) {
+  const source = nextState?.appointments && typeof nextState.appointments === "object"
     ? nextState.appointments
     : {};
+  const aliveStatus = nextState?.characterStatus && typeof nextState.characterStatus === "object"
+    ? nextState.characterStatus
+    : {};
+  const validIds = new Set(
+    getKnownCharactersFromState(nextState)
+      .map((character) => character?.id)
+      .filter((id) => typeof id === "string" && id)
+  );
+
+  if (!validIds.size) {
+    return { ...source };
+  }
+
+  const sanitized = {};
+  Object.entries(source).forEach(([positionId, holderId]) => {
+    if (typeof positionId !== "string" || typeof holderId !== "string") return;
+    if (!positionId || !holderId) return;
+    if (!validIds.has(holderId)) return;
+    if (aliveStatus[holderId]?.isAlive === false) return;
+    sanitized[positionId] = holderId;
+  });
+
+  return sanitized;
+}
+
+function deriveCourtMinistersFromState(nextState) {
+  const allCharacters = getKnownCharactersFromState(nextState);
+  const appointments = sanitizeAppointments(nextState);
   const characterStatus = nextState.characterStatus && typeof nextState.characterStatus === "object"
     ? nextState.characterStatus
     : {};
@@ -159,9 +201,15 @@ export function setState(partial) {
   const nextState = { ...state, ...partial };
   if (
     Object.prototype.hasOwnProperty.call(partial, "allCharacters") ||
+    Object.prototype.hasOwnProperty.call(partial, "candidateCharacters") ||
     Object.prototype.hasOwnProperty.call(partial, "appointments") ||
-    Object.prototype.hasOwnProperty.call(partial, "characterStatus")
+    Object.prototype.hasOwnProperty.call(partial, "characterStatus") ||
+    Object.prototype.hasOwnProperty.call(partial, "talent") ||
+    Object.prototype.hasOwnProperty.call(partial, "keju") ||
+    Object.prototype.hasOwnProperty.call(partial, "wuju")
   ) {
+    nextState.candidateCharacters = syncCandidateCharacters(nextState);
+    nextState.appointments = sanitizeAppointments(nextState);
     nextState.ministers = deriveCourtMinistersFromState(nextState);
   }
   state = nextState;
@@ -211,9 +259,7 @@ export function subscribeStateSelector(selector, listener, isEqual = Object.is) 
 }
 
 export function getRosterCharacters() {
-  return Array.isArray(state.allCharacters) && state.allCharacters.length
-    ? state.allCharacters
-    : state.ministers;
+  return getKnownCharactersFromState(state);
 }
 
 export function initializeAppointments(positions, characters) {

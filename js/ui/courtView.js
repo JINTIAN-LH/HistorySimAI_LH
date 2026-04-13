@@ -12,7 +12,10 @@ import { mergeDerivedAppointmentStateEffects, normalizeAppointmentEffects } from
 import { buildOutcomeDisplayDelta, captureDisplayStateSnapshot, hasOutcomeDisplayDelta, renderOutcomeDisplayCard } from "../utils/displayStateMetrics.js";
 import { KEJU_STAGE_LABELS, WUJU_STAGE_LABELS, advanceKejuSession, advanceWujuSession, appendTalentReserve, appendWujuTalentReserve, applyKejuAppointLoyaltyBonus, getKejuStateSnapshot, getSeasonLabelByMonth, getWujuStateSnapshot, mergeKejuState, mergeWujuState } from "../systems/kejuSystem.js";
 import { deriveCharacterArchetypes } from "../utils/characterArchetype.js";
+import { getAppointedCharactersFromState, getKnownCharactersFromState } from "../utils/characterRegistry.js";
 import { createActionButton, createElement, createFeedCard, createGameplayPageTemplate, createOverlayPanel, createSectionCard, createStatCard, createTag } from "./viewPrimitives.js";
+import { renderTalentView, ensureTalentViewDataLoaded } from "./talentView.js";
+import { renderPolicyView } from "./policyView.js";
 
 let currentMinisterChatId = null;
 let tagsConfigCache = null;
@@ -102,19 +105,11 @@ function patchWujuState(partial) {
 }
 
 function getAllCharactersFromState(state) {
-  const base = Array.isArray(state?.allCharacters) && state.allCharacters.length
-    ? state.allCharacters
-    : Array.isArray(state?.ministers)
-      ? state.ministers
-      : [];
-  const generatedKeju = Array.isArray(state?.keju?.generatedCandidates) ? state.keju.generatedCandidates : [];
-  const generatedWuju = Array.isArray(state?.wuju?.generatedCandidates) ? state.wuju.generatedCandidates : [];
-  const merged = new Map();
-  [...base, ...generatedKeju, ...generatedWuju].forEach((character) => {
-    if (!character?.id) return;
-    merged.set(character.id, character);
-  });
-  return Array.from(merged.values());
+  return getKnownCharactersFromState(state);
+}
+
+function getCourtMinistersFromState(state) {
+  return getAppointedCharactersFromState(state);
 }
 
 function getActiveAppointmentHolderCount(state) {
@@ -690,6 +685,52 @@ export async function showWujuPanel() {
 
   footer.appendChild(createOverlayFooterButton("关闭", close));
   app.appendChild(overlay);
+}
+
+export async function showTalentPanel() {
+  const app = document.getElementById("app");
+  if (!app) return;
+
+  const existing = document.getElementById("talent-panel-overlay");
+  if (existing) existing.remove();
+
+  await ensureTalentViewDataLoaded();
+
+  const panel = createDismissibleOverlayPanel({
+    overlayId: "talent-panel-overlay",
+    title: "人才储备",
+    subtitle: "延揽招募与职位任用，同科举武举共用弹窗结构。",
+    panelClassName: "keju-panel-card",
+    bodyClassName: "keju-panel-body",
+  });
+  const { overlay, body, footer, close } = panel;
+
+  footer.appendChild(createOverlayFooterButton("关闭", close));
+  app.appendChild(overlay);
+
+  renderTalentView(body, { inPanel: true });
+}
+
+export async function showPolicyPanel() {
+  const app = document.getElementById("app");
+  if (!app) return;
+
+  const existing = document.getElementById("policy-panel-overlay");
+  if (existing) existing.remove();
+
+  const panel = createDismissibleOverlayPanel({
+    overlayId: "policy-panel-overlay",
+    title: "问政廷议",
+    subtitle: "廷议群臣、建言采纳与诏令起草，统一弹窗骨架。",
+    panelClassName: "keju-panel-card",
+    bodyClassName: "keju-panel-body",
+  });
+  const { overlay, body, footer, close } = panel;
+
+  footer.appendChild(createOverlayFooterButton("关闭", close));
+  app.appendChild(overlay);
+
+  renderPolicyView(body, { inPanel: true });
 }
 
 function isAliveCharacter(state, characterId) {
@@ -1477,7 +1518,7 @@ async function showPositionSelectDialog(minister, state) {
 
   const positions = positionsCache?.positions || [];
   const appointments = state.appointments || {};
-  const ministers = state.ministers || [];
+  const ministers = getCourtMinistersFromState(state);
   const characterMap = new Map(ministers.map((character) => [character.id, character]));
   
   const existing = document.getElementById("position-select-overlay");
@@ -1618,7 +1659,7 @@ export function showFactionPanel(state) {
   body.style.gap = "8px";
 
   const factions = factionsCache?.factions || [];
-  const ministers = state.ministers || [];
+  const ministers = getCourtMinistersFromState(state);
   const loyalty = state.loyalty || {};
   const roleMap = buildMinisterRoleMap(state);
 
@@ -1648,7 +1689,8 @@ export function showFactionPanel(state) {
 }
 
 function createMinisterListElement(state, tagsConfig, onSelectMinister) {
-  const { ministers, loyalty } = state;
+  const ministers = getCourtMinistersFromState(state);
+  const loyalty = state.loyalty || {};
   const roleMap = buildMinisterRoleMap(state);
   const list = document.createElement("div");
   list.className = "minister-list";
@@ -1784,7 +1826,7 @@ export function showMinisterPanel(state, tagsConfig) {
 }
 
 function renderMinisterList(container, state, tagsConfig) {
-  const { ministers } = state;
+  const ministers = getCourtMinistersFromState(state);
 
   const panel = createSectionCard({
     className: "court-minister-card",
@@ -1823,10 +1865,28 @@ function renderMinisterList(container, state, tagsConfig) {
     showWujuPanel();
   });
 
+  const talentBtn = document.createElement("button");
+  talentBtn.type = "button";
+  talentBtn.className = "court-relations-btn";
+  talentBtn.textContent = "人才";
+  talentBtn.addEventListener("click", () => {
+    showTalentPanel();
+  });
+
+  const policyBtn = document.createElement("button");
+  policyBtn.type = "button";
+  policyBtn.className = "court-relations-btn";
+  policyBtn.textContent = "问政";
+  policyBtn.addEventListener("click", () => {
+    showPolicyPanel();
+  });
+
   actions.appendChild(ministerBtn);
   actions.appendChild(relBtn);
   actions.appendChild(kejuBtn);
   actions.appendChild(wujuBtn);
+  actions.appendChild(talentBtn);
+  actions.appendChild(policyBtn);
   panel.body.appendChild(actions);
 
   container.appendChild(panel.section);
@@ -1921,7 +1981,7 @@ async function renderCourtPageShell(container, state, { mainTitle, mainHint, ren
 
   const metaRow = createElement("div", { className: "gameplay-page__meta-row" });
   metaRow.appendChild(createTag(currentModeLabel));
-  metaRow.appendChild(createTag(`群臣 ${state.ministers?.length || 0} 人`));
+  metaRow.appendChild(createTag(`群臣 ${getCourtMinistersFromState(state).length} 人`));
   metaRow.appendChild(createTag(`未读 ${Object.values(state.ministerUnread || {}).filter(Boolean).length}`));
   actionsBody.appendChild(metaRow);
 
@@ -1931,6 +1991,8 @@ async function renderCourtPageShell(container, state, { mainTitle, mainHint, ren
     { label: "派系关系", description: "快速查看派系分布与朝局牵引。", onClick: () => showFactionPanel(state) },
     { label: "科举", description: "查看文官方向人才补充与待录用名单。", onClick: () => showKejuPanel() },
     { label: "武举", description: "查看军事人才补充与推荐任命。", onClick: () => showWujuPanel() },
+    { label: "人才", description: "人才储备、延揽招募与职位任用。", onClick: () => showTalentPanel() },
+    { label: "问政", description: "廷议群臣、建言采纳与诏令起草。", onClick: () => showPolicyPanel() },
   ].forEach((item) => {
     const button = createActionButton({
       label: item.label,
@@ -1980,7 +2042,12 @@ async function renderPositionMap(container, state) {
   const appointments = currentAppointments;
   const charactersData = await loadJSON("data/characters.json");
   const characters = charactersData?.characters || [];
+  const stateCharacters = getAllCharactersFromState(getState());
   const characterMap = new Map(characters.map(c => [c.id, c]));
+  stateCharacters.forEach((character) => {
+    if (!character?.id) return;
+    characterMap.set(character.id, character);
+  });
   const aliveStatus = getState().characterStatus || {};
   const getActiveHolder = (positionId) => {
     const holderId = appointments[positionId];
@@ -2484,7 +2551,16 @@ async function showAppointmentDialogAsync(position, state) {
   if (!app) return;
 
   const charactersData = await loadJSON("data/characters.json");
-  const allCharacters = charactersData?.characters || [];
+  const mergedCharacters = new Map();
+  (charactersData?.characters || []).forEach((character) => {
+    if (!character?.id) return;
+    mergedCharacters.set(character.id, character);
+  });
+  getAllCharactersFromState(getState()).forEach((character) => {
+    if (!character?.id) return;
+    mergedCharacters.set(character.id, character);
+  });
+  const allCharacters = Array.from(mergedCharacters.values());
   
   const excludedIds = new Set([
     'chongzhendi', 'zhouhuanghou', 'yuanfei', 'tianfei',
@@ -2689,7 +2765,7 @@ export async function renderCourtView(container, options = {}) {
       await renderPositionMap(container, state);
       return;
     }
-    const minister = state.ministers?.find((m) => m.id === currentMinisterChatId);
+    const minister = getCourtMinistersFromState(state).find((m) => m.id === currentMinisterChatId);
     if (!minister) {
       currentMinisterChatId = null;
       await renderPositionMap(container, state);
@@ -2710,7 +2786,7 @@ export async function renderCourtView(container, options = {}) {
         await renderPositionMap(mainHost, state);
         return;
       }
-      const minister = state.ministers?.find((m) => m.id === currentMinisterChatId);
+      const minister = getCourtMinistersFromState(state).find((m) => m.id === currentMinisterChatId);
       if (!minister) {
         currentMinisterChatId = null;
         await renderPositionMap(mainHost, state);
@@ -2736,7 +2812,7 @@ export async function renderCourtInteractiveView(container, options = {}) {
       return;
     }
 
-    const minister = state.ministers?.find((item) => item.id === currentMinisterChatId);
+    const minister = getCourtMinistersFromState(state).find((item) => item.id === currentMinisterChatId);
     if (!minister) {
       currentMinisterChatId = null;
       await renderPositionMap(container, state);
@@ -2759,7 +2835,7 @@ export async function renderCourtInteractiveView(container, options = {}) {
         return;
       }
 
-      const minister = state.ministers?.find((item) => item.id === currentMinisterChatId);
+      const minister = getCourtMinistersFromState(state).find((item) => item.id === currentMinisterChatId);
       if (!minister) {
         currentMinisterChatId = null;
         await renderPositionMap(mainHost, state);

@@ -35,14 +35,14 @@ describe("storage", () => {
 
   it("restores the loaded slot id back into runtime state", () => {
     setState({ currentYear: 2, currentMonth: 6, currentDay: 9, mode: "classic" });
-    saveGame({ slotId: "manual_04" });
+    saveGame({ slotId: "manual_03" });
 
-    const loaded = loadGame("manual_04");
+    const loaded = loadGame("manual_03");
     resetState();
 
     applyLoadedGame(loaded);
 
-    expect(getState().slotId).toBe("manual_04");
+    expect(getState().slotId).toBe("manual_03");
     expect(getState().mode).toBe("classic");
   });
 
@@ -51,10 +51,10 @@ describe("storage", () => {
     saveGame({ slotId: "manual_02" });
 
     setState({ currentYear: 1, currentMonth: 8, currentDay: 1, mode: "rigid_v1" });
-    saveGame({ slotId: "manual_05" });
+    saveGame({ slotId: "manual_03" });
 
     expect(resolveInitialLoadSlotId("classic")).toBe("manual_02");
-    expect(resolveInitialLoadSlotId("rigid_v1")).toBe("manual_05");
+    expect(resolveInitialLoadSlotId("rigid_v1")).toBe("manual_03");
   });
 
   it("keeps the same slot id isolated between classic and rigid modes", () => {

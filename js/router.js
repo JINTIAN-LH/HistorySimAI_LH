@@ -7,6 +7,8 @@ export const router = (() => {
     COURT: "court",
     NATION: "nation",
     SETTINGS: "settings",
+    TALENT: "talent",
+    POLICY: "policy",
   };
 
   let currentView = VIEW_IDS.EDICT;

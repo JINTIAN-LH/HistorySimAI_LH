@@ -1,6 +1,7 @@
 import { getPolicyCatalog } from "../systems/coreGameplaySystem.js";
 import { buildStoryFactsFromState } from "../utils/storyFacts.js";
 import { isRigidMode } from "../rigid/config.js";
+import { getKnownCharactersFromState } from "../utils/characterRegistry.js";
 
 function setOptionalArray(target, key, value, { requireNonEmpty = false } = {}) {
   if (!Array.isArray(value)) return;
@@ -115,6 +116,7 @@ export function buildMinisterChatRequestBody(state, ministerId, history) {
     state: {
       appointments: state.appointments || {},
       characterStatus: state.characterStatus || {},
+      extraCharacters: getKnownCharactersFromState(state).map((item) => ({ ...item })),
     },
     ...buildSharedContextFromState(state, { compact: false }),
   };

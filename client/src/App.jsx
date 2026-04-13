@@ -11,6 +11,8 @@ import { EdictView } from "./ui/views/edict/EdictView.jsx";
 import { NationView } from "./ui/views/nation/NationView.jsx";
 import { SettingsView } from "./ui/views/settings/SettingsView.jsx";
 import { StartView } from "./ui/views/start/StartView.jsx";
+import { TalentView } from "./ui/views/talent/TalentView.jsx";
+import { PolicyView } from "./ui/views/policy/PolicyView.jsx";
 
 const DESKTOP_MIN_WIDTH = 1200;
 
@@ -152,6 +154,8 @@ export function App() {
     [router.VIEW_IDS.NATION]: <NationView />,
     [router.VIEW_IDS.SETTINGS]: <SettingsView />,
     [router.VIEW_IDS.START]: <StartView />,
+    [router.VIEW_IDS.TALENT]: <TalentView />,
+    [router.VIEW_IDS.POLICY]: <PolicyView />,
   };
 
   const activeReactView = isBootstrapped ? reactViews[currentView] || null : null;

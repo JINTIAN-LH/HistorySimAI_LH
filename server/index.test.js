@@ -332,6 +332,53 @@ describe('API Endpoints', () => {
       expect(res.body.error).toBe('minister not found');
     });
 
+    it('should resolve generated ministers from request state extras', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            message: {
+              content: JSON.stringify({ reply: '臣在。', loyaltyDelta: 0 }),
+            },
+          }],
+        }),
+      });
+
+      const { app } = createApp({
+        config: { LLM_API_KEY: 'test-key' },
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const res = await request(app)
+        .post('/api/chongzhen/ministerChat')
+        .send({
+          ministerId: 'talent_1',
+          history: [],
+          state: {
+            appointments: { bingbu_shangshu: 'talent_1' },
+            characterStatus: {},
+            extraCharacters: [
+              {
+                id: 'talent_1',
+                name: '韩世忠',
+                role: '兵部尚书',
+                faction: 'neutral',
+                factionLabel: '中立派',
+                loyalty: 70,
+                summary: '武将新秀。',
+                attitude: '愿效死力。',
+                openingLine: '臣愿领命。'
+              }
+            ]
+          }
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.reply).toBe('臣在。');
+      expect(fetchSpy).toHaveBeenCalled();
+    });
+
     it('should return 400 when minister is deceased in client state', async () => {
       const { app } = createApp({
         config: { LLM_API_KEY: 'test-key' },
@@ -402,6 +449,59 @@ describe('API Endpoints', () => {
             'Content-Type': 'application/json',
           }),
           body: expect.stringContaining('chat-model'),
+        })
+      );
+    });
+  });
+
+  describe('POST /api/chongzhen/talentRecruit', () => {
+    it('should embed recruit-type-specific prompt guidance for search talents', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            message: {
+              content: JSON.stringify({ talents: [] }),
+            },
+          }],
+        }),
+      });
+
+      const { app } = createApp({
+        config: { LLM_API_KEY: 'test-key' },
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const res = await request(app)
+        .post('/api/chongzhen/talentRecruit')
+        .send({
+          recruitType: 'search',
+          worldviewData: {
+            title: '测试王朝',
+            talentConfig: {
+              recruitTypes: {
+                imperial_exam: '科举荐举',
+                recommend: '征辟访才',
+                search: '寻访奇俊',
+              },
+            },
+          },
+          existingTalentIds: ['talent_1'],
+          existingTalentNames: ['旧人甲'],
+        });
+
+      expect(res.status).toBe(200);
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          body: expect.stringContaining('隐士、边才、奇谋之士、工匠型或游历型人物'),
+        })
+      );
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          body: expect.stringContaining('禁止复用这些姓名：旧人甲'),
         })
       );
     });

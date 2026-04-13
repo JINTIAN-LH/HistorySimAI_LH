@@ -27,12 +27,27 @@ export default defineConfig({
       allow: [resolvePath('./')]
     },
     proxy: {
+      '/api/chongzhen/talentRecruit': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/api/chongzhen/talentInteract': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/api/chongzhen/ministerAdvise': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false,
+      },
       '/api': {
         target: devApiProxyTarget,
         changeOrigin: true,
-        secure: true
-      }
-    }
+        secure: true,
+      },
+    },
   },
   resolve: {
     alias: {

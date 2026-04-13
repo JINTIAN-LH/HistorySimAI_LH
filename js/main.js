@@ -11,6 +11,7 @@ import { createDefaultRigidState, DEFAULT_RIGID_INITIAL, DEFAULT_RIGID_TRIGGERS 
 import { getConfiguredWorldVersion, isSaveCompatibleWithWorld } from "./worldVersion.js";
 import { mergePlayerRuntimeConfig } from "./playerRuntimeConfig.js";
 import { hydratePersistentLocalStorage } from "./persistentBrowserStorage.js";
+import { repairImpossibleNaturalDeaths } from "./utils/characterStatusRepair.js";
 
 function normalizeCharacterId(rawId, aliasToCanonical) {
   if (typeof rawId !== "string") return "";
@@ -169,6 +170,18 @@ async function preloadBasicData(preferredMode = null) {
     ? current.rigid
     : createDefaultRigidState(rigidInitialData || DEFAULT_RIGID_INITIAL);
   const rigidCalendar = resolvedRigidState?.calendar || { year: 1627, month: 8 };
+  const repairedCharacterStatus = repairImpossibleNaturalDeaths({
+    characters: allCharacters,
+    characterStatus: current.characterStatus,
+    config,
+    currentYear: current.currentYear,
+  });
+
+  if (repairedCharacterStatus.repairedIds.length) {
+    console.warn(
+      `[bootstrap] repaired impossible early natural deaths for: ${repairedCharacterStatus.repairedIds.join(", ")}`
+    );
+  }
 
   setState({
     config: {
@@ -188,7 +201,7 @@ async function preloadBasicData(preferredMode = null) {
     goals: Array.isArray(goals) ? goals : [],
     nation,
     appointments: hasExistingAppointments ? normalizedExistingAppointments : normalizedDefaultAppointments,
-    characterStatus: current.characterStatus || {},
+    characterStatus: repairedCharacterStatus.characterStatus,
     storyHistory: current.storyHistory || [],
     ...coreState,
     externalPowers,

@@ -15,5 +15,54 @@
     "gameplayConstraints": [
       "保留现有资源结构、回合节奏与玩法循环，只改变叙事背景与历史名词，不要擅自新增机制。"
     ]
+  },
+  "talentConfig": {
+    "tabLabel": "人才",
+    "tabIcon": "🎓",
+    "viewTitle": "人才储备",
+    "viewSubtitle": "广纳贤才，择优任用，方可中兴大业",
+    "recruitLabel": "延揽",
+    "recruitTypes": {
+      "imperial_exam": "科举荐举",
+      "recommend": "征辟访才",
+      "search": "寻访奇俊"
+    },
+    "qualityLabels": {
+      "ordinary": "寒士俊彦",
+      "excellent": "贤才良臣",
+      "epic": "名臣大将"
+    },
+    "abilityFields": {
+      "military": "韬略",
+      "politics": "经世",
+      "economy": "理财",
+      "culture": "文史"
+    },
+    "rulerTitle": "官家",
+    "talentNoun": "臣子",
+    "poolLabel": "候选人才",
+    "interactVerb": "召见",
+    "appointVerb": "任用",
+    "trainVerb": "培育",
+    "recruitCostResource": "prestige",
+    "recruitCostLabel": "声望"
+  },
+  "policyConfig": {
+    "tabLabel": "问政",
+    "tabIcon": "📋",
+    "viewTitle": "廷议中枢",
+    "viewSubtitle": "兼听则明，偏信则暗，广询臣工以决国是",
+    "sessionLabel": "廷议",
+    "edictLabel": "诏旨",
+    "issueLabel": "议题",
+    "ministerLabel": "臣工",
+    "adviceLabel": "建言",
+    "rulerTitle": "官家",
+    "askVerb": "垂询",
+    "issueVerb": "颁旨",
+    "supportLabel": "赞同",
+    "opposeLabel": "反对",
+    "neutralLabel": "持重",
+    "historyLabel": "往议记录"
   }
 }

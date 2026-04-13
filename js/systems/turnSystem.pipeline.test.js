@@ -249,6 +249,48 @@ describe("turnSystem dual-mode one-turn loop", () => {
     }));
   });
 
+  it("consumes pending policy edict content on the next real choice only", async () => {
+    mocked.estimateEffectsFromEdictMock.mockReturnValueOnce({
+      treasury: -150000,
+      militaryStrength: 6,
+    });
+
+    setState({
+      currentMonth: 4,
+      currentYear: 3,
+      policyDiscussion: {
+        ...getState().policyDiscussion,
+        pendingIssuedEdict: {
+          content: "调拨军饷，增调边军",
+          issuedAt: Date.now(),
+        },
+      },
+    });
+
+    let choiceTriggered = false;
+    mocked.renderStoryTurnMock.mockImplementation(async (_state, _container, onChoice) => {
+      if (!choiceTriggered) {
+        choiceTriggered = true;
+        await onChoice("classic_choice", "整饬江防", null, null);
+      }
+      return { choices: [] };
+    });
+
+    const container = document.getElementById("main-view");
+    await runCurrentTurn(container);
+
+    const state = getState();
+    expect(state.lastChoiceId).toBe("classic_choice");
+    expect(state.lastChoiceText).toBe("整饬江防\n【问政】调拨军饷，增调边军");
+    expect(state.lastChoiceText).toContain("【问政】调拨军饷，增调边军");
+    expect(state.lastChoiceText).not.toContain("边患告急");
+    expect(state.policyDiscussion.pendingIssuedEdict).toBeNull();
+    expect(mocked.applyEffectsMock).toHaveBeenCalledWith(expect.objectContaining({
+      treasury: -150000,
+      militaryStrength: 6,
+    }));
+  });
+
   it("completes one rigid-mode turn loop through shared story entry", async () => {
     setState({
       mode: "rigid_v1",

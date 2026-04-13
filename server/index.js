@@ -27,6 +27,27 @@ const REQUEST_TIMEOUT_MS = 60000;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 200;
 
+const TALENT_RECRUIT_PROFILES = {
+  imperial_exam: {
+    talentSource: "科举、荐举、太学与州县贡举",
+    profileHint: "重点生成经义、策论、吏治见长的士人，主体应是文官苗子。可少量出现兼擅理财者，但不要把边将、游侠、隐士作为主流。",
+    fieldBias: "能力倾向以 politics、culture 为主，economy 可作辅项，military 仅少量点缀。",
+    tagHint: "标签优先体现清议、经术、治政、理财、馆阁、州县历练。",
+  },
+  recommend: {
+    talentSource: "地方征辟、幕府举荐、官员保举与乡里名望",
+    profileHint: "重点生成被地方官、将领或士绅举荐的人才，来源可以是幕僚、能吏、理财手、熟悉军政之才，不要全部写成科举出身。",
+    fieldBias: "能力倾向以 politics、economy 为主，可混入少量 military 强项，用于体现实务型人才。",
+    tagHint: "标签优先体现举荐、幕僚、能吏、理财、镇抚、地方历练。",
+  },
+  search: {
+    talentSource: "民间寻访、山林隐逸、边地奇士、江湖游历与异才访求",
+    profileHint: "重点生成隐士、边才、奇谋之士、工匠型或游历型人物，气质应明显区别于科举文士，禁止把三分之二以上人物写成科举士子。",
+    fieldBias: "能力分布可偏 military、economy 或 culture 的偏科型奇才，允许个性更强、履历更异。",
+    tagHint: "标签优先体现寻访、隐逸、边才、奇谋、游历、异士、匠作。",
+  },
+};
+
 function readJsonSafely(filePath) {
   try {
     const raw = fs.readFileSync(filePath, "utf8");
@@ -707,15 +728,14 @@ function createApp(options = {}) {
       return res.status(500).json({ error: "LLM_API_KEY not configured" });
     }
 
-    const ministers = getCharacters();
-    if (!Array.isArray(ministers) || ministers.length === 0) {
-      return res.status(500).json({ error: "characters.json not loaded" });
-    }
-
     const body = req.body || {};
     const ministerId = body.ministerId;
     const history = Array.isArray(body.history) ? body.history : [];
     const clientState = body.state && typeof body.state === "object" ? body.state : {};
+    const ministers = getCharactersWithStateExtras(clientState);
+    if (!Array.isArray(ministers) || ministers.length === 0) {
+      return res.status(500).json({ error: "characters.json not loaded" });
+    }
 
     if (!ministerId) {
       return res.status(400).json({ error: "ministerId is required" });
@@ -904,6 +924,312 @@ function createApp(options = {}) {
     }
   });
 
+  // ── 人才延揽：招募人才池 ──────────────────────────────────────────────────────
+  app.post("/api/chongzhen/talentRecruit", async (req, res) => {
+    const runtimeConfig = getRuntimeConfig(req);
+    if (!runtimeConfig.apiKey) {
+      return res.status(500).json({ error: "LLM_API_KEY not configured" });
+    }
+
+    const body = req.body || {};
+    const recruitType = typeof body.recruitType === "string" ? body.recruitType : "search";
+    const clientState = body.state && typeof body.state === "object" ? body.state : {};
+    const worldviewData = body.worldviewData && typeof body.worldviewData === "object" ? body.worldviewData : {};
+    const existingTalentIds = Array.isArray(body.existingTalentIds) ? body.existingTalentIds.filter((item) => typeof item === 'string' && item.trim()) : [];
+    const existingTalentNames = Array.isArray(body.existingTalentNames) ? body.existingTalentNames.filter((item) => typeof item === 'string' && item.trim()) : [];
+
+    const worldviewTitle = worldviewData?.worldviewTitle || worldviewData?.title || "历史架空";
+    const talentCfg = worldviewData?.talentConfig || {};
+    const recruitTypeLabel = talentCfg?.recruitTypes?.[recruitType] || recruitType;
+    const recruitProfile = TALENT_RECRUIT_PROFILES[recruitType] || TALENT_RECRUIT_PROFILES.search;
+    const rulerTitle = talentCfg?.rulerTitle || "君主";
+    const talentNoun = talentCfg?.talentNoun || "人才";
+    const qualityLabels = talentCfg?.qualityLabels || { ordinary: "普通", excellent: "优秀", epic: "史诗" };
+    const abilityFields = talentCfg?.abilityFields || { military: "武略", politics: "政务", economy: "理财", culture: "文化" };
+    const tagHints = Object.values(abilityFields).join("、");
+    const existingConstraint = existingTalentNames.length || existingTalentIds.length
+      ? `\n已有候选不可重复。禁止复用这些姓名：${existingTalentNames.slice(0, 24).join("、") || "无"}。禁止复用这些ID：${existingTalentIds.slice(0, 24).join(", ") || "无"}。`
+      : "";
+
+    const systemPrompt = `你是${worldviewTitle}世界的人才生成器。
+${rulerTitle}正以"${recruitTypeLabel}"的方式延揽${talentNoun}。
+请生成3到5位风格各异的${talentNoun}，输出严格合法的 JSON：
+  {"talents":[{"id":"talent_<随机8位>","name":"姓名","quality":"ordinary|excellent|epic","field":"military|politics|economy|culture","ability":{"military":0-100,"politics":0-100,"economy":0-100,"culture":0-100,"loyalty":40-80},"personality":"性格描述（20字以内）","faction":"所属派系（可为空字符串）","background":"人物背景（30字以内）","openingLine":"首次见面的自述（30字以内）","tags":["标签1","标签2","标签3"],"source":"${recruitType}"}]}
+quality 分布：epic 约占 10%，excellent 约占 30%，ordinary 约占 60%。
+  本次招募来源：${recruitProfile.talentSource}。
+  人物画像要求：${recruitProfile.profileHint}
+  能力倾向要求：${recruitProfile.fieldBias}
+  tags 必须反映人才特征、专长或出身，优先围绕：${tagHints}；同时${recruitProfile.tagHint}${existingConstraint}
+  严格输出 JSON，不要有任何额外内容。`;
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: `请为${rulerTitle}生成此次${recruitTypeLabel}获得的${talentNoun}名单。` },
+    ];
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      let response;
+      try {
+        response = await fetch(`${runtimeConfig.apiBase}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${runtimeConfig.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: runtimeConfig.chatModel,
+            messages,
+            response_format: { type: "json_object" },
+          }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!response.ok) {
+        const errText = await response.text();
+        return res.status(response.status).json({ error: errText || "LLM request failed" });
+      }
+
+      const data = await response.json();
+      const content = data?.choices?.[0]?.message?.content;
+      if (!content) return res.status(502).json({ error: "No content in LLM response" });
+
+      let parsed;
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+      } catch (_) {
+        return res.status(502).json({ error: "Failed to parse LLM response as JSON" });
+      }
+
+      const talents = Array.isArray(parsed.talents) ? parsed.talents : Array.isArray(parsed) ? parsed : [];
+      return res.json({ talents });
+    } catch (e) {
+      if (e.name === "AbortError") {
+        return res.status(504).json({ error: "LLM request timed out" });
+      }
+      return res.status(500).json({ error: e.message || "Proxy error" });
+    }
+  });
+
+  // ── 人才召见：单人对话 ────────────────────────────────────────────────────────
+  app.post("/api/chongzhen/talentInteract", async (req, res) => {
+    const runtimeConfig = getRuntimeConfig(req);
+    if (!runtimeConfig.apiKey) {
+      return res.status(500).json({ error: "LLM_API_KEY not configured" });
+    }
+
+    const body = req.body || {};
+    const clientState = body.state && typeof body.state === "object" ? body.state : {};
+    const stateCharacters = getCharactersWithStateExtras(clientState);
+    const requestedTalentId = typeof body.talentId === "string" ? body.talentId : "";
+    const talentFromState = requestedTalentId
+      ? stateCharacters.find((item) => item?.id === requestedTalentId)
+      : null;
+    const talent = body.talent && typeof body.talent === "object"
+      ? { ...(talentFromState || {}), ...body.talent }
+      : talentFromState;
+    const playerMessage = typeof body.playerMessage === "string" ? body.playerMessage.trim() : "";
+    const history = Array.isArray(body.history) ? body.history : [];
+    const worldviewData = body.worldviewData && typeof body.worldviewData === "object" ? body.worldviewData : {};
+
+    if (!talent || !playerMessage) {
+      return res.status(400).json({ error: "talent and playerMessage are required" });
+    }
+
+    const talentCfg = worldviewData?.talentConfig || {};
+    const rulerTitle = talentCfg?.rulerTitle || "君主";
+    const loyalty = talent?.ability?.loyalty ?? 50;
+    const loyaltyDesc = loyalty >= 80 ? "对君主忠心耿耿" : loyalty >= 50 ? "对君主态度中立" : "对是否出仕尚存犹豫";
+    const qualityDesc = talent.quality === "epic" ? "名满天下的大贤" : talent.quality === "excellent" ? "颇有才名" : "才华横溢的寒士";
+
+    const systemPrompt = `你现在扮演${talent.name}，一位${qualityDesc}。性格：${talent.personality || "沉稳"}。背景：${talent.background || "出身不详"}。${loyaltyDesc}。
+${rulerTitle}正在召见你，请以第一人称回应，保持人物性格，字数200字以内。
+严格输出 JSON：{"reply":"回应内容","loyaltyDelta":[-3..3],"attitude":"willing|hesitant|reluctant","suggestion":"可选的建议或信息，可为空字符串"}
+loyaltyDelta 正数表示好感上升，负数表示下降。`;
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...history.slice(-10),
+      { role: "user", content: playerMessage },
+    ];
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      let response;
+      try {
+        response = await fetch(`${runtimeConfig.apiBase}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${runtimeConfig.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: runtimeConfig.chatModel,
+            messages,
+            response_format: { type: "json_object" },
+          }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!response.ok) {
+        const errText = await response.text();
+        return res.status(response.status).json({ error: errText || "LLM request failed" });
+      }
+
+      const data = await response.json();
+      const content = data?.choices?.[0]?.message?.content;
+      if (!content) return res.status(502).json({ error: "No content in LLM response" });
+
+      let parsed = {};
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+      } catch (_) {
+        parsed = { reply: content };
+      }
+
+      return res.json({
+        reply: typeof parsed.reply === "string" ? parsed.reply : content,
+        loyaltyDelta: typeof parsed.loyaltyDelta === "number" ? Math.max(-5, Math.min(5, Math.round(parsed.loyaltyDelta))) : 0,
+        attitude: ["willing", "hesitant", "reluctant"].includes(parsed.attitude) ? parsed.attitude : "hesitant",
+        suggestion: typeof parsed.suggestion === "string" ? parsed.suggestion : "",
+      });
+    } catch (e) {
+      if (e.name === "AbortError") {
+        return res.status(504).json({ error: "LLM request timed out" });
+      }
+      return res.status(500).json({ error: e.message || "Proxy error" });
+    }
+  });
+
+  // ── 廷议建言：多位大臣分析议题 ───────────────────────────────────────────────
+  app.post("/api/chongzhen/ministerAdvise", async (req, res) => {
+    const runtimeConfig = getRuntimeConfig(req);
+    if (!runtimeConfig.apiKey) {
+      return res.status(500).json({ error: "LLM_API_KEY not configured" });
+    }
+
+    const body = req.body || {};
+    const question = typeof body.question === "string" ? body.question.trim() : "";
+    const ministers = Array.isArray(body.ministers) ? body.ministers : [];
+    const clientState = body.state && typeof body.state === "object" ? body.state : {};
+    const conversationHistory = Array.isArray(body.conversationHistory) ? body.conversationHistory : [];
+    const worldviewData = body.worldviewData && typeof body.worldviewData === "object" ? body.worldviewData : {};
+
+    if (!question) {
+      return res.status(400).json({ error: "question is required" });
+    }
+
+    const worldviewTitle = worldviewData?.worldviewTitle || worldviewData?.title || "历史架空";
+    const policyCfg = worldviewData?.policyConfig || {};
+    const rulerTitle = policyCfg?.rulerTitle || "君主";
+    const edictLabel = policyCfg?.edictLabel || "诏令";
+
+    // 从角色数据中取得大臣信息
+    const allCharacters = getCharacters();
+    const appointments = clientState.appointments && typeof clientState.appointments === "object"
+      ? clientState.appointments : {};
+    const appointedIds = new Set(Object.values(appointments).filter(Boolean));
+
+    // 若前端传了大臣 ID，则优先使用；否则自动从在任大臣中选取最多 3 人
+    let selectedMinisters = ministers;
+    if (!selectedMinisters.length) {
+      selectedMinisters = allCharacters
+        .filter((m) => appointedIds.has(m.id) && getAliveStatus(clientState, m.id))
+        .slice(0, 3)
+        .map((m) => ({ id: m.id, name: m.name, faction: m.faction || "" }));
+    }
+
+    if (selectedMinisters.length === 0) {
+      // 回退：无在任大臣时用通用提示
+      selectedMinisters = [
+        { id: "minister_a", name: "某臣甲", faction: "" },
+        { id: "minister_b", name: "某臣乙", faction: "" },
+      ];
+    }
+
+    const ministerList = selectedMinisters.map((m) => `${m.name}（${m.faction || "无派"}）`).join("、");
+    const systemPrompt = `你正在扮演${worldviewTitle}中的朝廷议政场景。
+${rulerTitle}就以下议题向群臣垂询：「${question}」
+参与廷议的大臣：${ministerList}
+请为每位大臣生成一份有针对性、符合其性格和派系利益的建言。
+严格输出合法 JSON：
+{"advices":[{"ministerId":"id","ministerName":"姓名","faction":"派系","attitude":"support|oppose|neutral","content":"建言正文（100字以内）","reason":"理由（50字以内）","estimatedEffects":["效果描述1","效果描述2"]}],"summary":"群臣议论综述（80字以内）"}
+每位大臣的 attitude 不必相同，体现不同派系利益的冲突。`;
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...conversationHistory.slice(-6),
+      { role: "user", content: `${rulerTitle}问：${question}` },
+    ];
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      let response;
+      try {
+        response = await fetch(`${runtimeConfig.apiBase}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${runtimeConfig.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: runtimeConfig.chatModel,
+            messages,
+            response_format: { type: "json_object" },
+          }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!response.ok) {
+        const errText = await response.text();
+        return res.status(response.status).json({ error: errText || "LLM request failed" });
+      }
+
+      const data = await response.json();
+      const content = data?.choices?.[0]?.message?.content;
+      if (!content) return res.status(502).json({ error: "No content in LLM response" });
+
+      let parsed = {};
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+      } catch (_) {
+        return res.status(502).json({ error: "Failed to parse LLM response as JSON" });
+      }
+
+      const advices = Array.isArray(parsed.advices) ? parsed.advices.map((a) => ({
+        ministerId: a.ministerId || "",
+        ministerName: a.ministerName || a.ministerId || "臣",
+        faction: a.faction || "",
+        attitude: ["support", "oppose", "neutral"].includes(a.attitude) ? a.attitude : "neutral",
+        content: typeof a.content === "string" ? a.content : "",
+        reason: typeof a.reason === "string" ? a.reason : "",
+        estimatedEffects: Array.isArray(a.estimatedEffects) ? a.estimatedEffects : [],
+      })) : [];
+
+      return res.json({ advices, summary: typeof parsed.summary === "string" ? parsed.summary : "" });
+    } catch (e) {
+      if (e.name === "AbortError") {
+        return res.status(504).json({ error: "LLM request timed out" });
+      }
+      return res.status(500).json({ error: e.message || "Proxy error" });
+    }
+  });
+
   app.get("/api/chongzhen/characters", (_req, res) => {
     const characters = getCharacters();
     return res.json({
@@ -1061,7 +1387,7 @@ if (require.main === module) {
     ? envPort
     : (Number.isFinite(configuredPort) && configuredPort > 0 ? configuredPort : 3002);
   app.listen(PORT, () => {
-    console.log(`ChongzhenSim proxy listening on http://localhost:${PORT} (routes: /api/chongzhen/story, /api/chongzhen/ministerChat, /api/chongzhen/characters, /api/chongzhen/positions, /api/chongzhen/appoint, /api/chongzhen/punish)`);
+    console.log(`ChongzhenSim proxy listening on http://localhost:${PORT} (routes: /api/chongzhen/story, /api/chongzhen/ministerChat, /api/chongzhen/talentRecruit, /api/chongzhen/talentInteract, /api/chongzhen/ministerAdvise, /api/chongzhen/characters, /api/chongzhen/positions, /api/chongzhen/appoint, /api/chongzhen/punish)`);
     if (!localConfig.LLM_API_KEY) {
       console.warn("config.json 中 LLM_API_KEY 未填写; API 将返回 500。");
     }

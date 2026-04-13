@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSharedContextFromState, buildStoryRequestBody } from "./requestContext.js";
+import { buildMinisterChatRequestBody, buildSharedContextFromState, buildStoryRequestBody } from "./requestContext.js";
 import { createDefaultRigidState, DEFAULT_RIGID_INITIAL, RIGID_MODE_ID } from "../rigid/config.js";
 
 describe("buildStoryRequestBody", () => {
@@ -56,5 +56,28 @@ describe("buildStoryRequestBody", () => {
 
     expect(ctx.unlockedPolicyTitles).toEqual(["察事耳目收束", "海商互市"]);
     expect(ctx.unlockedPolicyTitleMap?.politics_east_factory).toBe("察事耳目收束");
+  });
+
+  it("includes dynamic extra characters in minister chat payload", () => {
+    const body = buildMinisterChatRequestBody({
+      appointments: { bingbu_shangshu: "talent_1" },
+      characterStatus: {},
+      allCharacters: [{ id: "talent_1", name: "韩世忠" }],
+      talent: {
+        pool: [{ id: "talent_3", name: "张巡" }],
+      },
+      keju: {
+        generatedCandidates: [{ id: "talent_1", name: "韩世忠" }],
+      },
+      wuju: {
+        generatedCandidates: [{ id: "talent_2", name: "岳飞" }],
+      },
+    }, "talent_1", []);
+
+    expect(body.state.extraCharacters).toEqual([
+      { id: "talent_1", name: "韩世忠" },
+      { id: "talent_3", name: "张巡" },
+      { id: "talent_2", name: "岳飞" },
+    ]);
   });
 });

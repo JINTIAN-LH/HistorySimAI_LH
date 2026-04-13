@@ -11,7 +11,7 @@ const ACTIVE_SLOT_KEY_PREFIX = "chongzhen_sim_active_slot_v1";
 const COURT_CHATS_CAP = 50;
 const DEFAULT_MODE = "classic";
 const SAVE_VERSION = "1.0";
-export const MAX_MANUAL_SLOTS = 20;
+export const MAX_MANUAL_SLOTS = 3;
 const MAX_AUTO_SLOTS = 10;
 const BACKUP_SUFFIX = "_bak";
 

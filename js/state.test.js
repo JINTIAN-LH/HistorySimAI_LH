@@ -193,6 +193,55 @@ describe('markCharacterDead', () => {
     expect(state.characterStatus['wen_tiren'].isAlive).toBe(false);
     expect(state.characterStatus['wen_tiren'].deathReason).toBe('病逝');
   });
+
+  it('should sanitize appointments for unknown holders on state updates', () => {
+    setState({
+      allCharacters: [{ id: 'sun_chengzong', name: '孙承宗', isAlive: true }],
+      characterStatus: { sun_chengzong: { isAlive: true } },
+      appointments: {
+        neige_shoufu: 'sun_chengzong',
+        hubu_shangshu: 'ghost_holder',
+      },
+    });
+
+    const nextState = getState();
+    expect(nextState.appointments['neige_shoufu']).toBe('sun_chengzong');
+    expect(nextState.appointments['hubu_shangshu']).toBeUndefined();
+    expect(nextState.ministers.map((item) => item.id)).toEqual(['sun_chengzong']);
+  });
+
+  it('should sync candidateCharacters from recruit and exam sources', () => {
+    setState({
+      talent: {
+        pool: [{ id: 'talent_1', name: '韩岳', isAlive: true }],
+        interactionHistory: {},
+        recruiting: false,
+      },
+      keju: {
+        stage: 'idle',
+        candidatePool: [],
+        publishedList: [],
+        talentReserve: [],
+        generatedCandidates: [{ id: 'keju_1', name: '许国桢', isAlive: true }],
+        bureauMomentum: 50,
+        reserveQuality: 0,
+        note: '',
+      },
+      wuju: {
+        stage: 'idle',
+        candidatePool: [],
+        publishedList: [],
+        talentReserve: [],
+        generatedCandidates: [{ id: 'wuju_1', name: '岳承节', isAlive: true }],
+        bureauMomentum: 50,
+        reserveQuality: 0,
+        note: '',
+      },
+    });
+
+    const nextState = getState();
+    expect(nextState.candidateCharacters.map((item) => item.id)).toEqual(['talent_1', 'keju_1', 'wuju_1']);
+  });
 });
 
 describe('isCharacterAlive', () => {
