@@ -2,8 +2,108 @@ import { router } from "../router.js";
 import { runCurrentTurn } from "../systems/turnSystem.js";
 import { createGameplayPageTemplate } from "./viewPrimitives.js";
 
+const EDICT_SCROLL_FAB_ID = "edict-scroll-bottom-fab";
+const EDICT_SCROLL_FAB_OFFSET = 18;
+const EDICT_SCROLL_FAB_VISIBILITY_GAP = 32;
+
+function scrollHostToBottom(scrollHost) {
+  if (!scrollHost) return;
+  const targetTop = Math.max(0, scrollHost.scrollHeight - scrollHost.clientHeight);
+  if (typeof scrollHost.scrollTo === "function") {
+    scrollHost.scrollTo({ top: targetTop, behavior: "smooth" });
+    return;
+  }
+  scrollHost.scrollTop = targetTop;
+}
+
+function getFloatingButtonPositionHost(container, scrollHost, useLegacyLayout) {
+  if (!useLegacyLayout) {
+    return scrollHost;
+  }
+
+  return container.closest(".desktop-gameplay-panel__body")
+    || document.getElementById("main-view")
+    || container;
+}
+
+function syncFloatingButtonPosition(button, positionHost) {
+  if (!button || !positionHost) return;
+
+  const rect = positionHost.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    button.style.opacity = "0";
+    button.style.pointerEvents = "none";
+    return;
+  }
+
+  button.style.left = `${Math.round(rect.right - EDICT_SCROLL_FAB_OFFSET)}px`;
+  button.style.top = `${Math.round(rect.bottom - EDICT_SCROLL_FAB_OFFSET)}px`;
+}
+
+function syncFloatingButtonVisibility(button, scrollHost) {
+  if (!button || !scrollHost) return;
+
+  const remainingDistance = scrollHost.scrollHeight - scrollHost.clientHeight - scrollHost.scrollTop;
+  const canScrollFurther = remainingDistance > EDICT_SCROLL_FAB_VISIBILITY_GAP;
+
+  button.hidden = !canScrollFurther;
+  button.setAttribute("aria-hidden", canScrollFurther ? "false" : "true");
+}
+
+function removeEdictScrollButton(container) {
+  if (typeof container?._edictScrollFabCleanup === "function") {
+    container._edictScrollFabCleanup();
+  }
+  container._edictScrollFabCleanup = null;
+}
+
+function mountEdictScrollButton(container, scrollHost, useLegacyLayout) {
+  if (typeof document === "undefined" || !container || !scrollHost) {
+    return;
+  }
+
+  removeEdictScrollButton(container);
+
+  const positionHost = getFloatingButtonPositionHost(container, scrollHost, useLegacyLayout);
+  const button = document.createElement("button");
+  button.id = EDICT_SCROLL_FAB_ID;
+  button.className = "edict-scroll-fab";
+  button.type = "button";
+  button.setAttribute("aria-label", "跳转到诏书底部");
+  button.title = "直达最新诏书";
+  button.textContent = "最新诏书";
+
+  const syncUi = () => {
+    syncFloatingButtonPosition(button, positionHost);
+    syncFloatingButtonVisibility(button, scrollHost);
+  };
+
+  button.addEventListener("click", () => {
+    scrollHostToBottom(scrollHost);
+  });
+
+  scrollHost.addEventListener("scroll", syncUi, { passive: true });
+  window.addEventListener("resize", syncUi);
+  if (positionHost !== scrollHost) {
+    window.addEventListener("scroll", syncUi, { passive: true });
+  }
+
+  document.body.appendChild(button);
+  syncUi();
+
+  container._edictScrollFabCleanup = () => {
+    scrollHost.removeEventListener("scroll", syncUi);
+    window.removeEventListener("resize", syncUi);
+    if (positionHost !== scrollHost) {
+      window.removeEventListener("scroll", syncUi);
+    }
+    button.remove();
+  };
+}
+
 export async function renderEdictView(container, options = {}) {
   const { useLegacyLayout = false } = options;
+  removeEdictScrollButton(container);
   container.classList.add("main-view--edict");
   container.innerHTML = "";
 
@@ -11,6 +111,7 @@ export async function renderEdictView(container, options = {}) {
     container._storyLayout = null;
     container._storyRenderId = (container._storyRenderId || 0) + 1;
     await runCurrentTurn(container, { renderId: container._storyRenderId });
+    mountEdictScrollButton(container, container, true);
     requestAnimationFrame(() => {
       container.scrollTop = container.scrollHeight;
     });
@@ -39,12 +140,14 @@ export async function renderEdictView(container, options = {}) {
   container.appendChild(template.root);
 
   await runCurrentTurn(template.root, { renderId: template.root._storyRenderId });
+  mountEdictScrollButton(container, template.mainBody, false);
   requestAnimationFrame(() => {
     template.mainBody.scrollTop = template.mainBody.scrollHeight;
   });
 }
 
 export function removeEdictPanelsWrap() {
+  document.querySelectorAll(`#${EDICT_SCROLL_FAB_ID}`).forEach((button) => button.remove());
   const panels = document.querySelectorAll(".edict-panels-wrap");
   panels.forEach((panel) => panel.remove());
 }

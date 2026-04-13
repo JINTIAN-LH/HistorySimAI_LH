@@ -1,5 +1,31 @@
 # Commit 日志
 
+## 2026-04-13: feat: add edict jump-to-latest floating button
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+这次在诏书页补了一个面向长历史流的悬浮入口：当玩家从最新诏书向上翻阅旧内容时，右下角会出现“最新诏书”按钮，点击即可平滑回到底部，减少在长文本和多回合历史中手动拖拽的成本。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/ui/edictView.js` | ✏️ 增强 | 为诏书视图挂载可清理的右下角悬浮按钮，按当前滚动位置决定显隐，并统一兼容 legacy / gameplay page 两种布局 |
+| `css/modules/edict.css` | ✏️ 增强 | 新增悬浮按钮样式、交互态与移动端尺寸收敛，避免遮挡正文 |
+| `js/ui/edictView.test.js` | ➕ 新增 | 为按钮显隐、点击回到底部与清理行为补充 DOM 回归测试 |
+
+### 价值
+
+- **长诏书历史回跳更快**：翻到旧记录后可一键回到最新内容
+- **界面负担更低**：只有在仍可继续向下滚动时才显示，不会常驻遮挡正文
+- **兼容现有布局**：移动端 legacy 视图和新骨架诏书页都走同一套交互
+
+### 验证
+
+- `npm test -- js/ui/edictView.test.js` ✅ 通过
+
 ## 2026-04-13: perf: split react views and trim initial build chunks
 
 **Commit Hash**: `1b25a2b`
