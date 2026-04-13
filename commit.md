@@ -1,5 +1,31 @@
 # Commit 日志
 
+## 2026-04-13: perf: split react views and trim initial build chunks
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+这一轮聚焦生产构建体积优化：将 React 壳层中的页面组件改为懒加载，避免所有视图同时进入首包；同时把 Vite 的分包策略收敛为稳定的 React vendor 拆分，去掉会触发循环 chunk 告警的激进手动切分。最终构建仍然通过，且原先约 550 kB 的主 JS chunk 被拆散为多个按需加载产物。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `client/src/App.jsx` | ✏️ 优化 | 将 Court / Edict / Nation / Talent / Policy / Settings / Start 等 React 视图改为 `lazy + Suspense` 按需加载，降低首包体积 |
+| `vite.config.js` | ✏️ 优化 | 新增稳定的 React / React DOM vendor 分包，并移除会导致循环依赖告警的细粒度 legacy 手动分包 |
+
+### 价值
+
+- **首包更小**：非当前页面代码不再全部打进初始入口
+- **加载路径更合理**：页面级资源随访问按需下载，而不是启动时一次性加载
+- **构建更稳定**：保留有效拆分收益，同时避免循环 chunk 告警
+
+### 验证
+
+- `npm run build` ✅ 通过
+- 构建结果从单个约 `550.56 kB` 大 chunk，收敛为多个较小 chunk；当前较大的产物主要为 `react-dom-vendor` `184.04 kB`、`EdictView` `97.81 kB`、`CourtView` `50.37 kB`
+
 ## 2026-04-13: feat: add talent recruitment and policy discussion flows
 
 **Commit Hash**: `4a4c56e`

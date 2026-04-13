@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { startApplication } from "./bootstrap/startApplication.js";
 import { fetchConfigStatus, saveRuntimeConfig } from "./bootstrap/configurationGate.js";
 import { router } from "@legacy/router.js";
@@ -6,15 +6,20 @@ import { useLegacyRouterView } from "./ui/hooks/useLegacyRouterView.js";
 import { ConfigSetupGate } from "./ui/components/ConfigSetupGate.jsx";
 import { TopBar } from "./ui/shell/TopBar.jsx";
 import { BottomNav } from "./ui/shell/BottomNav.jsx";
-import { CourtView } from "./ui/views/court/CourtView.jsx";
-import { EdictView } from "./ui/views/edict/EdictView.jsx";
-import { NationView } from "./ui/views/nation/NationView.jsx";
-import { SettingsView } from "./ui/views/settings/SettingsView.jsx";
-import { StartView } from "./ui/views/start/StartView.jsx";
-import { TalentView } from "./ui/views/talent/TalentView.jsx";
-import { PolicyView } from "./ui/views/policy/PolicyView.jsx";
 
 const DESKTOP_MIN_WIDTH = 1200;
+
+function lazyNamedView(loadModule, exportName) {
+  return lazy(() => loadModule().then((module) => ({ default: module[exportName] })));
+}
+
+const CourtView = lazyNamedView(() => import("./ui/views/court/CourtView.jsx"), "CourtView");
+const EdictView = lazyNamedView(() => import("./ui/views/edict/EdictView.jsx"), "EdictView");
+const NationView = lazyNamedView(() => import("./ui/views/nation/NationView.jsx"), "NationView");
+const SettingsView = lazyNamedView(() => import("./ui/views/settings/SettingsView.jsx"), "SettingsView");
+const StartView = lazyNamedView(() => import("./ui/views/start/StartView.jsx"), "StartView");
+const TalentView = lazyNamedView(() => import("./ui/views/talent/TalentView.jsx"), "TalentView");
+const PolicyView = lazyNamedView(() => import("./ui/views/policy/PolicyView.jsx"), "PolicyView");
 
 function useIsDesktopShell() {
   const [isDesktop, setIsDesktop] = useState(() => {
@@ -46,6 +51,10 @@ function useIsDesktopShell() {
   }, []);
 
   return isDesktop;
+}
+
+function ViewLoadingFallback({ message = "正在载入页面…" }) {
+  return <div className="app-shell__loading-card">{message}</div>;
 }
 
 export function App() {
@@ -185,24 +194,32 @@ export function App() {
                   <section className={`desktop-gameplay-panel${currentView === router.VIEW_IDS.COURT ? " desktop-gameplay-panel--active" : ""}`}>
                     <div className="desktop-gameplay-panel__header">朝堂</div>
                     <div className="desktop-gameplay-panel__body">
-                      <CourtView useLegacyLayout />
+                      <Suspense fallback={<ViewLoadingFallback message="正在载入朝堂…" />}>
+                        <CourtView useLegacyLayout />
+                      </Suspense>
                     </div>
                   </section>
                   <section className={`desktop-gameplay-panel${currentView === router.VIEW_IDS.EDICT ? " desktop-gameplay-panel--active" : ""}`}>
                     <div className="desktop-gameplay-panel__header">诏书</div>
                     <div className="desktop-gameplay-panel__body">
-                      <EdictView useLegacyLayout />
+                      <Suspense fallback={<ViewLoadingFallback message="正在载入诏书…" />}>
+                        <EdictView useLegacyLayout />
+                      </Suspense>
                     </div>
                   </section>
                   <section className={`desktop-gameplay-panel${currentView === router.VIEW_IDS.NATION ? " desktop-gameplay-panel--active" : ""}`}>
                     <div className="desktop-gameplay-panel__header">国家</div>
                     <div className="desktop-gameplay-panel__body">
-                      <NationView useLegacyLayout />
+                      <Suspense fallback={<ViewLoadingFallback message="正在载入国家…" />}>
+                        <NationView useLegacyLayout />
+                      </Suspense>
                     </div>
                   </section>
                 </div>
               ) : (
-                activeReactView
+                <Suspense fallback={<ViewLoadingFallback />}>
+                  {activeReactView}
+                </Suspense>
               )}
             </main>
             {!shouldUseDesktopComposite ? <BottomNav currentView={currentView} /> : null}
