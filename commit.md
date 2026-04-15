@@ -1,5 +1,31 @@
 # Commit 日志
 
+## 2026-04-15: fix: resolve single-column edict scroll button host
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+修复单栏（移动端）布局下诏书页"最新诏书"悬浮按钮不显示且点击无效的问题。根因是 legacy layout 下滚动宿主误用了不可滚动的内容容器，改为向上查找真实滚动祖先（`#main-view` 或 `.desktop-gameplay-panel__body`）。同时新增 build-commit-push 自动化 skill。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/ui/edictView.js` | ✏️ 修复 | 新增 `findLegacyScrollHost` 解析真实可滚动容器，替代直接使用 container 作为 scrollHost |
+| `js/ui/edictView.test.js` | ➕ 补测 | 新增单栏 legacy layout 下按钮可见与点击滚动的回归测试 |
+| `.github/skills/build-commit-push/SKILL.md` | ➕ 新增 | 打包构建提交推送自动化 skill，支持 `/build-commit-push` 或自然语言触发 |
+
+### 价值
+
+- **单栏布局可用**：移动端诏书页悬浮按钮正确显示并可点击跳转
+- **工作流自动化**：build-commit-push 一句话触发完整构建发布流程
+
+### 验证
+
+- `npm run test -- js/ui/edictView.test.js` ✅ 通过（4 项）
+- `npm run build` ✅ 通过
+
 ## 2026-04-15: fix: stabilize llm turn rollback and settings runtime updates
 
 **Commit Hash**: (pending)

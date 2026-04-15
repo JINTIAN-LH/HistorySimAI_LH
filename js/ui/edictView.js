@@ -29,14 +29,18 @@ function scrollHostToBottom(scrollHost) {
   scrollHost.scrollTop = targetTop;
 }
 
+function findLegacyScrollHost(container) {
+  return container.closest(".desktop-gameplay-panel__body")
+    || document.getElementById("main-view")
+    || container;
+}
+
 function getFloatingButtonPositionHost(container, scrollHost, useLegacyLayout) {
   if (!useLegacyLayout) {
     return scrollHost;
   }
 
-  return container.closest(".desktop-gameplay-panel__body")
-    || document.getElementById("main-view")
-    || container;
+  return findLegacyScrollHost(container);
 }
 
 function syncFloatingButtonPosition(button, positionHost) {
@@ -149,9 +153,10 @@ export async function renderEdictView(container, options = {}) {
     container._storyRenderId = (container._storyRenderId || 0) + 1;
     await runCurrentTurn(container, { renderId: container._storyRenderId });
     await waitForRenderFrames();
-    mountEdictScrollButton(container, container, true);
+    const legacyScrollHost = findLegacyScrollHost(container);
+    mountEdictScrollButton(container, legacyScrollHost, true);
     requestAnimationFrame(() => {
-      container.scrollTop = container.scrollHeight;
+      legacyScrollHost.scrollTop = legacyScrollHost.scrollHeight;
     });
     return;
   }

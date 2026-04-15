@@ -124,4 +124,41 @@ describe("renderEdictView", () => {
 
     expect(button.hidden).toBe(false);
   });
+
+  it("uses #main-view as scroll host in single-column legacy layout", async () => {
+    const mainView = document.getElementById("main-view");
+    const container = document.createElement("div");
+    mainView.appendChild(container);
+
+    Object.defineProperty(mainView, "clientHeight", { value: 300, configurable: true });
+    Object.defineProperty(mainView, "scrollHeight", { value: 1200, configurable: true });
+    Object.defineProperty(mainView, "scrollTop", { value: 0, writable: true, configurable: true });
+    mainView.scrollTo = vi.fn(({ top }) => {
+      mainView.scrollTop = top;
+    });
+    mainView.getBoundingClientRect = () => ({
+      width: 400,
+      height: 300,
+      top: 50,
+      left: 0,
+      right: 400,
+      bottom: 350,
+      x: 0,
+      y: 50,
+      toJSON: () => ({}),
+    });
+
+    await renderEdictView(container, { useLegacyLayout: true });
+
+    // renderEdictView scrolls to bottom; simulate the user scrolling back up
+    mainView.scrollTop = 100;
+    mainView.dispatchEvent(new Event("scroll"));
+
+    const button = document.getElementById("edict-scroll-bottom-fab");
+    expect(button).toBeTruthy();
+    expect(button.hidden).toBe(false);
+
+    button.click();
+    expect(mainView.scrollTo).toHaveBeenCalledWith({ top: 900, behavior: "smooth" });
+  });
 });
