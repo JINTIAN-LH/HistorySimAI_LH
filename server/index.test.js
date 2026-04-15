@@ -196,6 +196,22 @@ describe('API Endpoints', () => {
       expect(res.status).toBe(204);
       expect(res.headers['access-control-allow-origin']).toBe('http://localhost:8080');
     });
+
+    it('should allow private LAN origins during mobile local-network testing', async () => {
+      const { app } = createApp({
+        config: {},
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const res = await request(app)
+        .options('/api/chongzhen/story')
+        .set('Origin', 'http://192.168.31.8:8080')
+        .set('Access-Control-Request-Method', 'POST');
+
+      expect(res.status).toBe(204);
+      expect(res.headers['access-control-allow-origin']).toBe('http://192.168.31.8:8080');
+    });
   });
 
   describe('POST /api/chongzhen/story', () => {

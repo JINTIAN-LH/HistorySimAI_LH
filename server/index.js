@@ -20,6 +20,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
 
 const DEFAULT_ALLOWED_ORIGIN_PATTERNS = [
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i,
+  /^https?:\/\/(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})(:\d+)?$/i,
   /^https:\/\/([a-z0-9-]+\.)?kurangames\.com$/i,
 ];
 

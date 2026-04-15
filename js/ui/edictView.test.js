@@ -79,4 +79,49 @@ describe("renderEdictView", () => {
 
     expect(document.getElementById("edict-scroll-bottom-fab")).toBeNull();
   });
+
+  it("re-syncs floating button visibility when new story blocks are appended after mount", async () => {
+    const container = document.createElement("div");
+    document.getElementById("main-view").appendChild(container);
+
+    await renderEdictView(container);
+
+    const mainBody = container.querySelector(".gameplay-page__section--main .section-card__body");
+    expect(mainBody).toBeTruthy();
+
+    let scrollHeight = 180;
+    Object.defineProperty(mainBody, "clientHeight", { value: 220, configurable: true });
+    Object.defineProperty(mainBody, "scrollHeight", {
+      configurable: true,
+      get: () => scrollHeight,
+    });
+    Object.defineProperty(mainBody, "scrollTop", { value: 0, writable: true, configurable: true });
+    mainBody.getBoundingClientRect = () => ({
+      width: 320,
+      height: 420,
+      top: 40,
+      left: 20,
+      right: 340,
+      bottom: 460,
+      x: 20,
+      y: 40,
+      toJSON: () => ({}),
+    });
+
+    mainBody.dispatchEvent(new Event("scroll"));
+
+    const button = document.getElementById("edict-scroll-bottom-fab");
+    expect(button).toBeTruthy();
+    expect(button.hidden).toBe(true);
+
+    scrollHeight = 760;
+    const followUpBlock = document.createElement("div");
+    followUpBlock.textContent = "追加剧情";
+    mainBody.appendChild(followUpBlock);
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(button.hidden).toBe(false);
+  });
 });

@@ -14,8 +14,16 @@ import { isRigidMode } from "../rigid/config.js";
 import { ensureRigidState, runRigidTurn } from "../rigid/engine.js";
 import { appendMemoryAnchor, createMemoryAnchor } from "../rigid/memory.js";
 import { computeRigidSettlementDelta } from "../rigid/settlement.js";
+import { showError } from "../utils/toast.js";
 
 let positionsMetaCache = null;
+
+function cloneStateSnapshot(value) {
+  if (typeof structuredClone === "function") {
+    return structuredClone(value);
+  }
+  return JSON.parse(JSON.stringify(value));
+}
 
 async function getPositionsMeta() {
   if (positionsMetaCache) return positionsMetaCache;
@@ -296,6 +304,7 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
 
   if (isRigidMode(getState())) {
     const beforeRigidState = getState();
+    const rigidStateSnapshot = cloneStateSnapshot(beforeRigidState);
     const historyKey = `${beforeRigidState.currentYear || 1}_${beforeRigidState.currentMonth || 1}_${beforeRigidState.currentPhase || "morning"}`;
 
     if (choiceId === "custom_edict") {
@@ -433,20 +442,34 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     });
 
     setState({ storyFacts: buildStoryFactsFromState(getState()) });
-    autoSaveIfEnabled();
-    updateTopbarByState(getState());
-  if (typeof window !== "undefined") {
+    if (typeof window !== "undefined") {
       const edictTarget = getEdictRerenderTarget();
       if (edictTarget) {
-        edictTarget.innerHTML = "";
-        await runCurrentTurn(edictTarget);
+        const strictLlmTurnLoad = (beforeRigidState.config?.storyMode || "template") === "llm";
+        const nextTurnRendered = await runCurrentTurn(
+          edictTarget,
+          strictLlmTurnLoad
+            ? { suppressStoryError: true, requireLlmSuccess: true }
+            : {}
+        );
+        if (strictLlmTurnLoad && nextTurnRendered === false) {
+          setState(cloneStateSnapshot(rigidStateSnapshot));
+          updateTopbarByState(getState());
+          await runCurrentTurn(edictTarget);
+          scrollEdictToLatest(edictTarget);
+          showError("大模型本回合生成失败，未推进新回合，请稍后重试。");
+          return;
+        }
         scrollEdictToLatest(edictTarget);
       }
     }
+    autoSaveIfEnabled();
+    updateTopbarByState(getState());
     return;
   }
 
   const state = getState();
+  const stateSnapshot = cloneStateSnapshot(state);
   const beforeTurnSnapshot = captureDisplayStateSnapshot(state);
   const positionsMeta = await getPositionsMeta();
 
@@ -602,17 +625,30 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
     setState({ storyHistory: historyAfterTurn });
   }
 
-  autoSaveIfEnabled();
-  updateTopbarByState(getState());
-
   if (typeof window !== "undefined") {
     const edictTarget = getEdictRerenderTarget();
     if (edictTarget) {
-      edictTarget.innerHTML = "";
-      await runCurrentTurn(edictTarget);
+      const strictLlmTurnLoad = (state.config?.storyMode || "template") === "llm";
+      const nextTurnRendered = await runCurrentTurn(
+        edictTarget,
+        strictLlmTurnLoad
+          ? { suppressStoryError: true, requireLlmSuccess: true }
+          : {}
+      );
+      if (strictLlmTurnLoad && nextTurnRendered === false) {
+        setState(cloneStateSnapshot(stateSnapshot));
+        updateTopbarByState(getState());
+        await runCurrentTurn(edictTarget);
+        scrollEdictToLatest(edictTarget);
+        showError("大模型本回合生成失败，未推进新回合，请稍后重试。");
+        return;
+      }
       scrollEdictToLatest(edictTarget);
     }
   }
+
+  autoSaveIfEnabled();
+  updateTopbarByState(getState());
 }
 
 function applyMonthlyIncome() {

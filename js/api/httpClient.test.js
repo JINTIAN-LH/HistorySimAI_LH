@@ -35,6 +35,19 @@ describe("getApiBase", () => {
     expect(getApiBase({ apiBase: "https://historysimai-lh.onrender.com/" }, "test")).toBe("http://localhost:8080");
   });
 
+  it("uses the current LAN origin as proxy when mobile preview points to a remote api", () => {
+    vi.stubGlobal("window", {
+      location: {
+        origin: "http://192.168.31.8:8080",
+        protocol: "http:",
+        hostname: "192.168.31.8",
+        port: "8080",
+      },
+    });
+
+    expect(getApiBase({ apiBase: "https://historysimai-lh.onrender.com/" }, "test")).toBe("http://192.168.31.8:8080");
+  });
+
   it("falls back to the current origin for non-local browser hosts", () => {
     vi.stubGlobal("window", {
       location: {

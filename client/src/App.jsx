@@ -6,20 +6,50 @@ import { useLegacyRouterView } from "./ui/hooks/useLegacyRouterView.js";
 import { ConfigSetupGate } from "./ui/components/ConfigSetupGate.jsx";
 import { TopBar } from "./ui/shell/TopBar.jsx";
 import { BottomNav } from "./ui/shell/BottomNav.jsx";
+import { CourtView } from "./ui/views/court/CourtView.jsx";
+import { EdictView } from "./ui/views/edict/EdictView.jsx";
+import { NationView } from "./ui/views/nation/NationView.jsx";
 
 const DESKTOP_MIN_WIDTH = 1200;
+const MOBILE_GAMEPLAY_VIEW_IDS = [router.VIEW_IDS.EDICT, router.VIEW_IDS.COURT, router.VIEW_IDS.NATION];
 
 function lazyNamedView(loadModule, exportName) {
   return lazy(() => loadModule().then((module) => ({ default: module[exportName] })));
 }
 
-const CourtView = lazyNamedView(() => import("./ui/views/court/CourtView.jsx"), "CourtView");
-const EdictView = lazyNamedView(() => import("./ui/views/edict/EdictView.jsx"), "EdictView");
-const NationView = lazyNamedView(() => import("./ui/views/nation/NationView.jsx"), "NationView");
 const SettingsView = lazyNamedView(() => import("./ui/views/settings/SettingsView.jsx"), "SettingsView");
 const StartView = lazyNamedView(() => import("./ui/views/start/StartView.jsx"), "StartView");
 const TalentView = lazyNamedView(() => import("./ui/views/talent/TalentView.jsx"), "TalentView");
 const PolicyView = lazyNamedView(() => import("./ui/views/policy/PolicyView.jsx"), "PolicyView");
+
+function isMobileGameplayView(viewId) {
+  return MOBILE_GAMEPLAY_VIEW_IDS.includes(viewId);
+}
+
+function createReactView(viewId) {
+  if (viewId === router.VIEW_IDS.EDICT) {
+    return <EdictView useLegacyLayout />;
+  }
+  if (viewId === router.VIEW_IDS.COURT) {
+    return <CourtView useLegacyLayout />;
+  }
+  if (viewId === router.VIEW_IDS.NATION) {
+    return <NationView />;
+  }
+  if (viewId === router.VIEW_IDS.SETTINGS) {
+    return <SettingsView />;
+  }
+  if (viewId === router.VIEW_IDS.START) {
+    return <StartView />;
+  }
+  if (viewId === router.VIEW_IDS.TALENT) {
+    return <TalentView />;
+  }
+  if (viewId === router.VIEW_IDS.POLICY) {
+    return <PolicyView />;
+  }
+  return null;
+}
 
 function useIsDesktopShell() {
   const [isDesktop, setIsDesktop] = useState(() => {
@@ -60,6 +90,7 @@ function ViewLoadingFallback({ message = "正在载入页面…" }) {
 export function App() {
   const [bootError, setBootError] = useState(null);
   const [isBootstrapped, setIsBootstrapped] = useState(false);
+  const [mobileMountedViews, setMobileMountedViews] = useState(() => [router.getCurrentView()]);
   const [gateState, setGateState] = useState({
     checking: true,
     status: null,
@@ -157,21 +188,60 @@ export function App() {
     inspectRuntimeConfig();
   }, []);
 
-  const reactViews = {
-    [router.VIEW_IDS.EDICT]: <EdictView useLegacyLayout />,
-    [router.VIEW_IDS.COURT]: <CourtView useLegacyLayout />,
-    [router.VIEW_IDS.NATION]: <NationView />,
-    [router.VIEW_IDS.SETTINGS]: <SettingsView />,
-    [router.VIEW_IDS.START]: <StartView />,
-    [router.VIEW_IDS.TALENT]: <TalentView />,
-    [router.VIEW_IDS.POLICY]: <PolicyView />,
-  };
+  useEffect(() => {
+    if (!isBootstrapped || isDesktopShell || !isMobileGameplayView(currentView)) {
+      return;
+    }
 
-  const activeReactView = isBootstrapped ? reactViews[currentView] || null : null;
+    setMobileMountedViews((existing) => (
+      existing.includes(currentView) ? existing : [...existing, currentView]
+    ));
+  }, [currentView, isBootstrapped, isDesktopShell]);
+
+  useEffect(() => {
+    if (!isBootstrapped || isDesktopShell || typeof window === "undefined") {
+      return undefined;
+    }
+
+    const missingViews = MOBILE_GAMEPLAY_VIEW_IDS.filter((viewId) => !mobileMountedViews.includes(viewId));
+    if (!missingViews.length) {
+      return undefined;
+    }
+
+    const scheduleWarmup = typeof window.requestIdleCallback === "function"
+      ? window.requestIdleCallback.bind(window)
+      : (callback) => window.setTimeout(callback, 120);
+    const cancelWarmup = typeof window.cancelIdleCallback === "function"
+      ? window.cancelIdleCallback.bind(window)
+      : window.clearTimeout.bind(window);
+
+    const warmupHandle = scheduleWarmup(() => {
+      setMobileMountedViews((existing) => {
+        const nextViews = existing.slice();
+        missingViews.forEach((viewId) => {
+          if (!nextViews.includes(viewId)) {
+            nextViews.push(viewId);
+          }
+        });
+        return nextViews;
+      });
+    });
+
+    return () => {
+      cancelWarmup(warmupHandle);
+    };
+  }, [isBootstrapped, isDesktopShell, mobileMountedViews]);
+
   const shouldUseDesktopComposite = isBootstrapped
     && isDesktopShell
     && currentView !== router.VIEW_IDS.START
     && currentView !== router.VIEW_IDS.SETTINGS;
+  const shouldUseMobileGameplayCache = isBootstrapped
+    && !isDesktopShell
+    && isMobileGameplayView(currentView);
+  const activeReactView = isBootstrapped && !shouldUseMobileGameplayCache
+    ? createReactView(currentView)
+    : null;
 
   return (
     <div className={`app-shell${shouldUseDesktopComposite ? " app-shell--desktop" : " app-shell--mobile"}`}>
@@ -194,32 +264,46 @@ export function App() {
                   <section className={`desktop-gameplay-panel${currentView === router.VIEW_IDS.COURT ? " desktop-gameplay-panel--active" : ""}`}>
                     <div className="desktop-gameplay-panel__header">朝堂</div>
                     <div className="desktop-gameplay-panel__body">
-                      <Suspense fallback={<ViewLoadingFallback message="正在载入朝堂…" />}>
-                        <CourtView useLegacyLayout />
-                      </Suspense>
+                      <CourtView useLegacyLayout />
                     </div>
                   </section>
                   <section className={`desktop-gameplay-panel${currentView === router.VIEW_IDS.EDICT ? " desktop-gameplay-panel--active" : ""}`}>
                     <div className="desktop-gameplay-panel__header">诏书</div>
                     <div className="desktop-gameplay-panel__body">
-                      <Suspense fallback={<ViewLoadingFallback message="正在载入诏书…" />}>
-                        <EdictView useLegacyLayout />
-                      </Suspense>
+                      <EdictView useLegacyLayout />
                     </div>
                   </section>
                   <section className={`desktop-gameplay-panel${currentView === router.VIEW_IDS.NATION ? " desktop-gameplay-panel--active" : ""}`}>
                     <div className="desktop-gameplay-panel__header">国家</div>
                     <div className="desktop-gameplay-panel__body">
-                      <Suspense fallback={<ViewLoadingFallback message="正在载入国家…" />}>
-                        <NationView useLegacyLayout />
-                      </Suspense>
+                      <NationView useLegacyLayout />
                     </div>
                   </section>
                 </div>
               ) : (
-                <Suspense fallback={<ViewLoadingFallback />}>
-                  {activeReactView}
-                </Suspense>
+                <>
+                  {!isDesktopShell ? (
+                    <div className="mobile-gameplay-stack" hidden={!shouldUseMobileGameplayCache} aria-live="polite">
+                      {mobileMountedViews
+                        .filter((viewId) => isMobileGameplayView(viewId))
+                        .map((viewId) => (
+                          <section
+                            key={viewId}
+                            className={`mobile-gameplay-stack__panel${currentView === viewId ? " mobile-gameplay-stack__panel--active" : ""}`}
+                            hidden={currentView !== viewId}
+                            aria-hidden={currentView !== viewId}
+                          >
+                            {createReactView(viewId)}
+                          </section>
+                        ))}
+                    </div>
+                  ) : null}
+                  {shouldUseMobileGameplayCache ? null : (
+                    <Suspense fallback={<ViewLoadingFallback />}>
+                      {activeReactView}
+                    </Suspense>
+                  )}
+                </>
               )}
             </main>
             {!shouldUseDesktopComposite ? <BottomNav currentView={currentView} /> : null}

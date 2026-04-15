@@ -2,6 +2,18 @@ function isLoopbackHost(hostname) {
   return hostname === "localhost" || hostname === "127.0.0.1";
 }
 
+function isPrivateIpv4Host(hostname) {
+  return /^(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})$/i.test(hostname);
+}
+
+function isLocalDevelopmentHost(hostname) {
+  const normalized = String(hostname || "").trim().toLowerCase();
+  if (!normalized) return false;
+  if (isLoopbackHost(normalized) || isPrivateIpv4Host(normalized)) return true;
+  if (normalized.endsWith(".local")) return true;
+  return !normalized.includes(".");
+}
+
 function getBrowserFallbackApiBase() {
   if (typeof window === "undefined" || !window.location) {
     return "";
@@ -23,13 +35,13 @@ function shouldUseBrowserProxyForConfiguredBase(configuredApiBase) {
     return false;
   }
 
-  if (!isLoopbackHost(window.location.hostname)) {
+  if (!isLocalDevelopmentHost(window.location.hostname)) {
     return false;
   }
 
   try {
     const targetUrl = new URL(configuredApiBase);
-    if (isLoopbackHost(targetUrl.hostname)) {
+    if (isLocalDevelopmentHost(targetUrl.hostname)) {
       return false;
     }
     return /(^|\.)onrender\.com$/i.test(targetUrl.hostname);

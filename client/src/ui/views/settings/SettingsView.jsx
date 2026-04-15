@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { router } from "@legacy/router.js";
 import { getState, resetState, setState } from "@legacy/state.js";
+import { fetchConfigStatus, saveRuntimeConfig } from "@client/bootstrap/configurationGate.js";
 import {
   applyLoadedGame,
   clearGame,
@@ -23,6 +24,32 @@ function buildProgressText(state) {
   const phaseLabels = config.phaseLabels || { morning: "早朝", afternoon: "午后", evening: "夜间" };
   const phaseLabel = phaseLabels[state.currentPhase] || "";
   return `当前进度：建炎${state.currentYear || 3}年${state.currentMonth || 4}月 · 第${state.currentDay || 1}日 · ${phaseLabel}`;
+}
+
+const DEFAULT_API_BASE = "https://open.bigmodel.cn/api/paas/v4";
+const DEFAULT_MODEL = "glm-4-flash";
+
+function buildRuntimeFormState(status) {
+  const fields = status?.fields || {};
+  return {
+    LLM_API_KEY: "",
+    LLM_API_BASE: fields.LLM_API_BASE?.value || DEFAULT_API_BASE,
+    LLM_MODEL: fields.LLM_MODEL?.value || DEFAULT_MODEL,
+    LLM_CHAT_MODEL: fields.LLM_CHAT_MODEL?.value || fields.LLM_MODEL?.value || DEFAULT_MODEL,
+  };
+}
+
+function buildRuntimePayload(formState) {
+  const apiBase = String(formState?.LLM_API_BASE || "").trim() || DEFAULT_API_BASE;
+  const model = String(formState?.LLM_MODEL || "").trim() || DEFAULT_MODEL;
+  const chatModel = String(formState?.LLM_CHAT_MODEL || "").trim() || model;
+
+  return {
+    LLM_API_KEY: String(formState?.LLM_API_KEY || "").trim(),
+    LLM_API_BASE: apiBase,
+    LLM_MODEL: model,
+    LLM_CHAT_MODEL: chatModel,
+  };
 }
 
 function SaveSlotsDrawer({ currentModeLabel, currentSlotId, savesBySlot, onLoad }) {
@@ -84,6 +111,12 @@ export function SettingsView() {
     currentSlotId.startsWith("manual_") ? currentSlotId : "manual_01"
   );
   const [saveButtonText, setSaveButtonText] = useState("保存");
+  const [runtimeStatus, setRuntimeStatus] = useState(null);
+  const [runtimeForm, setRuntimeForm] = useState(() => buildRuntimeFormState(null));
+  const [runtimeLoading, setRuntimeLoading] = useState(true);
+  const [runtimeSaving, setRuntimeSaving] = useState(false);
+  const [runtimeError, setRuntimeError] = useState("");
+  const [runtimeSaveHint, setRuntimeSaveHint] = useState("");
 
   useEffect(() => {
     if (currentSlotId.startsWith("manual_")) {
@@ -102,6 +135,32 @@ export function SettingsView() {
       window.clearTimeout(timerId);
     };
   }, [saveButtonText]);
+
+  useEffect(() => {
+    let active = true;
+    const loadRuntimeStatus = async () => {
+      setRuntimeLoading(true);
+      setRuntimeError("");
+      try {
+        const status = await fetchConfigStatus();
+        if (!active) return;
+        setRuntimeStatus(status);
+        setRuntimeForm(buildRuntimeFormState(status));
+      } catch (error) {
+        if (!active) return;
+        setRuntimeError(error?.message || "无法读取当前浏览器中的大模型设置");
+      } finally {
+        if (active) {
+          setRuntimeLoading(false);
+        }
+      }
+    };
+
+    loadRuntimeStatus();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const saves = getSaveList(mode).filter((save) => save.slotId.startsWith("manual_"));
   const savesBySlot = new Map(saves.map((save) => [save.slotId, save]));
@@ -146,6 +205,32 @@ export function SettingsView() {
     updateTopbarByState(getState());
     updateGoalBar(getState());
     window.location.reload();
+  };
+
+  const handleRuntimeFieldChange = (event) => {
+    const { name, value } = event.target;
+    setRuntimeForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const handleRuntimeConfigSave = async (event) => {
+    event.preventDefault();
+    setRuntimeSaving(true);
+    setRuntimeSaveHint("");
+    setRuntimeError("");
+
+    try {
+      const status = await saveRuntimeConfig(buildRuntimePayload(runtimeForm));
+      setRuntimeStatus(status);
+      setRuntimeForm(buildRuntimeFormState(status));
+      setRuntimeSaveHint("已保存到当前浏览器，下次进入仍会生效");
+    } catch (error) {
+      setRuntimeError(error?.message || "保存失败，请稍后重试");
+    } finally {
+      setRuntimeSaving(false);
+    }
   };
 
   const progressState = useLegacySelector((state) => ({
@@ -211,6 +296,93 @@ export function SettingsView() {
             <button type="button" onClick={() => switchMode("classic")}>经典</button>
             <button type="button" onClick={() => switchMode("rigid_v1")}>困难</button>
           </div>
+        </div>
+
+        <div
+          className="settings-item"
+          style={{ flexDirection: "column", alignItems: "stretch", gap: "8px" }}
+        >
+          <div style={{ fontSize: "13px", fontWeight: "600" }}>大模型参数</div>
+          <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>
+            仅保存在当前浏览器，不会写入公共服务器。
+          </div>
+
+          {runtimeLoading ? (
+            <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>正在读取本地参数…</div>
+          ) : (
+            <form onSubmit={handleRuntimeConfigSave} style={{ display: "grid", gap: "8px" }}>
+              <label style={{ display: "grid", gap: "4px" }}>
+                <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>API Key（留空则沿用当前已保存值）</span>
+                <input
+                  type="password"
+                  name="LLM_API_KEY"
+                  value={runtimeForm.LLM_API_KEY}
+                  onChange={handleRuntimeFieldChange}
+                  placeholder="粘贴新 key，或留空保持不变"
+                  autoComplete="off"
+                  spellCheck="false"
+                />
+              </label>
+
+              <label style={{ display: "grid", gap: "4px" }}>
+                <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>API Base</span>
+                <input
+                  type="text"
+                  name="LLM_API_BASE"
+                  value={runtimeForm.LLM_API_BASE}
+                  onChange={handleRuntimeFieldChange}
+                  placeholder={DEFAULT_API_BASE}
+                  autoComplete="off"
+                  spellCheck="false"
+                />
+              </label>
+
+              <div style={{ display: "grid", gap: "8px", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+                <label style={{ display: "grid", gap: "4px" }}>
+                  <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>剧情模型</span>
+                  <input
+                    type="text"
+                    name="LLM_MODEL"
+                    value={runtimeForm.LLM_MODEL}
+                    onChange={handleRuntimeFieldChange}
+                    placeholder={DEFAULT_MODEL}
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                </label>
+
+                <label style={{ display: "grid", gap: "4px" }}>
+                  <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>对话模型</span>
+                  <input
+                    type="text"
+                    name="LLM_CHAT_MODEL"
+                    value={runtimeForm.LLM_CHAT_MODEL}
+                    onChange={handleRuntimeFieldChange}
+                    placeholder={DEFAULT_MODEL}
+                    autoComplete="off"
+                    spellCheck="false"
+                  />
+                </label>
+              </div>
+
+              <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>
+                当前 Key 状态：{runtimeStatus?.fields?.LLM_API_KEY?.masked || "未填写"}
+              </div>
+
+              {runtimeError ? (
+                <div style={{ fontSize: "12px", color: "var(--color-danger)" }}>{runtimeError}</div>
+              ) : null}
+              {runtimeSaveHint ? (
+                <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>{runtimeSaveHint}</div>
+              ) : null}
+
+              <div>
+                <button type="submit" disabled={runtimeSaving}>
+                  {runtimeSaving ? "正在保存…" : "保存大模型参数"}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
         <div className="settings-item">

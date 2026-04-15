@@ -1313,6 +1313,8 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
   const rigidMode = isRigidMode(state);
   const isFirstTurn = (state.lastChoiceId == null) && (!Array.isArray(state.storyHistory) || state.storyHistory.length === 0);
   const templatePaths = buildStoryTemplatePaths(state, config);
+  const requireLlmSuccess = !!options?.requireLlmSuccess;
+  const suppressStoryError = !!options?.suppressStoryError;
 
   if (state.currentStoryTurn && state.currentStoryTurn.key === cacheKey && state.currentStoryTurn.data) {
     storyCache = { key: cacheKey, data: state.currentStoryTurn.data };
@@ -1343,6 +1345,10 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
     if (renderId != null && container._storyRenderId !== renderId) return null;
   }
 
+  if (useLLM && data == null && requireLlmSuccess) {
+    return null;
+  }
+
   if (data == null) {
     for (const templatePath of templatePaths) {
       try {
@@ -1360,11 +1366,13 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
         ? "本回合剧情生成失败，请检查网络或后端配置。"
         : "本回合剧情尚未准备好，请稍后再试。";
 
-      renderStoryError(container, errorMessage, () => {
-        storyCache = { key: null, data: null };
-        resetStoryRenderTargets(container);
-        renderStoryTurn(getState(), container, onChoice, options);
-      });
+      if (!suppressStoryError) {
+        renderStoryError(container, errorMessage, () => {
+          storyCache = { key: null, data: null };
+          resetStoryRenderTargets(container);
+          renderStoryTurn(getState(), container, onChoice, options);
+        });
+      }
       return null;
     }
   }
@@ -1718,7 +1726,7 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
 export async function renderStoryTurn(state, container, onChoice, options = {}) {
   storyChoiceSubmitting = false;
   const renderId = options && options.renderId;
-  if (renderId != null && container._storyRenderId !== renderId) return;
+  if (renderId != null && container._storyRenderId !== renderId) return false;
 
   resetStoryRenderTargets(container);
   setupDanmuLayer(container);
@@ -1727,10 +1735,10 @@ export async function renderStoryTurn(state, container, onChoice, options = {}) 
   const phaseLabels = config.phaseLabels || { morning: "早朝", afternoon: "午后", evening: "夜间" };
   const history = state.storyHistory || [];
   
-  if (!renderStoryHistory(container, history, phaseLabels, state, renderId)) return;
+  if (!renderStoryHistory(container, history, phaseLabels, state, renderId)) return false;
 
   const data = await loadStoryData(state, container, renderId, onChoice, options);
-  if (data == null) return;
+  if (data == null) return false;
 
   if (data.lastChoiceEffects && state.lastChoiceId != null) {
     const lastEntry = history[history.length - 1];
@@ -1773,11 +1781,12 @@ export async function renderStoryTurn(state, container, onChoice, options = {}) 
   const latestState = getState();
   renderStorySidePanels(container, latestState, phaseLabels);
 
-  if (renderId != null && container._storyRenderId !== renderId) return;
+  if (renderId != null && container._storyRenderId !== renderId) return false;
 
   renderCurrentTurn(container, data, latestState, phaseLabels, onChoice, options);
 
   startDanmu(container);
+  return true;
 }
 
 function showCustomEdictPanel(onChoice, state) {

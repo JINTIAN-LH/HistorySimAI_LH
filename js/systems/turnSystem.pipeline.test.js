@@ -55,6 +55,10 @@ vi.mock("../layout.js", () => ({
   updateTopbarByState: vi.fn(),
 }));
 
+vi.mock("../utils/toast.js", () => ({
+  showError: vi.fn(),
+}));
+
 vi.mock("./coreGameplaySystem.js", () => ({
   applyProgressionToChoiceEffects: vi.fn((effects) => effects),
   extractCustomPoliciesFromEdict: vi.fn(() => []),
@@ -108,6 +112,7 @@ vi.mock("../rigid/settlement.js", () => ({
 import { getState, resetState, setState } from "../state.js";
 import { runCurrentTurn } from "./turnSystem.js";
 import { extractCustomPoliciesFromEdict, resolveHostileForcesAfterChoice } from "./coreGameplaySystem.js";
+import { showError } from "../utils/toast.js";
 
 describe("turnSystem dual-mode one-turn loop", () => {
   beforeEach(() => {
@@ -147,6 +152,37 @@ describe("turnSystem dual-mode one-turn loop", () => {
     expect(state.currentYear).toBe(3);
     expect(mocked.pushCurrentTurnToHistoryMock).toHaveBeenCalled();
     expect(mocked.renderStoryTurnMock).toHaveBeenCalled();
+  });
+
+  it("does not advance to a new turn when llm next-turn generation fails", async () => {
+    setState({
+      config: {
+        ...(getState().config || {}),
+        storyMode: "llm",
+      },
+    });
+
+    let renderCount = 0;
+    mocked.renderStoryTurnMock.mockImplementation(async (_state, _container, onChoice) => {
+      renderCount += 1;
+      if (renderCount === 1) {
+        await onChoice("classic_choice", "整饬吏治", null, { nation: { treasury: 1200 } });
+        return true;
+      }
+      if (renderCount === 2) {
+        return false;
+      }
+      return true;
+    });
+
+    const container = document.getElementById("main-view");
+    await runCurrentTurn(container);
+
+    const state = getState();
+    expect(state.lastChoiceId).toBeNull();
+    expect(state.currentMonth).toBe(4);
+    expect(state.currentYear).toBe(3);
+    expect(showError).toHaveBeenCalledWith("大模型本回合生成失败，未推进新回合，请稍后重试。");
   });
 
   it("applies estimated treasury and grain effects in classic mode when text contains amounts", async () => {
@@ -315,6 +351,42 @@ describe("turnSystem dual-mode one-turn loop", () => {
     expect(state.lastChoiceId).toBe("rigid_relief_refugees");
     expect(state.rigid?.lastSettlementDelta?.rigidRefuteTimes).toBe(1);
     expect(mocked.renderStoryTurnMock).toHaveBeenCalled();
+  });
+
+  it("does not advance rigid mode when llm next-turn generation fails", async () => {
+    setState({
+      mode: "rigid_v1",
+      config: { ...(getState().config || {}), gameplayMode: "rigid_v1", storyMode: "llm", apiBase: "http://localhost:3002" },
+      currentMonth: 8,
+      currentYear: 1,
+      rigid: {
+        ...(getState().rigid || {}),
+        calendar: { year: 1627, month: 8, turn: 1 },
+      },
+    });
+
+    let renderCount = 0;
+    mocked.renderStoryTurnMock.mockImplementation(async (_state, _container, onChoice) => {
+      renderCount += 1;
+      if (renderCount === 1) {
+        await onChoice("rigid_relief_refugees", "赈济流民", null, null);
+        return true;
+      }
+      if (renderCount === 2) {
+        return false;
+      }
+      return true;
+    });
+
+    const container = document.getElementById("main-view");
+    await runCurrentTurn(container);
+
+    const state = getState();
+    expect(state.lastChoiceId).toBeNull();
+    expect(state.currentMonth).toBe(8);
+    expect(state.currentYear).toBe(1);
+    expect(state.rigid?.calendar).toEqual({ year: 1627, month: 8, turn: 1 });
+    expect(showError).toHaveBeenCalledWith("大模型本回合生成失败，未推进新回合，请稍后重试。");
   });
 
   it("applies derived appointment effects in rigid mode", async () => {

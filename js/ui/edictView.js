@@ -5,6 +5,19 @@ import { createGameplayPageTemplate } from "./viewPrimitives.js";
 const EDICT_SCROLL_FAB_ID = "edict-scroll-bottom-fab";
 const EDICT_SCROLL_FAB_OFFSET = 18;
 const EDICT_SCROLL_FAB_VISIBILITY_GAP = 32;
+const activeEdictScrollFabCleanups = new Set();
+
+function waitForRenderFrames() {
+  return new Promise((resolve) => {
+    if (typeof requestAnimationFrame !== "function") {
+      resolve();
+      return;
+    }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    });
+  });
+}
 
 function scrollHostToBottom(scrollHost) {
   if (!scrollHost) return;
@@ -51,8 +64,10 @@ function syncFloatingButtonVisibility(button, scrollHost) {
 }
 
 function removeEdictScrollButton(container) {
-  if (typeof container?._edictScrollFabCleanup === "function") {
-    container._edictScrollFabCleanup();
+  const cleanup = container?._edictScrollFabCleanup;
+  if (typeof cleanup === "function") {
+    cleanup();
+    activeEdictScrollFabCleanups.delete(cleanup);
   }
   container._edictScrollFabCleanup = null;
 }
@@ -88,17 +103,39 @@ function mountEdictScrollButton(container, scrollHost, useLegacyLayout) {
     window.addEventListener("scroll", syncUi, { passive: true });
   }
 
+  const mutationObserver = typeof MutationObserver === "function"
+    ? new MutationObserver(() => {
+      syncUi();
+    })
+    : null;
+  if (mutationObserver) {
+    mutationObserver.observe(scrollHost, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+  }
+
   document.body.appendChild(button);
   syncUi();
 
-  container._edictScrollFabCleanup = () => {
+  let released = false;
+  const cleanup = () => {
+    if (released) return;
+    released = true;
     scrollHost.removeEventListener("scroll", syncUi);
     window.removeEventListener("resize", syncUi);
     if (positionHost !== scrollHost) {
       window.removeEventListener("scroll", syncUi);
     }
+    if (mutationObserver) {
+      mutationObserver.disconnect();
+    }
     button.remove();
+    activeEdictScrollFabCleanups.delete(cleanup);
   };
+  container._edictScrollFabCleanup = cleanup;
+  activeEdictScrollFabCleanups.add(cleanup);
 }
 
 export async function renderEdictView(container, options = {}) {
@@ -111,6 +148,7 @@ export async function renderEdictView(container, options = {}) {
     container._storyLayout = null;
     container._storyRenderId = (container._storyRenderId || 0) + 1;
     await runCurrentTurn(container, { renderId: container._storyRenderId });
+    await waitForRenderFrames();
     mountEdictScrollButton(container, container, true);
     requestAnimationFrame(() => {
       container.scrollTop = container.scrollHeight;
@@ -140,6 +178,7 @@ export async function renderEdictView(container, options = {}) {
   container.appendChild(template.root);
 
   await runCurrentTurn(template.root, { renderId: template.root._storyRenderId });
+  await waitForRenderFrames();
   mountEdictScrollButton(container, template.mainBody, false);
   requestAnimationFrame(() => {
     template.mainBody.scrollTop = template.mainBody.scrollHeight;
@@ -147,6 +186,7 @@ export async function renderEdictView(container, options = {}) {
 }
 
 export function removeEdictPanelsWrap() {
+  activeEdictScrollFabCleanups.forEach((cleanup) => cleanup());
   document.querySelectorAll(`#${EDICT_SCROLL_FAB_ID}`).forEach((button) => button.remove());
   const panels = document.querySelectorAll(".edict-panels-wrap");
   panels.forEach((panel) => panel.remove());

@@ -1,5 +1,40 @@
 # Commit 日志
 
+## 2026-04-15: fix: stabilize llm turn rollback and settings runtime updates
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+这一轮把玩家反馈的两条主线问题和相关稳定性改动合并提交：
+1) 诏书页在长剧情/多回合后“最新诏书”按钮偶发不出现；
+2) 设置页无法直接更新玩家本地大模型参数。
+
+同时补齐了 LLM 回合失败时的回滚保障、移动端本地联调代理/CORS 兼容，以及 React 壳层移动端玩法视图缓存与样式入口收敛，确保构建产物与回归测试稳定。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/ui/edictView.js` `js/ui/edictView.test.js` | ✏️ 修复 / ➕ 补测 | 诏书悬浮按钮增加渲染帧等待与 MutationObserver 同步，修复多回合内容追加后的显隐时序问题，并补充回归测试 |
+| `client/src/ui/views/settings/SettingsView.jsx` `client/src/bootstrap/configurationGate.js` `client/src/bootstrap/configurationGate.test.js` | ✏️ 修复 / ➕ 补测 | 设置页新增大模型参数编辑与本地保存入口；保存时支持“API Key 留空沿用已保存值” |
+| `js/systems/turnSystem.js` `js/systems/storySystem.js` `js/systems/turnSystem.pipeline.test.js` | ✏️ 加固 / ➕ 补测 | LLM 模式下下一回合生成失败时回滚状态并提示，不再静默推进错误回合 |
+| `js/api/httpClient.js` `js/api/httpClient.test.js` `server/index.js` `server/index.test.js` | ✏️ 兼容 / ➕ 补测 | 本地局域网调试下代理与 CORS 允许私网地址来源，移动端真机联调更稳定 |
+| `client/src/App.jsx` `client/src/main.js` `css/layout.css` | ✏️ 优化 | React 视图装载与移动端布局细节收敛，减少切页抖动并统一样式入口 |
+| `.github/copilot-instructions.md` | ➕ 新增 | 补充仓库级 Copilot 开发约束说明，统一协作规则 |
+
+### 价值
+
+- **玩家体验更稳定**：多回合诏书浏览可稳定回跳到最新内容
+- **设置可维护性提升**：玩家可在设置页直接更新本地模型参数
+- **LLM 失败可回退**：回合推进在生成失败时不会破坏状态一致性
+- **移动端联调更顺畅**：LAN 场景下前后端联通与预检通过率更高
+
+### 验证
+
+- `npm run test -- js/ui/edictView.test.js client/src/bootstrap/configurationGate.test.js` ✅ 通过
+- `npm run build` ✅ 通过
+
 ## 2026-04-13: feat: add edict jump-to-latest floating button
 
 **Commit Hash**: (pending)

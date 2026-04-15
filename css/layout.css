@@ -33,6 +33,7 @@ body {
 }
 
 #main-view {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -58,6 +59,20 @@ body {
 .app-shell {
   width: 100%;
   min-height: 100%;
+}
+
+.mobile-gameplay-stack {
+  position: relative;
+  min-height: 100%;
+}
+
+.mobile-gameplay-stack__panel {
+  min-height: 100%;
+}
+
+.app-shell--mobile #main-view {
+  overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 .desktop-gameplay-grid {
@@ -259,6 +274,8 @@ body {
 
   #app {
     max-width: 480px;
+    height: 100svh;
+    min-height: 100svh;
     box-shadow: var(--shadow-soft);
   }
 
