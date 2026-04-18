@@ -8,9 +8,25 @@
 import { getState } from "../state.js";
 import { buildLlmProxyHeaders, getApiBase, postJsonAndReadText } from "./httpClient.js";
 import { getKnownCharactersFromState, normalizeCandidateCharacter } from "../utils/characterRegistry.js";
+import { mapFactionLabel, resolveFactionId } from "../worldview/worldviewAdapter.js";
 
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, Number.isFinite(v) ? v : min));
+}
+
+/**
+ * 从 worldviewOverrides 中提取 faction id→name 映射供服务端 LLM 提示词使用。
+ * 返回 { donglin: "主战清议", ... } 或 null。
+ */
+function extractFactionNamesForPrompt(worldviewOverrides) {
+  if (!worldviewOverrides) return null;
+  const factions = worldviewOverrides?.factions;
+  if (!factions || typeof factions !== "object") return null;
+  const result = {};
+  for (const [id, entry] of Object.entries(factions)) {
+    if (entry?.name) result[id] = entry.name;
+  }
+  return Object.keys(result).length ? result : null;
 }
 
 function deriveTalentTags(raw, source) {
@@ -63,6 +79,8 @@ export async function requestTalentRecruit(recruitType = "recommend") {
   const knownCharacters = getKnownCharactersFromState(state);
 
   const nation = state.nation || {};
+  const worldviewOverrides = config.worldviewOverrides;
+  const factionNames = extractFactionNamesForPrompt(worldviewOverrides);
   const body = {
     recruitType,
     state: {
@@ -74,6 +92,7 @@ export async function requestTalentRecruit(recruitType = "recommend") {
       prestige: state.prestige,
     },
     worldviewData: config.worldviewData || null,
+    factionNames,
     existingTalentIds: knownCharacters.map((t) => t.id).filter(Boolean),
     existingTalentNames: knownCharacters.map((t) => t.name).filter(Boolean),
   };
@@ -125,6 +144,16 @@ function normalizeTalent(raw, recruitType, usedIds = new Set()) {
   const rawId = typeof raw.id === "string" && raw.id.trim()
     ? raw.id.trim()
     : `talent_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+  // Apply worldview faction mapping so AI-generated talents use the correct era labels
+  const state = getState();
+  const worldviewOverrides = state?.config?.worldviewOverrides;
+  const rawFaction = typeof raw.faction === "string" ? raw.faction : "neutral";
+  const mappedFactionId = worldviewOverrides ? resolveFactionId(rawFaction, worldviewOverrides) : rawFaction;
+  const mappedFactionLabel = worldviewOverrides
+    ? mapFactionLabel(rawFaction, worldviewOverrides)
+    : (typeof raw.factionLabel === "string" ? raw.factionLabel : "中立派");
+
   return normalizeCandidateCharacter({
     ...raw,
     id: buildUniqueTalentId(rawId, usedIds),
@@ -138,10 +167,10 @@ function normalizeTalent(raw, recruitType, usedIds = new Set()) {
       culture: clamp(Number(ability.culture) || 50, 0, 100),
       loyalty: clamp(Number(ability.loyalty) || 60, 0, 100),
     },
-    faction: typeof raw.faction === "string" ? raw.faction : "neutral",
+    faction: mappedFactionId,
     tags: deriveTalentTags(raw, source),
     source,
-  }, { source, factionLabel: typeof raw.factionLabel === "string" ? raw.factionLabel : "中立派" });
+  }, { source, factionLabel: mappedFactionLabel });
 }
 
 // ─── 人才交互 ─────────────────────────────────────────────────────────────────

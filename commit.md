@@ -1,5 +1,32 @@
 # Commit 日志
 
+## 2026-04-18: fix: apply worldview faction mapping to AI-generated talents
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+AI 生成的人才角色仍携带明末派系标签（帝党、东林党、中立、军事将领），因为世界观映射层只处理了静态角色数据，未覆盖 LLM 运行时生成的人才。本次修复在 worldviewAdapter 新增派系名映射函数，在 talentApi 的 normalizeTalent 中调用映射，并在服务端 LLM 提示词中注入当前世界观的派系 ID 约束。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/worldview/worldviewAdapter.js` | ➕ 新增 | `mapFactionLabel()` / `resolveFactionId()` 派系名双向映射 |
+| `js/api/talentApi.js` | ✏️ 调整 | `normalizeTalent()` 内调用世界观映射修正 faction/factionLabel；新增 `extractFactionNamesForPrompt()` 传递派系名给服务端 |
+| `server/index.js` | ✏️ 调整 | talentRecruit 提示词追加 `factionHint`，约束 LLM 使用正确派系 ID |
+| `js/worldview/southernSongAdapter.test.js` | ➕ 新增 | 12 条测试覆盖 mapFactionLabel / resolveFactionId 各路径 |
+
+### 价值
+
+- **派系标签正确**：AI 招募的人才显示南宋世界观派系名（主战清议、务实经世等），不再泄漏明末标签
+- **双重防御**：服务端提示词约束 + 客户端归一化映射，确保任何 LLM 输出都能正确转换
+
+### 验证
+
+- `npm run build` ✅ 通过
+- `npm run test` ✅ 371 tests passed
+
 ## 2026-04-18: chore: switch default LLM provider to Alibaba Qwen (qwen-plus)
 
 **Commit Hash**: (pending)

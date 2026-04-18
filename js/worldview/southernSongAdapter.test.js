@@ -5,6 +5,8 @@ import {
   adaptFactionsData,
   adaptPolicyCatalogData,
   adaptPositionsData,
+  mapFactionLabel,
+  resolveFactionId,
 } from "./worldviewAdapter.js";
 
 describe("worldviewAdapter", () => {
@@ -54,5 +56,60 @@ describe("worldviewAdapter", () => {
     expect(policies[0].title).toBe("察事耳目收束");
     expect(policies[1].title).toBe("海商互市");
     expect(policies[1].description).toContain("南海");
+  });
+});
+
+describe("mapFactionLabel – AI talent faction mapping", () => {
+  it("should map faction IDs to Southern Song names", () => {
+    expect(mapFactionLabel("donglin")).toBe("主战清议");
+    expect(mapFactionLabel("neutral")).toBe("务实经世");
+    expect(mapFactionLabel("imperial")).toBe("行在近臣");
+    expect(mapFactionLabel("military")).toBe("江防宿将");
+    expect(mapFactionLabel("eunuch")).toBe("和议近习");
+  });
+
+  it("should map Ming-era Chinese labels to Southern Song names", () => {
+    expect(mapFactionLabel("东林党")).toBe("主战清议");
+    expect(mapFactionLabel("帝党")).toBe("行在近臣");
+    expect(mapFactionLabel("阉党")).toBe("和议近习");
+    expect(mapFactionLabel("中立")).toBe("务实经世");
+    expect(mapFactionLabel("中立派")).toBe("务实经世");
+    expect(mapFactionLabel("军事将领")).toBe("江防宿将");
+  });
+
+  it("should pass through already-correct Southern Song labels", () => {
+    expect(mapFactionLabel("主战清议")).toBe("主战清议");
+    expect(mapFactionLabel("务实经世")).toBe("务实经世");
+    expect(mapFactionLabel("江防宿将")).toBe("江防宿将");
+  });
+
+  it("should return unknown labels as-is", () => {
+    expect(mapFactionLabel("未知派系")).toBe("未知派系");
+  });
+
+  it("should handle empty or missing input", () => {
+    expect(mapFactionLabel("")).toBe("");
+    expect(mapFactionLabel(null)).toBe("");
+    expect(mapFactionLabel(undefined)).toBe("");
+  });
+});
+
+describe("resolveFactionId – AI talent faction ID resolution", () => {
+  it("should resolve faction IDs to themselves", () => {
+    expect(resolveFactionId("donglin")).toBe("donglin");
+    expect(resolveFactionId("military")).toBe("military");
+  });
+
+  it("should resolve Chinese labels to faction IDs", () => {
+    expect(resolveFactionId("东林党")).toBe("donglin");
+    expect(resolveFactionId("帝党")).toBe("imperial");
+    expect(resolveFactionId("军事将领")).toBe("military");
+    expect(resolveFactionId("中立")).toBe("neutral");
+  });
+
+  it("should fallback to neutral for unknown input", () => {
+    expect(resolveFactionId("未知")).toBe("neutral");
+    expect(resolveFactionId("")).toBe("neutral");
+    expect(resolveFactionId(null)).toBe("neutral");
   });
 });

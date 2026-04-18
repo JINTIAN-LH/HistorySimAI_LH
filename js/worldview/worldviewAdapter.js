@@ -93,6 +93,75 @@ export function adaptPolicyCatalogData(data, worldviewOverrides = defaultWorldvi
   return applyOverrideList(data, resolvedOverrides.policies || {});
 }
 
+// ─── 派系名映射（用于 AI 生成人才的 faction/factionLabel 修正）────────────────
+
+// Ming-era labels → faction id lookup (hardcoded because the overrides JSON only
+// stores id→name, not the reverse legacy labels).
+const LEGACY_FACTION_LABEL_TO_ID = {
+  "东林党": "donglin",
+  "帝党": "imperial",
+  "阉党": "eunuch",
+  "阉党余部": "eunuch",
+  "中立": "neutral",
+  "中立派": "neutral",
+  "军事将领": "military",
+  "清议士人": "donglin",
+  "主战清议": "donglin",
+  "务实经世": "neutral",
+  "行在近臣": "imperial",
+  "江防宿将": "military",
+  "和议近习": "eunuch",
+};
+
+/**
+ * 将 LLM 生成的原始 faction 字符串映射为当前世界观的派系名。
+ * 支持 faction id（如 "donglin"）和中文标签（如 "东林党"）两种输入。
+ * 找不到映射时返回原值。
+ */
+export function mapFactionLabel(rawFaction, worldviewOverrides = defaultWorldviewOverrides) {
+  if (!rawFaction || typeof rawFaction !== "string") return rawFaction || "";
+  const trimmed = rawFaction.trim();
+  if (!trimmed) return "";
+
+  const resolvedOverrides = resolveWorldviewOverrides(worldviewOverrides);
+  const factionOverrides = resolvedOverrides?.factions || {};
+
+  // Direct id match (e.g. "donglin" → overrides.factions.donglin.name)
+  if (factionOverrides[trimmed]?.name) {
+    return factionOverrides[trimmed].name;
+  }
+
+  // Label → id → override name
+  const resolvedId = LEGACY_FACTION_LABEL_TO_ID[trimmed];
+  if (resolvedId && factionOverrides[resolvedId]?.name) {
+    return factionOverrides[resolvedId].name;
+  }
+
+  return trimmed;
+}
+
+/**
+ * 将 LLM 生成的原始 faction 字符串解析为标准 faction id。
+ * 支持中文标签和 id 两种输入。找不到时返回 "neutral"。
+ */
+export function resolveFactionId(rawFaction, worldviewOverrides = defaultWorldviewOverrides) {
+  if (!rawFaction || typeof rawFaction !== "string") return "neutral";
+  const trimmed = rawFaction.trim();
+  if (!trimmed) return "neutral";
+
+  const resolvedOverrides = resolveWorldviewOverrides(worldviewOverrides);
+  const factionOverrides = resolvedOverrides?.factions || {};
+
+  // Direct id match
+  if (factionOverrides[trimmed]) return trimmed;
+
+  // Label → id
+  const resolvedId = LEGACY_FACTION_LABEL_TO_ID[trimmed];
+  if (resolvedId && factionOverrides[resolvedId]) return resolvedId;
+
+  return "neutral";
+}
+
 export function adaptWorldviewData(path, data, worldviewOverrides = defaultWorldviewOverrides) {
   if (!path || !data) return data;
   if (path.endsWith("data/characters.json")) return adaptCharactersData(data, worldviewOverrides);

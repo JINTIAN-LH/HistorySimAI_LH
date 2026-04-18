@@ -952,6 +952,12 @@ function createApp(options = {}) {
       ? `\n已有候选不可重复。禁止复用这些姓名：${existingTalentNames.slice(0, 24).join("、") || "无"}。禁止复用这些ID：${existingTalentIds.slice(0, 24).join(", ") || "无"}。`
       : "";
 
+    // Build faction hint from worldview data if available
+    const clientFactionNames = body.factionNames && typeof body.factionNames === "object" ? body.factionNames : null;
+    const factionHint = clientFactionNames
+      ? `\nfaction 字段请使用以下派系 ID 之一：${Object.entries(clientFactionNames).map(([id, name]) => `${id}（${name}）`).join("、")}。不要使用其他朝代的派系名称。`
+      : "";
+
     const systemPrompt = `你是${worldviewTitle}世界的人才生成器。
 ${rulerTitle}正以"${recruitTypeLabel}"的方式延揽${talentNoun}。
 请生成3到5位风格各异的${talentNoun}，输出严格合法的 JSON：
@@ -960,7 +966,7 @@ quality 分布：epic 约占 10%，excellent 约占 30%，ordinary 约占 60%。
   本次招募来源：${recruitProfile.talentSource}。
   人物画像要求：${recruitProfile.profileHint}
   能力倾向要求：${recruitProfile.fieldBias}
-  tags 必须反映人才特征、专长或出身，优先围绕：${tagHints}；同时${recruitProfile.tagHint}${existingConstraint}
+  tags 必须反映人才特征、专长或出身，优先围绕：${tagHints}；同时${recruitProfile.tagHint}${factionHint}${existingConstraint}
   严格输出 JSON，不要有任何额外内容。`;
 
     const messages = [
