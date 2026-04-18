@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-const DEFAULT_API_BASE = "https://open.bigmodel.cn/api/paas/v4";
-const DEFAULT_MODEL = "glm-4-long";
+const DEFAULT_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+const DEFAULT_MODEL = "qwen-plus";
 
 function buildFormState(status) {
   const fields = status?.fields || {};

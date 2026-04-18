@@ -1,5 +1,32 @@
 # Commit 日志
 
+## 2026-04-18: chore: switch default LLM provider to Alibaba Qwen (qwen-plus)
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+将全局默认 LLM 提供商从智谱 BigModel（glm-4-long）切换到阿里通义千问（qwen-plus），同步更新 API Base、默认模型名和对应测试断言。共 6 个文件，纯配置/常量替换，无逻辑变更。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `client/src/ui/components/ConfigSetupGate.jsx` | ✏️ 调整 | 默认 API Base → dashscope，默认模型 → qwen-plus |
+| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ 调整 | 同上 |
+| `js/playerRuntimeConfig.js` | ✏️ 调整 | `DEFAULT_LLM_API_BASE` / `DEFAULT_LLM_MODEL` 切换 |
+| `server/index.js` | ✏️ 调整 | `getRuntimeConfig` 与 config-status 回退值统一为 qwen-plus |
+| `server/index.test.js` | ✏️ 调整 | 测试断言同步更新 |
+| `server/config.example.json` | ✏️ 调整 | 示例配置切换为通义千问 |
+
+### 价值
+
+- **提供商切换**：默认使用阿里通义千问 qwen-plus，支持更广泛的国内开发者 API 接入
+
+### 验证
+
+- `npm run build` ✅ 通过
+
 ## 2026-04-18: fix: make LLM settings effective immediately and switch default model to glm-4-long
 
 **Commit Hash**: (pending)

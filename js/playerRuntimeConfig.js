@@ -2,8 +2,8 @@ import { getPersistentLocalItem, setPersistentLocalItem } from "./persistentBrow
 
 const PLAYER_RUNTIME_CONFIG_STORAGE_KEY = "history_sim_player_llm_config_v1";
 
-const DEFAULT_LLM_API_BASE = "https://open.bigmodel.cn/api/paas/v4";
-const DEFAULT_LLM_MODEL = "glm-4-long";
+const DEFAULT_LLM_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+const DEFAULT_LLM_MODEL = "qwen-plus";
 
 function canUseStorage() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";

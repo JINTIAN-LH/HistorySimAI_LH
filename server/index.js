@@ -162,9 +162,9 @@ function createApp(options = {}) {
     const requestModel = normalizeRequestHeaderValue(req?.get?.("X-LLM-Model"));
     const requestChatModel = normalizeRequestHeaderValue(req?.get?.("X-LLM-Chat-Model"));
     const apiKey = requestApiKey || String(currentConfig.LLM_API_KEY || "").trim();
-    const apiBase = (requestApiBase || String(currentConfig.LLM_API_BASE || "https://open.bigmodel.cn/api/paas/v4").trim()).replace(/\/$/, "");
-    const model = requestModel || String(currentConfig.LLM_MODEL || "glm-4-long").trim() || "glm-4-long";
-    const chatModel = requestChatModel || String(currentConfig.LLM_CHAT_MODEL || model || "glm-4-long").trim() || model || "glm-4-long";
+    const apiBase = (requestApiBase || String(currentConfig.LLM_API_BASE || "https://dashscope.aliyuncs.com/compatible-mode/v1").trim()).replace(/\/$/, "");
+    const model = requestModel || String(currentConfig.LLM_MODEL || "qwen-plus").trim() || "qwen-plus";
+    const chatModel = requestChatModel || String(currentConfig.LLM_CHAT_MODEL || model || "qwen-plus").trim() || model || "qwen-plus";
     return {
       apiKey,
       apiBase,
@@ -632,8 +632,8 @@ function createApp(options = {}) {
 
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const nextApiKey = String(body.LLM_API_KEY || "").trim();
-    const nextApiBase = String(body.LLM_API_BASE || "").trim() || "https://open.bigmodel.cn/api/paas/v4";
-    const nextModel = String(body.LLM_MODEL || "").trim() || "glm-4-long";
+    const nextApiBase = String(body.LLM_API_BASE || "").trim() || "https://dashscope.aliyuncs.com/compatible-mode/v1";
+    const nextModel = String(body.LLM_MODEL || "").trim() || "qwen-plus";
     const nextChatModel = String(body.LLM_CHAT_MODEL || "").trim() || nextModel;
 
     if (!nextApiKey) {
