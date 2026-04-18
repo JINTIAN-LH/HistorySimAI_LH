@@ -106,6 +106,12 @@ export function buildStoryRequestBody(state, lastChoice) {
     if (lastChoice.hint) body.lastChoiceHint = lastChoice.hint;
   }
 
+  // 自定义世界观的剧情提示词透传
+  const storyPrompt = state.config?.worldviewData?.storyPrompt;
+  if (typeof storyPrompt === "string" && storyPrompt.trim()) {
+    body.worldviewStoryPrompt = storyPrompt.trim();
+  }
+
   return body;
 }
 

@@ -5,6 +5,7 @@ const PERSISTENT_EXACT_KEYS = new Set([
   "chongzhen_sim_gameplay_mode_v1",
   "history_sim_player_llm_config_v1",
   "czsim_auto_idx",
+  "czsim_custom_worldview_v1",
 ]);
 
 const PERSISTENT_KEY_PREFIXES = [

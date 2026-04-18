@@ -1,5 +1,38 @@
 # Commit 日志
 
+## 2026-04-19: feat: add custom worldview import in settings UI with full data pipeline integration
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+在设置界面新增自定义世界观导入功能，玩家可上传 worldview.json + worldviewOverrides.json 两个文件，经校验预览后导入浏览器存储。刷新页面后 bootstrap 自动加载自定义世界观，注入覆盖到 dataLoader 适配层，同时将自定义剧情提示词透传到服务端 story 端点。玩法规则完全保留，仅替换角色、势力和背景叙事。同时修复了 state.config.worldviewData 从未被填充的既有缺陷。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/worldview/worldviewStorage.js` | ➕ 新增 | 世界观包校验、构建、浏览器存储CRUD、预览生成 |
+| `js/worldview/worldviewStorage.test.js` | ➕ 新增 | 18项单元测试覆盖全部导出函数 |
+| `js/persistentBrowserStorage.js` | ✏️ 调整 | 白名单新增 `czsim_custom_worldview_v1` 存储键 |
+| `js/dataLoader.js` | ✏️ 调整 | 新增 `setActiveWorldviewOverrides()` / `clearDataCache()` 导出，loadJSON 透传覆盖 |
+| `js/main.js` | ✏️ 调整 | bootstrap 加载自定义世界观、注入覆盖、填充 worldviewData 到 state.config |
+| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ 调整 | 新增世界观导入区域：双文件上传→校验→预览→导入/清除 |
+| `server/index.js` | ✏️ 调整 | story 端点支持请求体 `worldviewStoryPrompt` 覆盖默认系统提示词 |
+| `js/api/requestContext.js` | ✏️ 调整 | buildStoryRequestBody 自动附带自定义世界观的 storyPrompt |
+
+### 价值
+
+- **玩法全盘保留**：所有游戏机制（回合、政策、科举、军事、结算）不受影响，仅世界观语义层替换
+- **完整数据管线**：从浏览器存储→bootstrap→dataLoader→worldviewAdapter→服务端提示词，全链路打通
+- **用户友好**：设置页提供校验预览，导入前可确认角色数量、势力列表、提示词状态
+- **修复既有缺陷**：state.config.worldviewData 此前从未填充，talentPolicyWorldviewAdapter 一直回退到默认值
+
+### 验证
+
+- `npm run build` ✅ 通过
+- `npm run test` ✅ 389 tests passed
+
 ## 2026-04-18: fix: apply worldview faction mapping to AI-generated talents
 
 **Commit Hash**: (pending)

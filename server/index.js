@@ -667,8 +667,12 @@ function createApp(options = {}) {
     }
 
     const body = req.body || {};
+    const systemPrompt =
+      typeof body.worldviewStoryPrompt === "string" && body.worldviewStoryPrompt.trim()
+        ? body.worldviewStoryPrompt.trim()
+        : buildStorySystemPrompt(worldviewData);
     const messages = [
-      { role: "system", content: buildStorySystemPrompt(worldviewData) },
+      { role: "system", content: systemPrompt },
       { role: "user", content: buildUserMessage(body) },
     ];
 

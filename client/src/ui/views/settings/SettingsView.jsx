@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { router } from "@legacy/router.js";
 import { getState, resetState, setState } from "@legacy/state.js";
 import { fetchConfigStatus, saveRuntimeConfig } from "@client/bootstrap/configurationGate.js";
@@ -14,6 +14,15 @@ import {
 } from "@legacy/storage.js";
 import { updateGoalBar, updateTopbarByState } from "@legacy/layout.js";
 import { shallowEqual, useLegacySelector } from "@client/ui/hooks/useLegacySelector.js";
+import {
+  validateWorldviewPackage,
+  buildWorldviewPackage,
+  saveCustomWorldview,
+  loadCustomWorldview,
+  clearCustomWorldview,
+  hasCustomWorldview,
+  buildWorldviewPreview,
+} from "@legacy/worldview/worldviewStorage.js";
 
 function getModeLabel(mode) {
   return mode === "rigid_v1" ? "困难模式" : "经典模式";
@@ -117,6 +126,21 @@ export function SettingsView() {
   const [runtimeSaving, setRuntimeSaving] = useState(false);
   const [runtimeError, setRuntimeError] = useState("");
   const [runtimeSaveHint, setRuntimeSaveHint] = useState("");
+
+  // ── 世界观导入状态 ──
+  const [wvWorldviewFile, setWvWorldviewFile] = useState(null);
+  const [wvOverridesFile, setWvOverridesFile] = useState(null);
+  const [wvValidation, setWvValidation] = useState(null);
+  const [wvPreview, setWvPreview] = useState(null);
+  const [wvImporting, setWvImporting] = useState(false);
+  const [wvError, setWvError] = useState("");
+  const [wvActive, setWvActive] = useState(() => hasCustomWorldview());
+  const [wvActivePreview, setWvActivePreview] = useState(() => {
+    const existing = loadCustomWorldview();
+    return existing ? buildWorldviewPreview({ worldview: existing.worldview, overrides: existing.overrides, meta: existing.meta }) : null;
+  });
+  const worldviewFileRef = useRef(null);
+  const overridesFileRef = useRef(null);
 
   useEffect(() => {
     if (currentSlotId.startsWith("manual_")) {
@@ -233,6 +257,89 @@ export function SettingsView() {
     }
   };
 
+  // ── 世界观导入处理 ──
+  const readJsonFile = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          resolve(JSON.parse(reader.result));
+        } catch {
+          reject(new Error(`${file.name} 不是有效的 JSON 文件`));
+        }
+      };
+      reader.onerror = () => reject(new Error(`读取 ${file.name} 失败`));
+      reader.readAsText(file);
+    });
+
+  const handleWorldviewValidate = async () => {
+    setWvError("");
+    setWvValidation(null);
+    setWvPreview(null);
+    if (!wvWorldviewFile || !wvOverridesFile) {
+      setWvError("请同时选择 worldview.json 和 worldviewOverrides.json 两个文件");
+      return;
+    }
+    try {
+      const [worldviewJson, overridesJson] = await Promise.all([
+        readJsonFile(wvWorldviewFile),
+        readJsonFile(wvOverridesFile),
+      ]);
+      const pkg = buildWorldviewPackage(worldviewJson, overridesJson);
+      const result = validateWorldviewPackage(pkg);
+      setWvValidation(result);
+      if (result.valid) {
+        setWvPreview(buildWorldviewPreview(pkg));
+      }
+    } catch (err) {
+      setWvError(err.message || "解析文件失败");
+    }
+  };
+
+  const handleWorldviewImport = async () => {
+    setWvImporting(true);
+    setWvError("");
+    try {
+      const [worldviewJson, overridesJson] = await Promise.all([
+        readJsonFile(wvWorldviewFile),
+        readJsonFile(wvOverridesFile),
+      ]);
+      const pkg = buildWorldviewPackage(worldviewJson, overridesJson);
+      const result = validateWorldviewPackage(pkg);
+      if (!result.valid) {
+        setWvError("校验未通过：" + result.errors.join("；"));
+        return;
+      }
+      saveCustomWorldview(pkg);
+      setWvActive(true);
+      setWvActivePreview(buildWorldviewPreview(pkg));
+      setWvValidation(null);
+      setWvPreview(null);
+      if (window.confirm("自定义世界观已保存。需要立即刷新页面以使其生效吗？")) {
+        window.location.reload();
+      }
+    } catch (err) {
+      setWvError(err.message || "导入失败");
+    } finally {
+      setWvImporting(false);
+    }
+  };
+
+  const handleWorldviewClear = () => {
+    if (!window.confirm("确定要清除自定义世界观并恢复默认吗？清除后需刷新页面生效。")) return;
+    clearCustomWorldview();
+    setWvActive(false);
+    setWvActivePreview(null);
+    setWvWorldviewFile(null);
+    setWvOverridesFile(null);
+    setWvValidation(null);
+    setWvPreview(null);
+    setWvError("");
+    if (worldviewFileRef.current) worldviewFileRef.current.value = "";
+    if (overridesFileRef.current) overridesFileRef.current.value = "";
+    window.location.reload();
+  };
+
   const progressState = useLegacySelector((state) => ({
     currentYear: state.currentYear,
     currentMonth: state.currentMonth,
@@ -296,6 +403,110 @@ export function SettingsView() {
             <button type="button" onClick={() => switchMode("classic")}>经典</button>
             <button type="button" onClick={() => switchMode("rigid_v1")}>困难</button>
           </div>
+        </div>
+
+        {/* ── 自定义世界观导入 ── */}
+        <div
+          className="settings-item"
+          style={{ flexDirection: "column", alignItems: "stretch", gap: "8px" }}
+        >
+          <div style={{ fontSize: "13px", fontWeight: "600" }}>自定义世界观导入</div>
+          <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>
+            导入自定义 worldview.json 和 worldviewOverrides.json，玩法规则不变，仅替换角色、势力和背景叙事。
+          </div>
+
+          {wvActive && wvActivePreview ? (
+            <div style={{ fontSize: "12px", padding: "8px", background: "var(--color-surface-alt, #1a1a2e)", borderRadius: "6px" }}>
+              <div style={{ fontWeight: "600", marginBottom: "4px" }}>
+                当前世界观：{wvActivePreview.title}
+              </div>
+              <div>玩家角色：{wvActivePreview.playerRole}</div>
+              <div>角色数量：{wvActivePreview.characterCount}</div>
+              <div>势力：{wvActivePreview.factionNames.join("、") || "无"}</div>
+              <div>自定义剧情提示词：{wvActivePreview.hasStoryPrompt ? "有" : "无"}</div>
+              <div style={{ color: "var(--color-text-sub)" }}>导入时间：{wvActivePreview.importedAt}</div>
+              <button
+                type="button"
+                style={{ marginTop: "6px", color: "var(--color-danger)", borderColor: "var(--color-danger)" }}
+                onClick={handleWorldviewClear}
+              >
+                清除自定义世界观（恢复默认）
+              </button>
+            </div>
+          ) : null}
+
+          <div style={{ display: "grid", gap: "6px" }}>
+            <label style={{ display: "grid", gap: "2px" }}>
+              <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>worldview.json（世界观主文件）</span>
+              <input
+                ref={worldviewFileRef}
+                type="file"
+                accept=".json"
+                onChange={(e) => {
+                  setWvWorldviewFile(e.target.files?.[0] || null);
+                  setWvValidation(null);
+                  setWvPreview(null);
+                }}
+              />
+            </label>
+            <label style={{ display: "grid", gap: "2px" }}>
+              <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>worldviewOverrides.json（映射覆盖文件）</span>
+              <input
+                ref={overridesFileRef}
+                type="file"
+                accept=".json"
+                onChange={(e) => {
+                  setWvOverridesFile(e.target.files?.[0] || null);
+                  setWvValidation(null);
+                  setWvPreview(null);
+                }}
+              />
+            </label>
+          </div>
+
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              disabled={!wvWorldviewFile || !wvOverridesFile}
+              onClick={handleWorldviewValidate}
+            >
+              校验
+            </button>
+            <button
+              type="button"
+              disabled={!wvValidation?.valid || wvImporting}
+              onClick={handleWorldviewImport}
+            >
+              {wvImporting ? "导入中…" : "导入并应用"}
+            </button>
+          </div>
+
+          {wvError ? (
+            <div style={{ fontSize: "12px", color: "var(--color-danger)" }}>{wvError}</div>
+          ) : null}
+
+          {wvValidation && !wvValidation.valid ? (
+            <div style={{ fontSize: "12px", color: "var(--color-danger)" }}>
+              校验失败：{wvValidation.errors.map((e, i) => <div key={i}>· {e}</div>)}
+            </div>
+          ) : null}
+
+          {wvValidation?.warnings?.length > 0 ? (
+            <div style={{ fontSize: "12px", color: "var(--color-warning, orange)" }}>
+              {wvValidation.warnings.map((w, i) => <div key={i}>⚠ {w}</div>)}
+            </div>
+          ) : null}
+
+          {wvPreview ? (
+            <div style={{ fontSize: "12px", padding: "8px", background: "var(--color-surface-alt, #1a1a2e)", borderRadius: "6px" }}>
+              <div style={{ fontWeight: "600", marginBottom: "4px" }}>预览</div>
+              <div>世界观：{wvPreview.title}（{wvPreview.id}）</div>
+              <div>玩家角色：{wvPreview.playerRole}</div>
+              <div>角色数量：{wvPreview.characterCount}</div>
+              <div>势力：{wvPreview.factionNames.join("、") || "无"}</div>
+              <div>自定义剧情提示词：{wvPreview.hasStoryPrompt ? "有" : "无"}</div>
+            </div>
+          ) : null}
         </div>
 
         <div

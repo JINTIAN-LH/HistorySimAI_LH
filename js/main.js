@@ -2,7 +2,7 @@ import { initLayout, updateTopbarByState, updateMinisterTabBadge, updateGoalBar 
 import { router } from "./router.js";
 import { setStartPhase } from "@client/ui/registerViews.js";
 import "@client/ui/registerViews.js";
-import { loadJSON } from "./dataLoader.js";
+import { loadJSON, setActiveWorldviewOverrides, clearDataCache } from "./dataLoader.js";
 import { getState, setState } from "./state.js";
 import { loadGame, applyLoadedGame, getSavedGameplayMode, resolveInitialLoadSlotId } from "./storage.js";
 import { initializeCoreGameplayState } from "./systems/coreGameplaySystem.js";
@@ -12,6 +12,7 @@ import { getConfiguredWorldVersion, isSaveCompatibleWithWorld } from "./worldVer
 import { mergePlayerRuntimeConfig } from "./playerRuntimeConfig.js";
 import { hydratePersistentLocalStorage } from "./persistentBrowserStorage.js";
 import { repairImpossibleNaturalDeaths } from "./utils/characterStatusRepair.js";
+import { loadCustomWorldview } from "./worldview/worldviewStorage.js";
 
 function normalizeCharacterId(rawId, aliasToCanonical) {
   if (typeof rawId !== "string") return "";
@@ -33,6 +34,16 @@ function normalizeAppointmentsMap(appointments, aliasToCanonical) {
 }
 
 async function preloadBasicData(preferredMode = null) {
+  // ── 自定义世界观注入 ──
+  const customWorldview = loadCustomWorldview();
+  let resolvedWorldviewData = null;
+  if (customWorldview && customWorldview.overrides) {
+    setActiveWorldviewOverrides(customWorldview.overrides);
+    clearDataCache();
+    resolvedWorldviewData = customWorldview.worldview || {};
+    console.info("[bootstrap] 使用自定义世界观:", customWorldview.meta?.title || customWorldview.worldview?.id || "unknown");
+  }
+
   const [config, balanceConfig, characters, factionsData, goals, nationInit, positionsData, rigidInitialData, rigidTriggerData, rigidHistoryEvents] = await Promise.all([
     loadJSON("data/config.json"),
     loadJSON("data/balanceConfig.json").catch(() => ({})),
@@ -45,6 +56,15 @@ async function preloadBasicData(preferredMode = null) {
     loadJSON("data/rigidTriggers.json").catch(() => DEFAULT_RIGID_TRIGGERS),
     loadJSON("data/rigidHistoryEvents.json").catch(() => []),
   ]);
+
+  // 若无自定义世界观，从默认 worldview.json 加载
+  if (!resolvedWorldviewData) {
+    try {
+      const res = await fetch("data/worldview.json", { cache: "no-cache" });
+      if (res.ok) resolvedWorldviewData = await res.json();
+    } catch { /* 使用空对象兜底 */ }
+    resolvedWorldviewData = resolvedWorldviewData || {};
+  }
 
   const allCharacters = characters.characters || characters.ministers || [];
   const aliasToCanonical = (() => {
@@ -165,7 +185,7 @@ async function preloadBasicData(preferredMode = null) {
   const normalizedDefaultAppointments = normalizeAppointmentsMap(defaultAppointments, aliasToCanonical);
 
   const selectedMode = current.mode || preferredMode || config?.gameplayMode || "classic";
-  const worldVersion = getConfiguredWorldVersion(config);
+  const worldVersion = customWorldview?.worldview?.id || getConfiguredWorldVersion(config);
   const resolvedRigidState = current.rigid && typeof current.rigid === "object"
     ? current.rigid
     : createDefaultRigidState(rigidInitialData || DEFAULT_RIGID_INITIAL);
@@ -187,6 +207,8 @@ async function preloadBasicData(preferredMode = null) {
     config: {
       ...mergePlayerRuntimeConfig(config || {}),
       worldVersion,
+      worldviewData: resolvedWorldviewData,
+      worldviewOverrides: customWorldview?.overrides || undefined,
       balance: balanceConfig || {},
       gameplayMode: selectedMode,
       rigid: {
