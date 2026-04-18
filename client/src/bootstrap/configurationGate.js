@@ -3,6 +3,7 @@ import {
   getPlayerRuntimeConfig,
   savePlayerRuntimeConfig,
 } from "@legacy/playerRuntimeConfig.js";
+import { getState, setState } from "@legacy/state.js";
 
 export async function fetchConfigStatus() {
   return buildPlayerRuntimeConfigStatus();
@@ -20,6 +21,20 @@ export async function saveRuntimeConfig(values) {
     }
   }
 
-  savePlayerRuntimeConfig(payload);
+  const saved = savePlayerRuntimeConfig(payload);
+
+  // Sync saved config into runtime state so subsequent LLM requests
+  // use the new parameters immediately without page reload.
+  const currentConfig = getState().config || {};
+  setState({
+    config: {
+      ...currentConfig,
+      llmApiKey: saved.llmApiKey,
+      llmApiBase: saved.llmApiBase,
+      llmModel: saved.llmModel,
+      llmChatModel: saved.llmChatModel,
+    },
+  });
+
   return buildPlayerRuntimeConfigStatus();
 }

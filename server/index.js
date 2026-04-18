@@ -163,8 +163,8 @@ function createApp(options = {}) {
     const requestChatModel = normalizeRequestHeaderValue(req?.get?.("X-LLM-Chat-Model"));
     const apiKey = requestApiKey || String(currentConfig.LLM_API_KEY || "").trim();
     const apiBase = (requestApiBase || String(currentConfig.LLM_API_BASE || "https://open.bigmodel.cn/api/paas/v4").trim()).replace(/\/$/, "");
-    const model = requestModel || String(currentConfig.LLM_MODEL || "glm-4-flash").trim() || "glm-4-flash";
-    const chatModel = requestChatModel || String(currentConfig.LLM_CHAT_MODEL || model || "glm-4-flash").trim() || model || "glm-4-flash";
+    const model = requestModel || String(currentConfig.LLM_MODEL || "glm-4-long").trim() || "glm-4-long";
+    const chatModel = requestChatModel || String(currentConfig.LLM_CHAT_MODEL || model || "glm-4-long").trim() || model || "glm-4-long";
     return {
       apiKey,
       apiBase,
@@ -633,7 +633,7 @@ function createApp(options = {}) {
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const nextApiKey = String(body.LLM_API_KEY || "").trim();
     const nextApiBase = String(body.LLM_API_BASE || "").trim() || "https://open.bigmodel.cn/api/paas/v4";
-    const nextModel = String(body.LLM_MODEL || "").trim() || "glm-4-flash";
+    const nextModel = String(body.LLM_MODEL || "").trim() || "glm-4-long";
     const nextChatModel = String(body.LLM_CHAT_MODEL || "").trim() || nextModel;
 
     if (!nextApiKey) {

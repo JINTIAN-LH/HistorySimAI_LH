@@ -90,7 +90,7 @@ describe('API Endpoints', () => {
       expect(res.body.ready).toBe(false);
       expect(res.body.fields.LLM_API_KEY.configured).toBe(false);
       expect(res.body.fields.LLM_API_BASE.value).toBe('https://open.bigmodel.cn/api/paas/v4');
-      expect(res.body.fields.LLM_MODEL.value).toBe('glm-4-flash');
+      expect(res.body.fields.LLM_MODEL.value).toBe('glm-4-long');
       expect(Array.isArray(res.body.tips)).toBe(true);
     });
 

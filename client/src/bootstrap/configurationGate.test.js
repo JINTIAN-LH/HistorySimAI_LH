@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchConfigStatus, saveRuntimeConfig } from "./configurationGate.js";
+import { getState, setState } from "@legacy/state.js";
 
 describe("configurationGate", () => {
   beforeEach(() => {
@@ -57,5 +58,33 @@ describe("configurationGate", () => {
     expect(status.fields.LLM_API_BASE.value).toBe("https://example.com/v2");
     expect(status.fields.LLM_MODEL.value).toBe("glm-new");
     expect(status.fields.LLM_CHAT_MODEL.value).toBe("glm-new-chat");
+  });
+
+  it("syncs saved config into runtime state immediately without reload", async () => {
+    // Set up initial state with old config
+    setState({
+      config: {
+        storyMode: "llm",
+        llmApiKey: "old-key",
+        llmApiBase: "https://old.example.com/v1",
+        llmModel: "old-model",
+        llmChatModel: "old-chat-model",
+      },
+    });
+
+    await saveRuntimeConfig({
+      LLM_API_KEY: "new-key-9999",
+      LLM_API_BASE: "https://new.example.com/v2",
+      LLM_MODEL: "new-model",
+      LLM_CHAT_MODEL: "new-chat-model",
+    });
+
+    const config = getState().config;
+    expect(config.llmApiKey).toBe("new-key-9999");
+    expect(config.llmApiBase).toBe("https://new.example.com/v2");
+    expect(config.llmModel).toBe("new-model");
+    expect(config.llmChatModel).toBe("new-chat-model");
+    // Non-LLM config fields should be preserved
+    expect(config.storyMode).toBe("llm");
   });
 });

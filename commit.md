@@ -1,5 +1,38 @@
 # Commit 日志
 
+## 2026-04-18: fix: make LLM settings effective immediately and switch default model to glm-4-long
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+1. 修复设置页修改大模型参数后需刷新页面才能生效的问题。根因是保存只写入 localStorage，但运行态 `state.config` 仍为启动时快照，后续 LLM 请求继续读取旧值。修复后保存成功时同步将新参数合并进 `state.config`，后续故事/内阁/政策讨论请求立即使用新值，无需刷新。
+2. 全局默认模型从 `glm-4-flash` 切换为 `glm-4-long`，覆盖前端默认值、服务端回退值和配置示例。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `client/src/bootstrap/configurationGate.js` | ✏️ 修复 | 保存成功后通过 `setState` 将 llmApiKey/llmApiBase/llmModel/llmChatModel 同步写入运行态 config，保留其余非 LLM 字段不变 |
+| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ 修复 | 保存提示文案改为"已立即生效"；默认模型常量改为 `glm-4-long` |
+| `client/src/bootstrap/configurationGate.test.js` | ➕ 补测 | 新增"syncs saved config into runtime state immediately without reload"测试 |
+| `client/src/ui/components/ConfigSetupGate.jsx` | ✏️ 调整 | 默认模型从 `glm-4-flash` → `glm-4-long` |
+| `js/playerRuntimeConfig.js` | ✏️ 调整 | `DEFAULT_LLM_MODEL` 从 `glm-4-flash` → `glm-4-long` |
+| `server/index.js` | ✏️ 调整 | 服务端 `getRuntimeConfig` 模型回退值统一为 `glm-4-long` |
+| `server/index.test.js` | ✏️ 调整 | 测试断言同步更新为 `glm-4-long` |
+| `server/config.example.json` | ✏️ 调整 | 示例配置默认模型改为 `glm-4-long` |
+
+### 价值
+
+- **即时生效**：玩家修改模型/Key/Base 后无需刷新即可在下一次 AI 调用中使用新参数
+- **无副作用**：不触发页面刷新，不中断当前游戏进度
+- **模型升级**：全局默认模型切换到 `glm-4-long`，支持更长上下文
+
+### 验证
+
+- `npm run build` ✅ 通过
+- `npm run test` ✅ 363 项全部通过（34 个测试文件，0 回归）
+
 ## 2026-04-15: fix: resolve single-column edict scroll button host
 
 **Commit Hash**: (pending)

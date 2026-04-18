@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 const DEFAULT_API_BASE = "https://open.bigmodel.cn/api/paas/v4";
-const DEFAULT_MODEL = "glm-4-flash";
+const DEFAULT_MODEL = "glm-4-long";
 
 function buildFormState(status) {
   const fields = status?.fields || {};

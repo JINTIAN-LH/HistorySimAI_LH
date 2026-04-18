@@ -27,7 +27,7 @@ function buildProgressText(state) {
 }
 
 const DEFAULT_API_BASE = "https://open.bigmodel.cn/api/paas/v4";
-const DEFAULT_MODEL = "glm-4-flash";
+const DEFAULT_MODEL = "glm-4-long";
 
 function buildRuntimeFormState(status) {
   const fields = status?.fields || {};
@@ -225,7 +225,7 @@ export function SettingsView() {
       const status = await saveRuntimeConfig(buildRuntimePayload(runtimeForm));
       setRuntimeStatus(status);
       setRuntimeForm(buildRuntimeFormState(status));
-      setRuntimeSaveHint("已保存到当前浏览器，下次进入仍会生效");
+      setRuntimeSaveHint("已立即生效，并保存到当前浏览器");
     } catch (error) {
       setRuntimeError(error?.message || "保存失败，请稍后重试");
     } finally {
