@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
-const { adaptCharactersData, adaptPositionsData } = require("./worldviewAdapter.cjs");
+const { adaptCharactersData, adaptPositionsData, defaultWorldviewOverrides } = require("./worldviewAdapter.cjs");
 const { buildStorySystemPrompt } = require("./worldviewPrompt.cjs");
 
 const DEFAULT_ALLOWED_ORIGINS = [
@@ -25,6 +25,8 @@ const DEFAULT_ALLOWED_ORIGIN_PATTERNS = [
 ];
 
 const REQUEST_TIMEOUT_MS = 60000;
+const WORLDVIEW_TEMPLATE_MIN_LENGTH = 30;
+const WORLDVIEW_TEMPLATE_MAX_LENGTH = 12000;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 200;
 
@@ -61,6 +63,102 @@ function readJsonSafely(filePath) {
 function writeJsonSafely(filePath, value) {
   const payload = `${JSON.stringify(value, null, 2)}\n`;
   fs.writeFileSync(filePath, payload, "utf8");
+}
+
+function cloneRecord(value) {
+  return value && typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
+}
+
+function deepMergeObjects(base, patch) {
+  if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
+    return cloneRecord(base);
+  }
+  const source = base && typeof base === "object" && !Array.isArray(base)
+    ? cloneRecord(base)
+    : {};
+  Object.entries(patch).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      source[key] = cloneRecord(value);
+      return;
+    }
+    if (value && typeof value === "object") {
+      source[key] = deepMergeObjects(source[key], value);
+      return;
+    }
+    source[key] = value;
+  });
+  return source;
+}
+
+function sanitizeWorldviewTransformOutput(parsed, baseWorldview, baseOverrides) {
+  const worldviewPatch = parsed && typeof parsed.worldview === "object" ? parsed.worldview : {};
+  const overridesPatch = parsed && typeof parsed.overrides === "object" ? parsed.overrides : {};
+
+  const worldview = deepMergeObjects(baseWorldview, worldviewPatch);
+  const overrides = deepMergeObjects(baseOverrides, overridesPatch);
+
+  const fallbackAllowedIds = Array.isArray(baseOverrides?.allowedCharacterIds)
+    ? baseOverrides.allowedCharacterIds
+    : [];
+  const patchedAllowedIds = Array.isArray(overrides.allowedCharacterIds)
+    ? overrides.allowedCharacterIds.filter((item) => typeof item === "string" && item.trim())
+    : [];
+  const resolvedAllowedIds = patchedAllowedIds.length >= 5 ? patchedAllowedIds : fallbackAllowedIds;
+  overrides.allowedCharacterIds = resolvedAllowedIds;
+
+  const baseCharacters = baseOverrides?.characters && typeof baseOverrides.characters === "object"
+    ? baseOverrides.characters
+    : {};
+  const nextCharacters = overrides.characters && typeof overrides.characters === "object"
+    ? overrides.characters
+    : {};
+  const filteredCharacters = {};
+  resolvedAllowedIds.forEach((id) => {
+    if (!id || typeof id !== "string") return;
+    const key = id.trim();
+    if (!key) return;
+    if (nextCharacters[key] && typeof nextCharacters[key] === "object") {
+      filteredCharacters[key] = nextCharacters[key];
+      return;
+    }
+    if (baseCharacters[key] && typeof baseCharacters[key] === "object") {
+      filteredCharacters[key] = baseCharacters[key];
+    }
+  });
+  overrides.characters = filteredCharacters;
+
+  const fallbackFactions = baseOverrides?.factions && typeof baseOverrides.factions === "object"
+    ? baseOverrides.factions
+    : {};
+  const resolvedFactions = overrides.factions && typeof overrides.factions === "object"
+    ? overrides.factions
+    : {};
+  if (Object.keys(resolvedFactions).length < 2) {
+    overrides.factions = cloneRecord(fallbackFactions);
+  }
+
+  return { worldview, overrides };
+}
+
+function buildWorldviewTransformSystemPrompt(baseWorldview, baseOverrides) {
+  return `你是历史模拟器的“世界观重塑编译器”。
+玩家会提供一段自然语言模板，你要在“玩法机制完全不变”的前提下，只重写叙事语义层。
+
+硬性要求：
+1) 仅重塑世界观语义：人物称谓/背景、派系名、职位显示名、剧情语境。
+2) 不得新增、删除或改写玩法机制字段与数值结构；不要改变资源系统、回合结构、政策ID体系。
+3) 输出必须是一个合法 JSON 对象，且只能输出 JSON。
+4) 顶层结构必须是：{"worldview":{...},"overrides":{...}}。
+5) worldview 必须包含 id/title/gameTitle/playerRole/storyPrompt；overrides 必须至少包含 allowedCharacterIds/characters/factions。
+
+你可以参考当前默认世界观与覆盖数据：
+DEFAULT_WORLDVIEW=${JSON.stringify(baseWorldview)}
+DEFAULT_OVERRIDES=${JSON.stringify(baseOverrides)}
+
+输出策略：
+- 优先复用 DEFAULT_OVERRIDES 里的 id 键（角色ID、职位ID、部门ID、模块ID、派系ID）。
+- 只改显示层文案字段（name/summary/attitude/openingLine/factionLabel/title/worldview文本等）。
+- 让生成结果能直接用于浏览器本地持久化，不需要服务端存储。`;
 }
 
 function isLoopbackHost(value) {
@@ -657,6 +755,109 @@ function createApp(options = {}) {
       });
     } catch (error) {
       return res.status(500).json({ error: error.message || "failed to write config.json" });
+    }
+  });
+
+  app.post("/api/chongzhen/worldview/transform", async (req, res) => {
+    const runtimeConfig = getRuntimeConfig(req);
+    if (!runtimeConfig.apiKey) {
+      return res.status(500).json({ error: "LLM_API_KEY not configured" });
+    }
+
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const templateText = typeof body.templateText === "string" ? body.templateText.trim() : "";
+    if (templateText.length < WORLDVIEW_TEMPLATE_MIN_LENGTH) {
+      return res.status(400).json({
+        error: `templateText must be at least ${WORLDVIEW_TEMPLATE_MIN_LENGTH} characters`,
+      });
+    }
+    if (templateText.length > WORLDVIEW_TEMPLATE_MAX_LENGTH) {
+      return res.status(400).json({
+        error: `templateText exceeds max length ${WORLDVIEW_TEMPLATE_MAX_LENGTH}`,
+      });
+    }
+
+    const baseWorldview = worldviewData && typeof worldviewData === "object" ? worldviewData : {};
+    const baseOverrides = worldviewOverrides && typeof worldviewOverrides === "object"
+      ? worldviewOverrides
+      : defaultWorldviewOverrides;
+
+    const systemPrompt = buildWorldviewTransformSystemPrompt(baseWorldview, baseOverrides);
+    const userPrompt = `请根据以下玩家模板，生成可直接用于游戏的世界观包（worldview + overrides），保证玩法机制不变：\n\n${templateText}`;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      let response;
+      try {
+        response = await fetch(`${runtimeConfig.apiBase}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${runtimeConfig.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: runtimeConfig.chatModel,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt },
+            ],
+            response_format: { type: "json_object" },
+          }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!response.ok) {
+        const errText = await response.text();
+        return res.status(response.status).json({ error: errText || "LLM request failed" });
+      }
+
+      const llmData = await response.json();
+      const content = llmData?.choices?.[0]?.message?.content;
+      if (!content || typeof content !== "string") {
+        return res.status(502).json({ error: "No content in LLM response" });
+      }
+
+      let parsed;
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+      } catch (_error) {
+        return res.status(502).json({ error: "Failed to parse worldview transform JSON" });
+      }
+
+      const sanitized = sanitizeWorldviewTransformOutput(parsed, baseWorldview, baseOverrides);
+      const characterCount = Array.isArray(sanitized.overrides?.allowedCharacterIds)
+        ? sanitized.overrides.allowedCharacterIds.length
+        : 0;
+      const factionCount = sanitized.overrides?.factions && typeof sanitized.overrides.factions === "object"
+        ? Object.keys(sanitized.overrides.factions).length
+        : 0;
+
+      if (!sanitized.worldview?.id || !sanitized.worldview?.title || characterCount < 5 || factionCount < 2) {
+        return res.status(422).json({
+          error: "Generated worldview package is incomplete",
+          details: { characterCount, factionCount },
+        });
+      }
+
+      return res.json({
+        worldview: sanitized.worldview,
+        overrides: sanitized.overrides,
+        meta: {
+          sourceType: "template_text",
+          templateLength: templateText.length,
+          generatedAt: new Date().toISOString(),
+        },
+      });
+    } catch (e) {
+      if (e.name === "AbortError") {
+        return res.status(504).json({ error: "LLM request timed out" });
+      }
+      return res.status(500).json({ error: e.message || "Proxy error" });
     }
   });
 

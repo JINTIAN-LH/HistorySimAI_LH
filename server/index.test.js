@@ -305,6 +305,77 @@ describe('API Endpoints', () => {
     });
   });
 
+  describe('POST /api/chongzhen/worldview/transform', () => {
+    it('should reject too-short template text', async () => {
+      const { app } = createApp({
+        config: { LLM_API_KEY: 'test-key' },
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const res = await request(app)
+        .post('/api/chongzhen/worldview/transform')
+        .send({ templateText: '太短' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('at least');
+    });
+
+    it('should generate worldview package from template text', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            message: {
+              content: JSON.stringify({
+                worldview: {
+                  id: 'custom_xia_v1',
+                  title: '大夏中兴',
+                  gameTitle: '大夏中兴模拟器',
+                  playerRole: { name: '夏主', title: '天子' },
+                  storyPrompt: {
+                    role: '你是大夏中兴模拟器剧情写手。',
+                    worldview: ['大夏草创未稳，北境有警。'],
+                    gameplayConstraints: ['玩法机制不变，只改叙事语义。'],
+                  },
+                },
+                overrides: {
+                  factions: {
+                    donglin: { name: '清议派' },
+                    military: { name: '边镇派' },
+                  },
+                },
+              }),
+            },
+          }],
+        }),
+      });
+
+      const { app } = createApp({
+        config: { LLM_API_KEY: 'test-key', LLM_API_BASE: 'https://example.com/v1' },
+        charactersData: mockCharactersData,
+        allowMissingConfig: true,
+      });
+
+      const templateText = '请将当前世界观改为大夏初立，玩家扮演天子，朝局分为清议派与边镇派。';
+      const res = await request(app)
+        .post('/api/chongzhen/worldview/transform')
+        .send({ templateText });
+
+      expect(res.status).toBe(200);
+      expect(res.body.worldview.id).toBe('custom_xia_v1');
+      expect(res.body.worldview.title).toBe('大夏中兴');
+      expect(Array.isArray(res.body.overrides.allowedCharacterIds)).toBe(true);
+      expect(res.body.meta.sourceType).toBe('template_text');
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'https://example.com/v1/chat/completions',
+        expect.objectContaining({
+          body: expect.stringContaining(templateText),
+        })
+      );
+    });
+  });
+
   describe('POST /api/chongzhen/ministerChat', () => {
     it('should return 500 when LLM_API_KEY is not configured', async () => {
       const { app } = createApp({ 

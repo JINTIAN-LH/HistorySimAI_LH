@@ -77,9 +77,9 @@ export function validateWorldviewPackage(pkg) {
 }
 
 /**
- * 从导入的两个 JSON 对象构建标准世界观包。
+ * 从导入数据构建标准世界观包。
  */
-export function buildWorldviewPackage(worldviewJson, overridesJson) {
+export function buildWorldviewPackage(worldviewJson, overridesJson, metaOverrides = {}) {
   const title = worldviewJson?.title || worldviewJson?.id || "自定义世界观";
   const id = worldviewJson?.id || `custom_${Date.now()}`;
   return {
@@ -89,6 +89,7 @@ export function buildWorldviewPackage(worldviewJson, overridesJson) {
       id,
       title,
       importedAt: new Date().toISOString(),
+      ...(metaOverrides && typeof metaOverrides === "object" ? metaOverrides : {}),
     },
   };
 }

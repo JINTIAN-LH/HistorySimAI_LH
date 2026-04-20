@@ -1,5 +1,34 @@
 # Commit 日志
 
+## 2026-04-20: feat: enable txt template worldview transform flow
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+将设置页世界观导入流程从“双 JSON 上传”升级为“单个 txt 模板输入”，由后端调用 LLM 自动生成可用的世界观包（worldview + overrides），前端校验后仅保存到玩家本地并立即生效。为保证玩法骨架不被破坏，服务端新增结构合并与最小完整性兜底校验，确保只替换语义层映射。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ 调整 | 改为单 txt 上传/编辑模板，调用后端转换接口，自动本地应用并刷新 |
+| `server/index.js` | ✏️ 调整 | 新增 `POST /api/chongzhen/worldview/transform`，含模板长度校验、LLM转换、结构兜底和错误语义 |
+| `server/index.test.js` | ✏️ 调整 | 新增世界观转换接口测试（短文本拒绝/正常生成成功） |
+| `js/worldview/worldviewStorage.js` | ✏️ 调整 | `buildWorldviewPackage` 支持附加 meta 覆盖（记录模板来源） |
+
+### 价值
+
+- **门槛显著降低**：玩家无需维护两个结构化 JSON，只需提供自然语言模板文本
+- **玩法全盘保留**：通过服务端结构兜底确保机制字段与数值骨架不被破坏
+- **本地隔离持久化**：世界观结果仅在当前玩家浏览器生效并持久保存，不进入服务端全局状态
+
+### 验证
+
+- `npx vitest run server/index.test.js js/worldview/worldviewStorage.test.js` ✅ 通过
+- `npm run build` ✅ 通过
+- `npm test` ✅ 391 tests passed
+
 ## 2026-04-19: feat: add custom worldview import in settings UI with full data pipeline integration
 
 **Commit Hash**: (pending)

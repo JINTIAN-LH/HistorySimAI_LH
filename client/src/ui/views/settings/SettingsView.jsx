@@ -14,6 +14,7 @@ import {
 } from "@legacy/storage.js";
 import { updateGoalBar, updateTopbarByState } from "@legacy/layout.js";
 import { shallowEqual, useLegacySelector } from "@client/ui/hooks/useLegacySelector.js";
+import { buildLlmProxyHeaders, getApiBase } from "@api/httpClient.js";
 import {
   validateWorldviewPackage,
   buildWorldviewPackage,
@@ -128,19 +129,19 @@ export function SettingsView() {
   const [runtimeSaveHint, setRuntimeSaveHint] = useState("");
 
   // ── 世界观导入状态 ──
-  const [wvWorldviewFile, setWvWorldviewFile] = useState(null);
-  const [wvOverridesFile, setWvOverridesFile] = useState(null);
+  const [wvTemplateFile, setWvTemplateFile] = useState(null);
+  const [wvTemplateText, setWvTemplateText] = useState("");
   const [wvValidation, setWvValidation] = useState(null);
   const [wvPreview, setWvPreview] = useState(null);
   const [wvImporting, setWvImporting] = useState(false);
   const [wvError, setWvError] = useState("");
+  const [wvHint, setWvHint] = useState("");
   const [wvActive, setWvActive] = useState(() => hasCustomWorldview());
   const [wvActivePreview, setWvActivePreview] = useState(() => {
     const existing = loadCustomWorldview();
     return existing ? buildWorldviewPreview({ worldview: existing.worldview, overrides: existing.overrides, meta: existing.meta }) : null;
   });
-  const worldviewFileRef = useRef(null);
-  const overridesFileRef = useRef(null);
+  const templateFileRef = useRef(null);
 
   useEffect(() => {
     if (currentSlotId.startsWith("manual_")) {
@@ -258,53 +259,71 @@ export function SettingsView() {
   };
 
   // ── 世界观导入处理 ──
-  const readJsonFile = (file) =>
+  const readTextFile = (file) =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        try {
-          resolve(JSON.parse(reader.result));
-        } catch {
-          reject(new Error(`${file.name} 不是有效的 JSON 文件`));
-        }
+        resolve(String(reader.result || ""));
       };
       reader.onerror = () => reject(new Error(`读取 ${file.name} 失败`));
       reader.readAsText(file);
     });
 
-  const handleWorldviewValidate = async () => {
+  const handleTemplateFileChange = async (file) => {
+    setWvTemplateFile(file || null);
     setWvError("");
+    setWvHint("");
     setWvValidation(null);
     setWvPreview(null);
-    if (!wvWorldviewFile || !wvOverridesFile) {
-      setWvError("请同时选择 worldview.json 和 worldviewOverrides.json 两个文件");
+    if (!file) {
+      setWvTemplateText("");
       return;
     }
     try {
-      const [worldviewJson, overridesJson] = await Promise.all([
-        readJsonFile(wvWorldviewFile),
-        readJsonFile(wvOverridesFile),
-      ]);
-      const pkg = buildWorldviewPackage(worldviewJson, overridesJson);
-      const result = validateWorldviewPackage(pkg);
-      setWvValidation(result);
-      if (result.valid) {
-        setWvPreview(buildWorldviewPreview(pkg));
-      }
+      const text = await readTextFile(file);
+      setWvTemplateText(text);
+      setWvHint("模板已读取，可直接点击“生成并应用”。");
     } catch (err) {
-      setWvError(err.message || "解析文件失败");
+      setWvError(err.message || "读取模板失败");
     }
   };
 
   const handleWorldviewImport = async () => {
     setWvImporting(true);
     setWvError("");
+    setWvHint("");
     try {
-      const [worldviewJson, overridesJson] = await Promise.all([
-        readJsonFile(wvWorldviewFile),
-        readJsonFile(wvOverridesFile),
-      ]);
-      const pkg = buildWorldviewPackage(worldviewJson, overridesJson);
+      const templateText = String(wvTemplateText || "").trim();
+      if (templateText.length < 30) {
+        setWvError("请先输入至少30字的世界观模板文本");
+        return;
+      }
+
+      const currentConfig = getState().config || {};
+      const apiBase = getApiBase(currentConfig, "[settings/worldview-transform]");
+      if (!apiBase) {
+        setWvError("无法定位后端接口地址，请先检查运行配置");
+        return;
+      }
+
+      const res = await fetch(`${apiBase}/api/chongzhen/worldview/transform`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...buildLlmProxyHeaders(currentConfig),
+        },
+        body: JSON.stringify({ templateText }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setWvError(payload?.error || "世界观生成失败，请稍后重试");
+        return;
+      }
+
+      const pkg = buildWorldviewPackage(payload.worldview, payload.overrides, {
+        sourceType: payload?.meta?.sourceType || "template_text",
+        templateLength: templateText.length,
+      });
       const result = validateWorldviewPackage(pkg);
       if (!result.valid) {
         setWvError("校验未通过：" + result.errors.join("；"));
@@ -313,11 +332,10 @@ export function SettingsView() {
       saveCustomWorldview(pkg);
       setWvActive(true);
       setWvActivePreview(buildWorldviewPreview(pkg));
-      setWvValidation(null);
-      setWvPreview(null);
-      if (window.confirm("自定义世界观已保存。需要立即刷新页面以使其生效吗？")) {
-        window.location.reload();
-      }
+      setWvValidation(result);
+      setWvPreview(buildWorldviewPreview(pkg));
+      setWvHint("世界观已生成并保存到本地，正在刷新使其生效…");
+      window.location.reload();
     } catch (err) {
       setWvError(err.message || "导入失败");
     } finally {
@@ -330,13 +348,13 @@ export function SettingsView() {
     clearCustomWorldview();
     setWvActive(false);
     setWvActivePreview(null);
-    setWvWorldviewFile(null);
-    setWvOverridesFile(null);
+    setWvTemplateFile(null);
+    setWvTemplateText("");
     setWvValidation(null);
     setWvPreview(null);
     setWvError("");
-    if (worldviewFileRef.current) worldviewFileRef.current.value = "";
-    if (overridesFileRef.current) overridesFileRef.current.value = "";
+    setWvHint("");
+    if (templateFileRef.current) templateFileRef.current.value = "";
     window.location.reload();
   };
 
@@ -412,7 +430,7 @@ export function SettingsView() {
         >
           <div style={{ fontSize: "13px", fontWeight: "600" }}>自定义世界观导入</div>
           <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>
-            导入自定义 worldview.json 和 worldviewOverrides.json，玩法规则不变，仅替换角色、势力和背景叙事。
+            上传一个自然语言模板 txt 文件，系统将自动生成世界观并保持玩法规则不变。
           </div>
 
           {wvActive && wvActivePreview ? (
@@ -437,29 +455,28 @@ export function SettingsView() {
 
           <div style={{ display: "grid", gap: "6px" }}>
             <label style={{ display: "grid", gap: "2px" }}>
-              <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>worldview.json（世界观主文件）</span>
+              <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>世界观模板文件（.txt）</span>
               <input
-                ref={worldviewFileRef}
+                ref={templateFileRef}
                 type="file"
-                accept=".json"
-                onChange={(e) => {
-                  setWvWorldviewFile(e.target.files?.[0] || null);
-                  setWvValidation(null);
-                  setWvPreview(null);
-                }}
+                accept=".txt"
+                onChange={(e) => handleTemplateFileChange(e.target.files?.[0] || null)}
               />
             </label>
             <label style={{ display: "grid", gap: "2px" }}>
-              <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>worldviewOverrides.json（映射覆盖文件）</span>
-              <input
-                ref={overridesFileRef}
-                type="file"
-                accept=".json"
+              <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>模板文本（可直接编辑）</span>
+              <textarea
+                value={wvTemplateText}
+                rows={8}
+                placeholder="示例：我希望将当前世界观改为……（描述时代背景、玩家身份、核心人物、派系关系、叙事风格）"
                 onChange={(e) => {
-                  setWvOverridesFile(e.target.files?.[0] || null);
+                  setWvTemplateText(e.target.value);
+                  setWvError("");
+                  setWvHint("");
                   setWvValidation(null);
                   setWvPreview(null);
                 }}
+                style={{ resize: "vertical" }}
               />
             </label>
           </div>
@@ -467,22 +484,19 @@ export function SettingsView() {
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             <button
               type="button"
-              disabled={!wvWorldviewFile || !wvOverridesFile}
-              onClick={handleWorldviewValidate}
-            >
-              校验
-            </button>
-            <button
-              type="button"
-              disabled={!wvValidation?.valid || wvImporting}
+              disabled={String(wvTemplateText || "").trim().length < 30 || wvImporting}
               onClick={handleWorldviewImport}
             >
-              {wvImporting ? "导入中…" : "导入并应用"}
+              {wvImporting ? "生成中…" : "生成并应用"}
             </button>
           </div>
 
           {wvError ? (
             <div style={{ fontSize: "12px", color: "var(--color-danger)" }}>{wvError}</div>
+          ) : null}
+
+          {wvHint ? (
+            <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>{wvHint}</div>
           ) : null}
 
           {wvValidation && !wvValidation.valid ? (
