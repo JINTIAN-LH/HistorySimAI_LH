@@ -1,5 +1,29 @@
 # Commit 日志
 
+## 2026-04-20: feat: add quick-fill presets for worldview templates
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+在设置页“自定义世界观导入”区域新增三种一键快速填充模板（古典王朝版/架空奇幻版/赛博政治版），降低玩家编写自然语言模板的门槛。点击后会自动写入对应四段骨架文本，并重置旧错误与校验状态，减少误操作。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ 调整 | 新增 `WORLDVIEW_QUICK_TEMPLATES` 与快速填充按钮组；新增 `handleQuickTemplateFill` 同步重置模板状态 |
+
+### 价值
+
+- **更快上手**：玩家无需从零写模板，点击即可获得可直接生成的高质量文本
+- **提高成功率**：模板结构统一，减少生成接口因描述缺失导致的失败
+- **降低误操作**：自动清理旧文件选择与校验结果，避免状态混淆
+
+### 验证
+
+- `npm run build` ✅ 通过
+
 ## 2026-04-20: feat: enable txt template worldview transform flow
 
 **Commit Hash**: (pending)
