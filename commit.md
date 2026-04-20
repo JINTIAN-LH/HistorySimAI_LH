@@ -2,7 +2,7 @@
 
 ## 2026-04-21: feat: complete worldview semantic labels adaptation
 
-**Commit Hash**: (pending)
+**Commit Hash**: `9370b5f`
 
 ### 改动摘要
 
