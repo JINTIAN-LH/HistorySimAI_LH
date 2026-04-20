@@ -1,90 +1,31 @@
 # Commit 日志
 
-## 2026-04-20: feat: add quick-fill presets for worldview templates
+## 2026-04-20: refactor: roll back worldview template transform flow
 
 **Commit Hash**: (pending)
 
 ### 改动摘要
 
-在设置页“自定义世界观导入”区域新增三种一键快速填充模板（古典王朝版/架空奇幻版/赛博政治版），降低玩家编写自然语言模板的门槛。点击后会自动写入对应四段骨架文本，并重置旧错误与校验状态，减少误操作。
+将世界观导入流程从“自然语言模板 + 服务端自动转换”回退到“worldview.json + worldviewOverrides.json 双文件导入”。同时移除服务端模板转换相关逻辑与对应测试，恢复更稳定、可控的数据导入路径，降低线上超时与不确定性。
 
 ### 核心改动
 
 | 文件 | 改动 | 说明 |
 |------|------|------|
-| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ 调整 | 新增 `WORLDVIEW_QUICK_TEMPLATES` 与快速填充按钮组；新增 `handleQuickTemplateFill` 同步重置模板状态 |
+| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ 调整 | 恢复双 JSON 上传校验与导入流程，移除模板快速填充与文本转换入口 |
+| `server/index.js` | ✏️ 调整 | 移除 worldview 模板转换路由与相关辅助函数（深合并、转换提示词、降级逻辑） |
+| `server/index.test.js` | ✏️ 调整 | 删除模板转换相关测试，恢复现有服务端配置/接口验证基线 |
+| `js/worldview/worldviewStorage.js` | ✏️ 调整 | `buildWorldviewPackage` 回退为基础双参数版本，移除 meta 覆盖合并 |
 
 ### 价值
 
-- **更快上手**：玩家无需从零写模板，点击即可获得可直接生成的高质量文本
-- **提高成功率**：模板结构统一，减少生成接口因描述缺失导致的失败
-- **降低误操作**：自动清理旧文件选择与校验结果，避免状态混淆
+- **降低线上风险**：避免模板转换请求链路导致的额外超时与故障面
+- **行为可预测**：导入结果完全由用户上传 JSON 决定，便于问题复现与调试
+- **维护成本更低**：减少服务端特殊分支与冗余测试维护负担
 
 ### 验证
 
 - `npm run build` ✅ 通过
-
-## 2026-04-20: feat: enable txt template worldview transform flow
-
-**Commit Hash**: (pending)
-
-### 改动摘要
-
-将设置页世界观导入流程从“双 JSON 上传”升级为“单个 txt 模板输入”，由后端调用 LLM 自动生成可用的世界观包（worldview + overrides），前端校验后仅保存到玩家本地并立即生效。为保证玩法骨架不被破坏，服务端新增结构合并与最小完整性兜底校验，确保只替换语义层映射。
-
-### 核心改动
-
-| 文件 | 改动 | 说明 |
-|------|------|------|
-| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ 调整 | 改为单 txt 上传/编辑模板，调用后端转换接口，自动本地应用并刷新 |
-| `server/index.js` | ✏️ 调整 | 新增 `POST /api/chongzhen/worldview/transform`，含模板长度校验、LLM转换、结构兜底和错误语义 |
-| `server/index.test.js` | ✏️ 调整 | 新增世界观转换接口测试（短文本拒绝/正常生成成功） |
-| `js/worldview/worldviewStorage.js` | ✏️ 调整 | `buildWorldviewPackage` 支持附加 meta 覆盖（记录模板来源） |
-
-### 价值
-
-- **门槛显著降低**：玩家无需维护两个结构化 JSON，只需提供自然语言模板文本
-- **玩法全盘保留**：通过服务端结构兜底确保机制字段与数值骨架不被破坏
-- **本地隔离持久化**：世界观结果仅在当前玩家浏览器生效并持久保存，不进入服务端全局状态
-
-### 验证
-
-- `npx vitest run server/index.test.js js/worldview/worldviewStorage.test.js` ✅ 通过
-- `npm run build` ✅ 通过
-- `npm test` ✅ 391 tests passed
-
-## 2026-04-19: feat: add custom worldview import in settings UI with full data pipeline integration
-
-**Commit Hash**: (pending)
-
-### 改动摘要
-
-在设置界面新增自定义世界观导入功能，玩家可上传 worldview.json + worldviewOverrides.json 两个文件，经校验预览后导入浏览器存储。刷新页面后 bootstrap 自动加载自定义世界观，注入覆盖到 dataLoader 适配层，同时将自定义剧情提示词透传到服务端 story 端点。玩法规则完全保留，仅替换角色、势力和背景叙事。同时修复了 state.config.worldviewData 从未被填充的既有缺陷。
-
-### 核心改动
-
-| 文件 | 改动 | 说明 |
-|------|------|------|
-| `js/worldview/worldviewStorage.js` | ➕ 新增 | 世界观包校验、构建、浏览器存储CRUD、预览生成 |
-| `js/worldview/worldviewStorage.test.js` | ➕ 新增 | 18项单元测试覆盖全部导出函数 |
-| `js/persistentBrowserStorage.js` | ✏️ 调整 | 白名单新增 `czsim_custom_worldview_v1` 存储键 |
-| `js/dataLoader.js` | ✏️ 调整 | 新增 `setActiveWorldviewOverrides()` / `clearDataCache()` 导出，loadJSON 透传覆盖 |
-| `js/main.js` | ✏️ 调整 | bootstrap 加载自定义世界观、注入覆盖、填充 worldviewData 到 state.config |
-| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ 调整 | 新增世界观导入区域：双文件上传→校验→预览→导入/清除 |
-| `server/index.js` | ✏️ 调整 | story 端点支持请求体 `worldviewStoryPrompt` 覆盖默认系统提示词 |
-| `js/api/requestContext.js` | ✏️ 调整 | buildStoryRequestBody 自动附带自定义世界观的 storyPrompt |
-
-### 价值
-
-- **玩法全盘保留**：所有游戏机制（回合、政策、科举、军事、结算）不受影响，仅世界观语义层替换
-- **完整数据管线**：从浏览器存储→bootstrap→dataLoader→worldviewAdapter→服务端提示词，全链路打通
-- **用户友好**：设置页提供校验预览，导入前可确认角色数量、势力列表、提示词状态
-- **修复既有缺陷**：state.config.worldviewData 此前从未填充，talentPolicyWorldviewAdapter 一直回退到默认值
-
-### 验证
-
-- `npm run build` ✅ 通过
-- `npm run test` ✅ 389 tests passed
 
 ## 2026-04-18: fix: apply worldview faction mapping to AI-generated talents
 

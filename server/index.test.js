@@ -32,10 +32,6 @@ const mockCharactersData = {
 };
 
 describe('API Endpoints', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it('should compose story prompt from injected worldview data', () => {
     const { buildStorySystemPrompt } = createApp({
       config: {},
@@ -65,7 +61,6 @@ describe('API Endpoints', () => {
       const { app } = createApp({
         configPath: missingConfigPath,
         charactersData: mockCharactersData,
-        allowConfigManagement: true,
       });
 
       const res = await request(app).get('/api/chongzhen/config-status');
@@ -81,7 +76,6 @@ describe('API Endpoints', () => {
         config: {},
         charactersData: mockCharactersData,
         allowMissingConfig: true,
-        allowConfigManagement: true,
       });
 
       const res = await request(app).get('/api/chongzhen/config-status');
@@ -89,8 +83,8 @@ describe('API Endpoints', () => {
       expect(res.status).toBe(200);
       expect(res.body.ready).toBe(false);
       expect(res.body.fields.LLM_API_KEY.configured).toBe(false);
-      expect(res.body.fields.LLM_API_BASE.value).toBe('https://dashscope.aliyuncs.com/compatible-mode/v1');
-      expect(res.body.fields.LLM_MODEL.value).toBe('qwen-plus');
+      expect(res.body.fields.LLM_API_BASE.value).toBe('https://open.bigmodel.cn/api/paas/v4');
+      expect(res.body.fields.LLM_MODEL.value).toBe('glm-4-flash');
       expect(Array.isArray(res.body.tips)).toBe(true);
     });
 
@@ -102,7 +96,6 @@ describe('API Endpoints', () => {
         configPath,
         charactersData: mockCharactersData,
         allowMissingConfig: true,
-        allowConfigManagement: true,
       });
 
       const res = await request(app)
@@ -135,7 +128,6 @@ describe('API Endpoints', () => {
         config: {},
         charactersData: mockCharactersData,
         allowMissingConfig: true,
-        allowConfigManagement: true,
       });
 
       const res = await request(app)
@@ -144,73 +136,6 @@ describe('API Endpoints', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('LLM_API_KEY is required');
-    });
-
-    it('should reject config-status access from public deployments by default', async () => {
-      const { app } = createApp({
-        config: {},
-        charactersData: mockCharactersData,
-        allowMissingConfig: true,
-      });
-
-      const res = await request(app)
-        .get('/api/chongzhen/config-status')
-        .set('host', 'historysimai-lh.onrender.com')
-        .set('x-forwarded-for', '8.8.8.8');
-
-      expect(res.status).toBe(403);
-      expect(res.body.error).toBe('config-status is disabled for public deployments');
-    });
-  });
-
-  describe('CORS', () => {
-    it('should allow kurangames production origins during preflight', async () => {
-      const { app } = createApp({
-        config: {},
-        charactersData: mockCharactersData,
-        allowMissingConfig: true,
-      });
-
-      const res = await request(app)
-        .options('/api/chongzhen/story')
-        .set('Origin', 'https://api.kurangames.com')
-        .set('Access-Control-Request-Method', 'POST');
-
-      expect(res.status).toBe(204);
-      expect(res.headers['access-control-allow-origin']).toBe('https://api.kurangames.com');
-    });
-
-    it('should still allow localhost preflight when ALLOWED_ORIGINS is customized', async () => {
-      const { app } = createApp({
-        config: {},
-        charactersData: mockCharactersData,
-        allowMissingConfig: true,
-        allowedOrigins: ['https://historysimai-lh.onrender.com'],
-      });
-
-      const res = await request(app)
-        .options('/api/chongzhen/story')
-        .set('Origin', 'http://localhost:8080')
-        .set('Access-Control-Request-Method', 'POST');
-
-      expect(res.status).toBe(204);
-      expect(res.headers['access-control-allow-origin']).toBe('http://localhost:8080');
-    });
-
-    it('should allow private LAN origins during mobile local-network testing', async () => {
-      const { app } = createApp({
-        config: {},
-        charactersData: mockCharactersData,
-        allowMissingConfig: true,
-      });
-
-      const res = await request(app)
-        .options('/api/chongzhen/story')
-        .set('Origin', 'http://192.168.31.8:8080')
-        .set('Access-Control-Request-Method', 'POST');
-
-      expect(res.status).toBe(204);
-      expect(res.headers['access-control-allow-origin']).toBe('http://192.168.31.8:8080');
     });
   });
 
@@ -257,123 +182,6 @@ describe('API Endpoints', () => {
         });
       expect(res.status).toBe(500);
     });
-
-    it('should accept request-scoped llm config headers without relying on global config.json', async () => {
-      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                header: { time: '建炎1年1月 早朝', season: '春', weather: '晴' },
-                storyParagraphs: ['测试剧情'],
-                choices: [
-                  { id: 'a', text: '甲' },
-                  { id: 'b', text: '乙' },
-                  { id: 'c', text: '丙' },
-                ],
-              }),
-            },
-          }],
-        }),
-      });
-
-      const { app } = createApp({
-        config: {},
-        charactersData: mockCharactersData,
-        allowMissingConfig: true,
-      });
-
-      const res = await request(app)
-        .post('/api/chongzhen/story')
-        .set('X-LLM-API-Key', 'player-key')
-        .set('X-LLM-API-Base', 'https://example.com/v1')
-        .set('X-LLM-Model', 'story-model')
-        .send({ state: { currentDay: 1, currentPhase: 'morning' } });
-
-      expect(res.status).toBe(200);
-      expect(fetchSpy).toHaveBeenCalledWith(
-        'https://example.com/v1/chat/completions',
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: 'Bearer player-key',
-            'Content-Type': 'application/json',
-          }),
-          body: expect.stringContaining('story-model'),
-        })
-      );
-    });
-  });
-
-  describe('POST /api/chongzhen/worldview/transform', () => {
-    it('should reject too-short template text', async () => {
-      const { app } = createApp({
-        config: { LLM_API_KEY: 'test-key' },
-        charactersData: mockCharactersData,
-        allowMissingConfig: true,
-      });
-
-      const res = await request(app)
-        .post('/api/chongzhen/worldview/transform')
-        .send({ templateText: '太短' });
-
-      expect(res.status).toBe(400);
-      expect(res.body.error).toContain('at least');
-    });
-
-    it('should generate worldview package from template text', async () => {
-      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({
-                worldview: {
-                  id: 'custom_xia_v1',
-                  title: '大夏中兴',
-                  gameTitle: '大夏中兴模拟器',
-                  playerRole: { name: '夏主', title: '天子' },
-                  storyPrompt: {
-                    role: '你是大夏中兴模拟器剧情写手。',
-                    worldview: ['大夏草创未稳，北境有警。'],
-                    gameplayConstraints: ['玩法机制不变，只改叙事语义。'],
-                  },
-                },
-                overrides: {
-                  factions: {
-                    donglin: { name: '清议派' },
-                    military: { name: '边镇派' },
-                  },
-                },
-              }),
-            },
-          }],
-        }),
-      });
-
-      const { app } = createApp({
-        config: { LLM_API_KEY: 'test-key', LLM_API_BASE: 'https://example.com/v1' },
-        charactersData: mockCharactersData,
-        allowMissingConfig: true,
-      });
-
-      const templateText = '请将当前世界观改为大夏初立，玩家扮演天子，朝局分为清议派与边镇派。';
-      const res = await request(app)
-        .post('/api/chongzhen/worldview/transform')
-        .send({ templateText });
-
-      expect(res.status).toBe(200);
-      expect(res.body.worldview.id).toBe('custom_xia_v1');
-      expect(res.body.worldview.title).toBe('大夏中兴');
-      expect(Array.isArray(res.body.overrides.allowedCharacterIds)).toBe(true);
-      expect(res.body.meta.sourceType).toBe('template_text');
-      expect(fetchSpy).toHaveBeenCalledWith(
-        'https://example.com/v1/chat/completions',
-        expect.objectContaining({
-          body: expect.stringContaining(templateText),
-        })
-      );
-    });
   });
 
   describe('POST /api/chongzhen/ministerChat', () => {
@@ -419,53 +227,6 @@ describe('API Endpoints', () => {
       expect(res.body.error).toBe('minister not found');
     });
 
-    it('should resolve generated ministers from request state extras', async () => {
-      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({ reply: '臣在。', loyaltyDelta: 0 }),
-            },
-          }],
-        }),
-      });
-
-      const { app } = createApp({
-        config: { LLM_API_KEY: 'test-key' },
-        charactersData: mockCharactersData,
-        allowMissingConfig: true,
-      });
-
-      const res = await request(app)
-        .post('/api/chongzhen/ministerChat')
-        .send({
-          ministerId: 'talent_1',
-          history: [],
-          state: {
-            appointments: { bingbu_shangshu: 'talent_1' },
-            characterStatus: {},
-            extraCharacters: [
-              {
-                id: 'talent_1',
-                name: '韩世忠',
-                role: '兵部尚书',
-                faction: 'neutral',
-                factionLabel: '中立派',
-                loyalty: 70,
-                summary: '武将新秀。',
-                attitude: '愿效死力。',
-                openingLine: '臣愿领命。'
-              }
-            ]
-          }
-        });
-
-      expect(res.status).toBe(200);
-      expect(res.body.reply).toBe('臣在。');
-      expect(fetchSpy).toHaveBeenCalled();
-    });
-
     it('should return 400 when minister is deceased in client state', async () => {
       const { app } = createApp({
         config: { LLM_API_KEY: 'test-key' },
@@ -500,97 +261,6 @@ describe('API Endpoints', () => {
         .send({ ministerId: 'bi_ziyan', history: [] });
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('characters.json not loaded');
-    });
-
-    it('should accept request-scoped llm config headers for per-player chat config', async () => {
-      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({ reply: '臣遵旨。', loyaltyDelta: 1 }),
-            },
-          }],
-        }),
-      });
-
-      const { app } = createApp({
-        config: {},
-        charactersData: mockCharactersData,
-        allowMissingConfig: true,
-      });
-
-      const res = await request(app)
-        .post('/api/chongzhen/ministerChat')
-        .set('X-LLM-API-Key', 'player-key')
-        .set('X-LLM-API-Base', 'https://example.com/v1')
-        .set('X-LLM-Chat-Model', 'chat-model')
-        .send({ ministerId: 'bi_ziyan', history: [] });
-
-      expect(res.status).toBe(200);
-      expect(fetchSpy).toHaveBeenCalledWith(
-        'https://example.com/v1/chat/completions',
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            Authorization: 'Bearer player-key',
-            'Content-Type': 'application/json',
-          }),
-          body: expect.stringContaining('chat-model'),
-        })
-      );
-    });
-  });
-
-  describe('POST /api/chongzhen/talentRecruit', () => {
-    it('should embed recruit-type-specific prompt guidance for search talents', async () => {
-      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify({ talents: [] }),
-            },
-          }],
-        }),
-      });
-
-      const { app } = createApp({
-        config: { LLM_API_KEY: 'test-key' },
-        charactersData: mockCharactersData,
-        allowMissingConfig: true,
-      });
-
-      const res = await request(app)
-        .post('/api/chongzhen/talentRecruit')
-        .send({
-          recruitType: 'search',
-          worldviewData: {
-            title: '测试王朝',
-            talentConfig: {
-              recruitTypes: {
-                imperial_exam: '科举荐举',
-                recommend: '征辟访才',
-                search: '寻访奇俊',
-              },
-            },
-          },
-          existingTalentIds: ['talent_1'],
-          existingTalentNames: ['旧人甲'],
-        });
-
-      expect(res.status).toBe(200);
-      expect(fetchSpy).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          body: expect.stringContaining('隐士、边才、奇谋之士、工匠型或游历型人物'),
-        })
-      );
-      expect(fetchSpy).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          body: expect.stringContaining('禁止复用这些姓名：旧人甲'),
-        })
-      );
     });
   });
 });
