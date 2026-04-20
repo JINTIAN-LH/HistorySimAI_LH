@@ -2,6 +2,7 @@ import { router } from "@legacy/router.js";
 import { showGoalPanel } from "@ui/goalPanel.js";
 import { checkGoalCompleted } from "@systems/goalCheck.js";
 import { shallowEqual, useLegacySelector } from "@client/ui/hooks/useLegacySelector.js";
+import { formatEraTimeByRelativeYear } from "@legacy/worldview/worldviewRuntimeAccessor.js";
 
 function buildTopbarStatus(state) {
   if (!state) return "";
@@ -16,7 +17,7 @@ function buildTopbarStatus(state) {
   const year = state.currentYear || 3;
   const month = state.currentMonth || 4;
   const weather = state.weather ? `·${state.weather}` : "";
-  return `建炎${year}年·${month}月·${phaseLabel}${weather}`;
+  return `${formatEraTimeByRelativeYear(state, year, month)}·${phaseLabel}${weather}`;
 }
 
 function buildGoalText(state) {

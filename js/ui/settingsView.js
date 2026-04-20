@@ -3,9 +3,11 @@ import { getState, resetState, setState } from "../state.js";
 import { saveGame, clearGame, setSavedGameplayMode, getSaveList, loadGame, applyLoadedGame, formatSaveTimestamp, MAX_MANUAL_SLOTS } from "../storage.js";
 import { updateTopbarByState, updateGoalBar } from "../layout.js";
 import { createActionButton, createButtonRow, createElement, createFoldPanel, createInfoLine, createSectionCard, createTag, createViewShell } from "./viewPrimitives.js";
+import { formatEraTimeByRelativeYear, isRigidModeAllowed } from "../worldview/worldviewRuntimeAccessor.js";
 
 function renderSettingsView(container) {
   const state = getState();
+  const rigidModeAllowed = isRigidModeAllowed(state);
   const currentModeLabel = state.mode === "rigid_v1" ? "困难模式" : "经典模式";
   const { root, content } = createViewShell({
     className: "settings-view-root",
@@ -112,7 +114,9 @@ function renderSettingsView(container) {
 
   const modeSection = createSectionCard({
     title: "玩法模式",
-    hint: `当前：${state.mode === "rigid_v1" ? "困难模式" : "经典模式"}`,
+    hint: rigidModeAllowed
+      ? `当前：${state.mode === "rigid_v1" ? "困难模式" : "经典模式"}`
+      : "检测到自定义世界观，困难模式已隐藏，仅保留经典模式",
   });
   const modeBtns = createButtonRow();
 
@@ -122,14 +126,20 @@ function renderSettingsView(container) {
     selected: state.mode === "classic",
   });
 
-  const rigidBtn = createActionButton({
-    label: "困难",
-    description: "更严苛的节奏与约束链，适合验证长期玩法张力。",
-    selected: state.mode === "rigid_v1",
-  });
+  const rigidBtn = rigidModeAllowed
+    ? createActionButton({
+      label: "困难",
+      description: "更严苛的节奏与约束链，适合验证长期玩法张力。",
+      selected: state.mode === "rigid_v1",
+    })
+    : null;
 
   const switchMode = (targetMode) => {
     if (state.mode === targetMode) return;
+    if (targetMode === "rigid_v1" && !rigidModeAllowed) {
+      alert("自定义世界观已启用，困难模式不可用。请先清除自定义世界观。");
+      return;
+    }
     const targetLabel = targetMode === "rigid_v1" ? "困难模式" : "经典模式";
     if (!confirm(`切换到${targetLabel}？\n将加载该模式的独立存档。`)) return;
 
@@ -145,10 +155,14 @@ function renderSettingsView(container) {
   };
 
   classicBtn.addEventListener("click", () => switchMode("classic"));
-  rigidBtn.addEventListener("click", () => switchMode("rigid_v1"));
+  if (rigidBtn) {
+    rigidBtn.addEventListener("click", () => switchMode("rigid_v1"));
+  }
 
   modeBtns.appendChild(classicBtn);
-  modeBtns.appendChild(rigidBtn);
+  if (rigidBtn) {
+    modeBtns.appendChild(rigidBtn);
+  }
   modeSection.body.appendChild(modeBtns);
   list.appendChild(modeSection.section);
 
@@ -180,7 +194,7 @@ function renderSettingsView(container) {
     title: "当前局面",
     hint: "保留最常看的运行信息，避免调试时在多个面板来回切。",
   });
-  infoSection.body.appendChild(createInfoLine("当前进度", `建炎${state.currentYear || 3}年${state.currentMonth || 4}月 · 第${state.currentDay || 1}日 · ${phaseLabel}`));
+  infoSection.body.appendChild(createInfoLine("当前进度", `${formatEraTimeByRelativeYear(state, state.currentYear || 3, state.currentMonth || 4)} · 第${state.currentDay || 1}日 · ${phaseLabel}`));
   infoSection.body.appendChild(createInfoLine("国势摘要", `国库 ${(state.nation?.treasury || 0).toLocaleString()}两 · 民心 ${state.nation?.civilMorale || 0}`));
   list.appendChild(infoSection.section);
 

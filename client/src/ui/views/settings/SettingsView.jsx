@@ -16,13 +16,14 @@ import { updateGoalBar, updateTopbarByState } from "@legacy/layout.js";
 import { shallowEqual, useLegacySelector } from "@client/ui/hooks/useLegacySelector.js";
 import {
   validateWorldviewPackage,
-  buildWorldviewPackage,
+  parseWorldviewBundleText,
   saveCustomWorldview,
   loadCustomWorldview,
   clearCustomWorldview,
   hasCustomWorldview,
   buildWorldviewPreview,
 } from "@legacy/worldview/worldviewStorage.js";
+import { formatEraTimeByRelativeYear, isRigidModeAllowed } from "@legacy/worldview/worldviewRuntimeAccessor.js";
 
 function getModeLabel(mode) {
   return mode === "rigid_v1" ? "困难模式" : "经典模式";
@@ -32,7 +33,7 @@ function buildProgressText(state) {
   const config = state.config || {};
   const phaseLabels = config.phaseLabels || { morning: "早朝", afternoon: "午后", evening: "夜间" };
   const phaseLabel = phaseLabels[state.currentPhase] || "";
-  return `当前进度：建炎${state.currentYear || 3}年${state.currentMonth || 4}月 · 第${state.currentDay || 1}日 · ${phaseLabel}`;
+  return `当前进度：${formatEraTimeByRelativeYear(state, state.currentYear || 3, state.currentMonth || 4)} · 第${state.currentDay || 1}日 · ${phaseLabel}`;
 }
 
 const DEFAULT_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/v1";
@@ -128,8 +129,7 @@ export function SettingsView() {
   const [runtimeSaveHint, setRuntimeSaveHint] = useState("");
 
   // ── 世界观导入状态 ──
-  const [wvWorldviewFile, setWvWorldviewFile] = useState(null);
-  const [wvOverridesFile, setWvOverridesFile] = useState(null);
+  const [wvBundleFile, setWvBundleFile] = useState(null);
   const [wvValidation, setWvValidation] = useState(null);
   const [wvPreview, setWvPreview] = useState(null);
   const [wvImporting, setWvImporting] = useState(false);
@@ -139,8 +139,7 @@ export function SettingsView() {
     const existing = loadCustomWorldview();
     return existing ? buildWorldviewPreview({ worldview: existing.worldview, overrides: existing.overrides, meta: existing.meta }) : null;
   });
-  const worldviewFileRef = useRef(null);
-  const overridesFileRef = useRef(null);
+  const bundleFileRef = useRef(null);
 
   useEffect(() => {
     if (currentSlotId.startsWith("manual_")) {
@@ -190,7 +189,12 @@ export function SettingsView() {
   const savesBySlot = new Map(saves.map((save) => [save.slotId, save]));
 
   const switchMode = (targetMode) => {
+    const rigidModeAllowed = isRigidModeAllowed(getState()) && !wvActive;
     if (mode === targetMode) return;
+    if (targetMode === "rigid_v1" && !rigidModeAllowed) {
+      window.alert("自定义世界观已启用，困难模式不可用。请先清除自定义世界观。");
+      return;
+    }
     const targetLabel = getModeLabel(targetMode);
     if (!window.confirm(`切换到${targetLabel}？\n将加载该模式的独立存档。`)) return;
 
@@ -258,15 +262,11 @@ export function SettingsView() {
   };
 
   // ── 世界观导入处理 ──
-  const readJsonFile = (file) =>
+  const readTextFile = (file) =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        try {
-          resolve(JSON.parse(reader.result));
-        } catch {
-          reject(new Error(`${file.name} 不是有效的 JSON 文件`));
-        }
+        resolve(String(reader.result || ""));
       };
       reader.onerror = () => reject(new Error(`读取 ${file.name} 失败`));
       reader.readAsText(file);
@@ -276,16 +276,13 @@ export function SettingsView() {
     setWvError("");
     setWvValidation(null);
     setWvPreview(null);
-    if (!wvWorldviewFile || !wvOverridesFile) {
-      setWvError("请同时选择 worldview.json 和 worldviewOverrides.json 两个文件");
+    if (!wvBundleFile) {
+      setWvError("请先选择世界观导入包文件");
       return;
     }
     try {
-      const [worldviewJson, overridesJson] = await Promise.all([
-        readJsonFile(wvWorldviewFile),
-        readJsonFile(wvOverridesFile),
-      ]);
-      const pkg = buildWorldviewPackage(worldviewJson, overridesJson);
+      const bundleText = await readTextFile(wvBundleFile);
+      const pkg = parseWorldviewBundleText(bundleText);
       const result = validateWorldviewPackage(pkg);
       setWvValidation(result);
       if (result.valid) {
@@ -300,11 +297,8 @@ export function SettingsView() {
     setWvImporting(true);
     setWvError("");
     try {
-      const [worldviewJson, overridesJson] = await Promise.all([
-        readJsonFile(wvWorldviewFile),
-        readJsonFile(wvOverridesFile),
-      ]);
-      const pkg = buildWorldviewPackage(worldviewJson, overridesJson);
+      const bundleText = await readTextFile(wvBundleFile);
+      const pkg = parseWorldviewBundleText(bundleText);
       const result = validateWorldviewPackage(pkg);
       if (!result.valid) {
         setWvError("校验未通过：" + result.errors.join("；"));
@@ -330,13 +324,11 @@ export function SettingsView() {
     clearCustomWorldview();
     setWvActive(false);
     setWvActivePreview(null);
-    setWvWorldviewFile(null);
-    setWvOverridesFile(null);
+    setWvBundleFile(null);
     setWvValidation(null);
     setWvPreview(null);
     setWvError("");
-    if (worldviewFileRef.current) worldviewFileRef.current.value = "";
-    if (overridesFileRef.current) overridesFileRef.current.value = "";
+    if (bundleFileRef.current) bundleFileRef.current.value = "";
     window.location.reload();
   };
 
@@ -348,6 +340,8 @@ export function SettingsView() {
     config: state.config,
     nation: state.nation,
   }), shallowEqual);
+
+  const rigidModeAllowed = isRigidModeAllowed(getState()) && !wvActive;
 
   return (
     <div>
@@ -399,9 +393,14 @@ export function SettingsView() {
         >
           <div style={{ fontSize: "13px", fontWeight: "600" }}>玩法模式</div>
           <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>当前：{currentModeLabel}</div>
+          {!rigidModeAllowed ? (
+            <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>
+              检测到自定义世界观，困难模式已隐藏。
+            </div>
+          ) : null}
           <div style={{ display: "flex", gap: "8px" }}>
             <button type="button" onClick={() => switchMode("classic")}>经典</button>
-            <button type="button" onClick={() => switchMode("rigid_v1")}>困难</button>
+            {rigidModeAllowed ? <button type="button" onClick={() => switchMode("rigid_v1")}>困难</button> : null}
           </div>
         </div>
 
@@ -412,11 +411,16 @@ export function SettingsView() {
         >
           <div style={{ fontSize: "13px", fontWeight: "600" }}>自定义世界观导入</div>
           <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>
-            导入自定义 worldview.json 和 worldviewOverrides.json，玩法规则不变，仅替换角色、势力和背景叙事。
+            只需导入一个合并文件（与案例文件格式一致），玩法规则不变，仅替换角色、势力和背景叙事。
+          </div>
+          <div style={{ fontSize: "12px", color: "var(--color-text-sub)", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <span>下载案例文件：</span>
+            <a href="data/import-samples/worldview.import.bundle.txt" download="worldview.import.bundle.txt">worldview.import.bundle.txt（合并示例）</a>
+            <span>（内含 worldview.json 与 worldviewOverrides.json 两段示例）</span>
           </div>
 
           {wvActive && wvActivePreview ? (
-            <div style={{ fontSize: "12px", padding: "8px", background: "var(--color-surface-alt, #1a1a2e)", borderRadius: "6px" }}>
+            <div style={{ fontSize: "12px", padding: "8px", background: "var(--color-surface-alt, #d6e0cd)", borderRadius: "6px" }}>
               <div style={{ fontWeight: "600", marginBottom: "4px" }}>
                 当前世界观：{wvActivePreview.title}
               </div>
@@ -437,26 +441,13 @@ export function SettingsView() {
 
           <div style={{ display: "grid", gap: "6px" }}>
             <label style={{ display: "grid", gap: "2px" }}>
-              <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>worldview.json（世界观主文件）</span>
+              <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>worldview.import.bundle.txt（单文件导入包）</span>
               <input
-                ref={worldviewFileRef}
+                ref={bundleFileRef}
                 type="file"
-                accept=".json"
+                accept=".txt,.json,.md"
                 onChange={(e) => {
-                  setWvWorldviewFile(e.target.files?.[0] || null);
-                  setWvValidation(null);
-                  setWvPreview(null);
-                }}
-              />
-            </label>
-            <label style={{ display: "grid", gap: "2px" }}>
-              <span style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>worldviewOverrides.json（映射覆盖文件）</span>
-              <input
-                ref={overridesFileRef}
-                type="file"
-                accept=".json"
-                onChange={(e) => {
-                  setWvOverridesFile(e.target.files?.[0] || null);
+                  setWvBundleFile(e.target.files?.[0] || null);
                   setWvValidation(null);
                   setWvPreview(null);
                 }}
@@ -467,7 +458,7 @@ export function SettingsView() {
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             <button
               type="button"
-              disabled={!wvWorldviewFile || !wvOverridesFile}
+              disabled={!wvBundleFile}
               onClick={handleWorldviewValidate}
             >
               校验
@@ -498,7 +489,7 @@ export function SettingsView() {
           ) : null}
 
           {wvPreview ? (
-            <div style={{ fontSize: "12px", padding: "8px", background: "var(--color-surface-alt, #1a1a2e)", borderRadius: "6px" }}>
+            <div style={{ fontSize: "12px", padding: "8px", background: "var(--color-surface-alt, #d6e0cd)", borderRadius: "6px" }}>
               <div style={{ fontWeight: "600", marginBottom: "4px" }}>预览</div>
               <div>世界观：{wvPreview.title}（{wvPreview.id}）</div>
               <div>玩家角色：{wvPreview.playerRole}</div>

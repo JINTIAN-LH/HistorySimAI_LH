@@ -68,6 +68,7 @@ export function ensureRigidState(state) {
     triggerEvents: [],
     historyEvents: [],
     historyConfigs: configs.events,
+    worldviewState: state,
   });
   rigid.lastOutput = rigid.lastOutput || { modules: initialModules };
 
@@ -280,6 +281,7 @@ export function runRigidTurn(state, payload) {
               triggerEvents: [],
               historyEvents: [],
               historyConfigs: configs.events,
+              worldviewState: state,
             }),
           },
         },
@@ -303,6 +305,7 @@ export function runRigidTurn(state, payload) {
       triggerEvents: [],
       historyEvents: [],
       historyConfigs: configs.events,
+      worldviewState: state,
     });
     return {
       ok: false,
@@ -329,6 +332,7 @@ export function runRigidTurn(state, payload) {
       triggerEvents: [],
       historyEvents: [],
       historyConfigs: configs.events,
+      worldviewState: state,
     });
     return {
       ok: false,
@@ -354,6 +358,7 @@ export function runRigidTurn(state, payload) {
       triggerEvents: [],
       historyEvents: [],
       historyConfigs: configs.events,
+      worldviewState: state,
     });
     return {
       ok: false,
@@ -447,6 +452,7 @@ export function runRigidTurn(state, payload) {
     triggerEvents: thresholdEvents,
     historyEvents,
     historyConfigs: configs.events,
+    worldviewState: state,
   });
 
   advanceThreeMonths(nextRigid);

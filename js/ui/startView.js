@@ -4,6 +4,7 @@ import { router } from "../router.js";
 import { loadJSON } from "../dataLoader.js";
 import { showGoalPanel } from "./goalPanel.js";
 import { createActionButton, createElement, createSectionCard, createViewShell } from "./viewPrimitives.js";
+import { isRigidModeAllowed } from "../worldview/worldviewRuntimeAccessor.js";
 
 let startPhase = "intro";
 
@@ -13,7 +14,7 @@ export function setStartPhase(phase) {
 
 function applyModeSelection(mode) {
   const state = getState();
-  const nextMode = mode === "rigid_v1" ? "rigid_v1" : "classic";
+  const nextMode = (mode === "rigid_v1" && isRigidModeAllowed(state)) ? "rigid_v1" : "classic";
   const rigidCalendar = state?.rigid?.calendar || { year: 1627, month: 8 };
   setState({
     mode: nextMode,
@@ -33,10 +34,16 @@ function applyModeSelection(mode) {
 }
 
 async function renderIntroView(container) {
+  const runtimeState = getState();
+  const rigidModeAllowed = isRigidModeAllowed(runtimeState);
+  const runtimeTitle = runtimeState?.config?.gameTitle
+    || runtimeState?.config?.worldviewData?.gameTitle
+    || runtimeState?.config?.worldviewData?.title
+    || "历史模拟器";
   const { root, header, content } = createViewShell({
     className: "start-intro-root",
     centered: true,
-    title: "南宋中兴模拟器",
+    title: runtimeTitle,
   });
   header?.firstChild?.classList.add("start-intro-title");
   header?.lastChild?.classList.add("start-intro-subtitle");
@@ -49,11 +56,13 @@ async function renderIntroView(container) {
   const modeSection = createSectionCard({
     className: "start-intro-mode-card",
     title: "玩法模式",
-    hint: "先确定本局节奏。新模式扩展时可以直接复用这块结构。",
+    hint: rigidModeAllowed
+      ? "先确定本局节奏。新模式扩展时可以直接复用这块结构。"
+      : "检测到自定义世界观，困难模式已自动隐藏，仅保留经典模式。",
   });
   const modeWrap = createElement("div", { className: "start-intro-actions start-intro-mode-actions" });
 
-  let selectedMode = getState().mode === "rigid_v1" ? "rigid_v1" : "classic";
+  let selectedMode = rigidModeAllowed && getState().mode === "rigid_v1" ? "rigid_v1" : "classic";
 
   const buildModeBtn = (mode, label, desc) => {
     const btn = createActionButton({
@@ -69,17 +78,21 @@ async function renderIntroView(container) {
   };
 
   const classicBtn = buildModeBtn("classic", "经典模式", "初玩者推荐，第一代节奏与叙事系统");
-  const rigidBtn = buildModeBtn("rigid_v1", "困难模式", "更严苛的节奏与叙事系统，适合追求挑战的玩家");
   modeWrap.appendChild(classicBtn);
-  modeWrap.appendChild(rigidBtn);
+  const rigidBtn = rigidModeAllowed
+    ? buildModeBtn("rigid_v1", "困难模式", "更严苛的节奏与叙事系统，适合追求挑战的玩家")
+    : null;
+  if (rigidBtn) {
+    modeWrap.appendChild(rigidBtn);
+  }
   modeSection.body.appendChild(modeWrap);
   content.appendChild(modeSection.section);
 
   function refreshModeButtons() {
-    const pairs = [
-      [classicBtn, "classic"],
-      [rigidBtn, "rigid_v1"],
-    ];
+    const pairs = [[classicBtn, "classic"]];
+    if (rigidBtn) {
+      pairs.push([rigidBtn, "rigid_v1"]);
+    }
     pairs.forEach(([btn, mode]) => {
       const active = selectedMode === mode;
       btn.classList.toggle("ui-btn--selected", active);

@@ -15,6 +15,7 @@ import { ensureRigidState, getRigidPresets } from "../rigid/engine.js";
 import { isRigidMode } from "../rigid/config.js";
 import { isMilitaryCombatChoice, runMilitarySystem } from "./militarySystem.js";
 import { createElement, createFeedCard, createSectionCard, createStatCard, createTag } from "../ui/viewPrimitives.js";
+import { formatEraTimeByRelativeYear } from "../worldview/worldviewRuntimeAccessor.js";
 
 let storyCache = { key: null, data: null };
 let lastAppliedKey = null;
@@ -1601,7 +1602,8 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
   ) {
     const quarterNote = document.createElement("div");
     quarterNote.className = "story-history-label";
-    quarterNote.textContent = `季末结算 · 建炎${settlement.year}年${settlement.month}月：国库 +${(settlement.effects?.treasury || 0).toLocaleString()} 两，粮储 +${(settlement.effects?.grain || 0).toLocaleString()} 石`;
+    const settlementTime = formatEraTimeByRelativeYear(state, settlement.year, settlement.month);
+    quarterNote.textContent = `季末结算 · ${settlementTime}：国库 +${(settlement.effects?.treasury || 0).toLocaleString()} 两，粮储 +${(settlement.effects?.grain || 0).toLocaleString()} 石`;
     currentWrap.appendChild(quarterNote);
 
     const settlementDisplayEffects = {

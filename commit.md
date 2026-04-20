@@ -1,5 +1,35 @@
 # Commit 日志
 
+## 2026-04-21: feat: complete worldview semantic labels adaptation
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+完成世界观导入第四轮能力收敛：将运行时残余历史词汇进一步下沉到 `semanticLabels` 可选包，默认值保持跨题材可运行的极简语义；同步补齐导入规范文档，明确字段语义与模板使用边界，确保“默认通用、历史增强按需开启”。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/worldview/worldviewRuntimeAccessor.js` | ✏️ 调整 | 收缩北方主敌默认别名为通用词，历史词改为模板显式配置；保留叛乱识别必要通用别名避免回归 |
+| `js/systems/coreGameplaySystem.js` | ✏️ 调整 | 外交/敌对识别统一走 semantic labels，移除主流程历史词硬编码依赖 |
+| `client/src/ui/views/start/StartView.jsx` | ✏️ 调整 | 启动标题改为世界观动态标题，保持 custom worldview 与模式可用性一致 |
+| `public/data/import-samples/worldview.sample.json` | ✏️ 调整 | 新增/完善 `semanticLabels` 示例，显式提供“后金/建奴/满清”等历史增强别名 |
+| `public/data/import-samples/worldview.import.bundle.txt` | ✏️ 调整 | 同步单文件导入模板中的 `semanticLabels` 对照示例 |
+| `ChongzhenSim/世界观导入自动适配AI规范.md` | ✏️ 调整 | 新增 `semanticLabels` 字段语义说明与“极简默认 vs 历史词增强包”对照示例 |
+
+### 价值
+
+- **语义治理收口**：运行时默认文案脱离特定朝代词，跨世界观复用更稳定
+- **模板表达更清晰**：历史词仅在导入模板显式声明时生效，行为边界可预期
+- **交付可维护**：规范文档与样例同步，后续策划/开发可按统一口径扩展
+
+### 验证
+
+- `npm run build` ✅ 通过
+- `npx vitest run js/systems/coreGameplaySystem.test.js js/systems/militarySystem.test.js js/storage.test.js` ✅ 通过
+
 ## 2026-04-20: refactor: roll back worldview template transform flow
 
 **Commit Hash**: (pending)

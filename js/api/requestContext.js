@@ -37,6 +37,35 @@ function resolveUnlockedPolicyTitleMap(unlockedPolicies, policyTitleById) {
   return out;
 }
 
+function buildWorldviewReadonlyContext(state) {
+  const worldviewData = state?.config?.worldviewData;
+  if (!worldviewData || typeof worldviewData !== "object") return null;
+
+  const playerRole = worldviewData.playerRole && typeof worldviewData.playerRole === "object"
+    ? worldviewData.playerRole
+    : null;
+  const factionNames = Array.isArray(state?.factions)
+    ? state.factions.map((item) => item?.name).filter((name) => typeof name === "string" && name.trim())
+    : [];
+
+  return {
+    id: worldviewData.id || state?.worldVersion || state?.config?.worldVersion || "",
+    title: worldviewData.title || "",
+    gameTitle: worldviewData.gameTitle || state?.config?.gameTitle || "",
+    playerRole: playerRole
+      ? {
+        name: playerRole.name || state?.player?.name || "",
+        title: playerRole.title || state?.player?.title || "",
+      }
+      : {
+        name: state?.player?.name || "",
+        title: state?.player?.title || "",
+      },
+    factionNames,
+    storyPrompt: worldviewData.storyPrompt || null,
+  };
+}
+
 export function buildSharedContextFromState(state, { compact = false } = {}) {
   const ctx = {};
   const policyTitleById = buildPolicyTitleById(state);
@@ -54,6 +83,8 @@ export function buildSharedContextFromState(state, { compact = false } = {}) {
   setOptionalArray(ctx, "unlockedPolicies", state.unlockedPolicies, { requireNonEmpty: compact });
   setOptionalArray(ctx, "unlockedPolicyTitles", resolveUnlockedPolicyTitles(state.unlockedPolicies, policyTitleById), { requireNonEmpty: compact });
   setOptionalObject(ctx, "unlockedPolicyTitleMap", resolveUnlockedPolicyTitleMap(state.unlockedPolicies, policyTitleById));
+
+  setOptionalObject(ctx, "worldview", buildWorldviewReadonlyContext(state));
 
   return ctx;
 }

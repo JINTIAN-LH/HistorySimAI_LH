@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   validateWorldviewPackage,
   buildWorldviewPackage,
+  parseWorldviewBundleText,
   saveCustomWorldview,
   loadCustomWorldview,
   clearCustomWorldview,
@@ -119,6 +120,34 @@ describe("worldviewStorage", () => {
       expect(result.valid).toBe(true);
       expect(result.warnings.some((w) => w.includes("storyPrompt"))).toBe(true);
     });
+
+    it("应在 nationInit.externalThreats 结构非法时报错", () => {
+      const pkg = buildWorldviewPackage(
+        makeMinimalWorldview(),
+        makeMinimalOverrides({
+          nationInit: {
+            externalThreats: [{ power: "high" }],
+          },
+        })
+      );
+      const result = validateWorldviewPackage(pkg);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes("externalThreats"))).toBe(true);
+    });
+
+    it("应在 nationInit.provinces 结构非法时报错", () => {
+      const pkg = buildWorldviewPackage(
+        makeMinimalWorldview(),
+        makeMinimalOverrides({
+          nationInit: {
+            provinces: [{ name: "临安", taxSilver: "很多" }],
+          },
+        })
+      );
+      const result = validateWorldviewPackage(pkg);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes("provinces"))).toBe(true);
+    });
   });
 
   // ── buildWorldviewPackage ──
@@ -137,6 +166,45 @@ describe("worldviewStorage", () => {
       const pkg = buildWorldviewPackage({ title: "无ID" }, {});
       expect(pkg.meta.id).toMatch(/^custom_/);
       expect(pkg.meta.title).toBe("无ID");
+    });
+  });
+
+  describe("parseWorldviewBundleText", () => {
+    it("应正确解析单文件导入包", () => {
+      const worldview = makeMinimalWorldview();
+      const overrides = makeMinimalOverrides();
+      const bundle = [
+        "这是示例导入包",
+        "",
+        "=== worldview.json ===",
+        JSON.stringify(worldview, null, 2),
+        "",
+        "=== worldviewOverrides.json ===",
+        JSON.stringify(overrides, null, 2),
+        "",
+      ].join("\n");
+
+      const parsed = parseWorldviewBundleText(bundle);
+      expect(parsed.worldview.id).toBe("test_world");
+      expect(parsed.overrides.factions.f1.name).toBe("势力甲");
+      expect(parsed.meta).toBeTruthy();
+    });
+
+    it("应在缺少分段时报错", () => {
+      expect(() => parseWorldviewBundleText("{\"id\":\"x\"}"))
+        .toThrow("导入包格式错误");
+    });
+
+    it("应在 worldview 分段 JSON 非法时报错", () => {
+      const bundle = [
+        "=== worldview.json ===",
+        "{bad-json}",
+        "=== worldviewOverrides.json ===",
+        JSON.stringify(makeMinimalOverrides()),
+      ].join("\n");
+
+      expect(() => parseWorldviewBundleText(bundle))
+        .toThrow("worldview.json 不是有效 JSON");
     });
   });
 

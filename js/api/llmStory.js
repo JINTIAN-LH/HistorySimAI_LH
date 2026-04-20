@@ -2,6 +2,7 @@ import { buildStoryRequestBody } from "./requestContext.js";
 import { buildLlmProxyHeaders, getApiBase, postJsonAndReadText } from "./httpClient.js";
 import { normalizeStoryPayload, sanitizeStoryEffects } from "./validators.js";
 import { buildNameById, resolveCharacterDisplayName } from "../utils/sharedConstants.js";
+import { formatEraTimeByRelativeYear } from "../worldview/worldviewRuntimeAccessor.js";
 
 function getRosterCharacters(state) {
   return Array.isArray(state?.allCharacters) && state.allCharacters.length
@@ -42,7 +43,7 @@ export async function requestStoryTurn(state, lastChoice) {
 
   const phaseKey = state.currentPhase || "morning";
   const phaseLabel = phaseKey === "morning" ? "早朝" : phaseKey === "afternoon" ? "午后" : "夜间";
-  const expectedTime = `建炎${state.currentYear || 1}年${state.currentMonth || 1}月 ${phaseLabel}`;
+  const expectedTime = `${formatEraTimeByRelativeYear(state, state.currentYear || 1, state.currentMonth || 1)} ${phaseLabel}`;
   const expectedSeason = getSeasonByMonth(state.currentMonth || 1);
   const expectedWeather = getSeasonalWeatherByState(state, expectedSeason);
   const header = { ...(normalized.header || {}) };

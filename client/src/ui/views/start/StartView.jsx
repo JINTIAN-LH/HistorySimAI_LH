@@ -5,6 +5,7 @@ import { getState, setState } from "@legacy/state.js";
 import { saveGame, setSavedGameplayMode } from "@legacy/storage.js";
 import { showGoalPanel } from "@ui/goalPanel.js";
 import { useLegacySelector } from "@client/ui/hooks/useLegacySelector.js";
+import { isRigidModeAllowed } from "@legacy/worldview/worldviewRuntimeAccessor.js";
 
 let startPhase = "intro";
 
@@ -14,7 +15,7 @@ export function setStartPhase(phase) {
 
 function applyModeSelection(mode) {
   const state = getState();
-  const nextMode = mode === "rigid_v1" ? "rigid_v1" : "classic";
+  const nextMode = (mode === "rigid_v1" && isRigidModeAllowed(state)) ? "rigid_v1" : "classic";
   const rigidCalendar = state?.rigid?.calendar || { year: 1627, month: 8 };
   setState({
     mode: nextMode,
@@ -35,14 +36,22 @@ function applyModeSelection(mode) {
 
 export function StartView() {
   const mode = useLegacySelector((state) => state.mode);
-  const [selectedMode, setSelectedMode] = useState(mode === "rigid_v1" ? "rigid_v1" : "classic");
+  const runtimeState = useLegacySelector((state) => state);
+  const rigidModeAllowed = isRigidModeAllowed(runtimeState);
+  const runtimeTitle = runtimeState?.config?.gameTitle
+    || runtimeState?.config?.worldviewData?.gameTitle
+    || runtimeState?.config?.worldviewData?.title
+    || "历史模拟器";
+  const [selectedMode, setSelectedMode] = useState(
+    rigidModeAllowed && mode === "rigid_v1" ? "rigid_v1" : "classic"
+  );
   const [introLines, setIntroLines] = useState([]);
   const [revealedLines, setRevealedLines] = useState([]);
   const [canStart, setCanStart] = useState(false);
 
   useEffect(() => {
-    setSelectedMode(mode === "rigid_v1" ? "rigid_v1" : "classic");
-  }, [mode]);
+    setSelectedMode(rigidModeAllowed && mode === "rigid_v1" ? "rigid_v1" : "classic");
+  }, [mode, rigidModeAllowed]);
 
   useEffect(() => {
     let disposed = false;
@@ -110,7 +119,7 @@ export function StartView() {
   return (
     <div className={`view-shell view-shell--centered start-intro-root${startPhase === "create" ? " start-intro-root--create" : ""}`}>
       <div className="view-shell__header">
-        <div className="view-title start-intro-title">南宋中兴模拟器</div>
+        <div className="view-title start-intro-title">{runtimeTitle}</div>
       </div>
 
       <div className="view-shell__content">
@@ -140,15 +149,17 @@ export function StartView() {
                 <div className="ui-btn__desc">初玩者推荐，第一代节奏与叙事系统</div>
               </button>
 
-              <button
-                type="button"
-                className={`ui-btn ui-btn--block start-view-btn${selectedMode === "rigid_v1" ? " ui-btn--selected" : ""}`}
-                aria-pressed={selectedMode === "rigid_v1" ? "true" : "false"}
-                onClick={() => setSelectedMode("rigid_v1")}
-              >
-                <div className="ui-btn__title">困难模式</div>
-                <div className="ui-btn__desc">更严苛的节奏与叙事系统，适合追求挑战的玩家</div>
-              </button>
+              {rigidModeAllowed ? (
+                <button
+                  type="button"
+                  className={`ui-btn ui-btn--block start-view-btn${selectedMode === "rigid_v1" ? " ui-btn--selected" : ""}`}
+                  aria-pressed={selectedMode === "rigid_v1" ? "true" : "false"}
+                  onClick={() => setSelectedMode("rigid_v1")}
+                >
+                  <div className="ui-btn__title">困难模式</div>
+                  <div className="ui-btn__desc">更严苛的节奏与叙事系统，适合追求挑战的玩家</div>
+                </button>
+              ) : null}
             </div>
           </div>
         </section>

@@ -3,6 +3,7 @@ import { updateTopbarByState, updateMinisterTabBadge } from "./layout.js";
 import { getConfiguredWorldVersion } from "./worldVersion.js";
 import { mergePlayerRuntimeConfig, stripPlayerRuntimeConfig } from "./playerRuntimeConfig.js";
 import { getPersistentLocalItem, removePersistentLocalItem, setPersistentLocalItem } from "./persistentBrowserStorage.js";
+import { formatEraTimeByRelativeYear } from "./worldview/worldviewRuntimeAccessor.js";
 
 
 const STORAGE_KEY_PREFIX = "chongzhen_sim_save_v2"; // v2: 多槽位+结构升级
@@ -96,7 +97,7 @@ export function formatGameTimeFromState(state) {
   if (!year) return "";
   const month = Number(state?.currentMonth) || 1;
   const day = Number(state?.currentDay) || 1;
-  return `建炎${year}年${month}月第${day}日`;
+  return `${formatEraTimeByRelativeYear(state, year, month)}第${day}日`;
 }
 
 export function formatSaveTimestamp(timestampSeconds) {

@@ -3,7 +3,9 @@ import {
   adaptCharactersData,
   adaptCourtChatsData,
   adaptFactionsData,
+  adaptNationInitData,
   adaptPolicyCatalogData,
+  adaptProvinceRulesData,
   adaptPositionsData,
   mapFactionLabel,
   resolveFactionId,
@@ -56,6 +58,36 @@ describe("worldviewAdapter", () => {
     expect(policies[0].title).toBe("察事耳目收束");
     expect(policies[1].title).toBe("海商互市");
     expect(policies[1].description).toContain("南海");
+  });
+
+  it("should override nation init threats and provinces when worldview bundle provides them", () => {
+    const adapted = adaptNationInitData(
+      {
+        externalThreats: [{ name: "旧敌军", level: "high" }],
+        provinces: [{ name: "旧省份", status: "旧状态" }],
+      },
+      {
+        externalThreats: [{ name: "星海掠袭者", level: "critical" }],
+        provinces: [{ name: "主环都会", status: "局势紧张" }],
+      }
+    );
+
+    expect(adapted.externalThreats[0].name).toBe("星海掠袭者");
+    expect(adapted.provinces[0].name).toBe("主环都会");
+  });
+
+  it("should apply province rules override from worldview bundle", () => {
+    const adapted = adaptProvinceRulesData(
+      { regionRules: [{ namePattern: "旧", default: { status: "旧" } }] },
+      {
+        provinceRules: {
+          regionRules: [{ namePattern: "新", default: { status: "新" } }],
+        },
+      }
+    );
+
+    expect(adapted.regionRules).toHaveLength(1);
+    expect(adapted.regionRules[0].namePattern).toBe("新");
   });
 });
 

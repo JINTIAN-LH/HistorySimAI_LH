@@ -44,7 +44,7 @@ const initialState = {
     "dutcheng_duchayuan_zuoduyushi": "cao_yubian"
   },
   characterStatus: {},
-  // 外部势力势力值（如 { "金军": 100, "地方叛军": 80 }）
+  // 外部势力势力值（如 { "北方敌军": 100, "地方叛军": 80 }）
   externalPowers: {},
 
   // 省级经济与民生数据快照（按省名索引）

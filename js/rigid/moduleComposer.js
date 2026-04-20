@@ -1,6 +1,11 @@
 ﻿import { buildHistoryCountdown } from "./history.js";
 import { computeAssassinateRisk } from "./mechanisms.js";
 import { getLatestMemoryAnchor } from "./memory.js";
+import {
+  formatEraTimeByAbsoluteYear,
+  resolveWorldviewBattleLabels,
+  resolveWorldviewEraInfo,
+} from "../worldview/worldviewRuntimeAccessor.js";
 
 function riskLevel(risk) {
   if (risk >= 70) return "极高";
@@ -44,11 +49,13 @@ function buildTragicPulse(rigidState, triggerEvents = []) {
   };
 }
 
-function formatHistoryEventLine(event) {
+function formatHistoryEventLine(event, eraInfo) {
   if (!event) return "暂无";
-  const eraYear = Math.max(1, (Number(event.trigger?.year) || 1627) - 1626);
+  const startYear = Number(eraInfo?.absoluteStartYear) || 1627;
+  const eraLabel = eraInfo?.eraLabel || "建炎";
+  const eraYear = Math.max(1, (Number(event.trigger?.year) || startYear) - startYear + 1);
   const month = Number(event.trigger?.month) || 1;
-  const base = `建炎${eraYear}年${month}月 · ${event.name}`;
+  const base = `${eraLabel}${eraYear}年${month}月 · ${event.name}`;
   if (event.description) {
     return `${base}：${event.description}`;
   }
@@ -76,13 +83,18 @@ export function composeRigidModules(rigidState, context = {}) {
   const triggerEvents = Array.isArray(context.triggerEvents) ? context.triggerEvents : [];
   const historyEvents = Array.isArray(context.historyEvents) ? context.historyEvents : [];
   const historyCountdown = buildHistoryCountdown(rigidState, context.historyConfigs || []);
+  const worldviewState = context.worldviewState && typeof context.worldviewState === "object"
+    ? context.worldviewState
+    : null;
+  const eraInfo = resolveWorldviewEraInfo(worldviewState);
+  const battleLabels = resolveWorldviewBattleLabels(worldviewState);
   const memory = getLatestMemoryAnchor(rigidState);
   const tragicPulse = buildTragicPulse(rigidState, triggerEvents);
 
   const assassinateRisk = computeAssassinateRisk(rigidState.offendScores);
   const module1 = [
     `【财政】国库 ${formatNumber(rigidState.finance.treasury)} / 内帑 ${formatNumber(rigidState.finance.innerFund)} / 军饷拖欠 ${formatNumber(rigidState.finance.militaryArrears)} / 官俸拖欠 ${formatNumber(rigidState.finance.officialArrears)}`,
-    `【军事】沿江兵力 ${formatNumber(rigidState.military.liaoDongTroops)} / 军心 ${formatNumber(rigidState.military.liaoDongMorale)} / 地方兵乱规模 ${formatNumber(rigidState.military.rebelScale)} / 金军态势 ${rigidState.military.qingTrend || "未知"}`,
+    `【军事】沿江兵力 ${formatNumber(rigidState.military.liaoDongTroops)} / 军心 ${formatNumber(rigidState.military.liaoDongMorale)} / 地方兵乱规模 ${formatNumber(rigidState.military.rebelScale)} / ${battleLabels.hostileTrendLabel} ${rigidState.military.qingTrend || "未知"}`,
     `【朝廷】权威 ${formatNumber(rigidState.court.authority)} / 党争 ${formatNumber(rigidState.court.factionFight)}（下限20） / 阻力 ${formatNumber(rigidState.court.resistance)}（下限15） / 封驳次数 ${formatNumber(rigidState.court.refuteTimes)}`,
     `【圣躬】焦虑 ${formatNumber(rigidState.chongZhen.anxiety)}（下限20） / 失眠 ${formatNumber(rigidState.chongZhen.insomnia)} / 暴露风险 ${formatNumber(rigidState.chongZhen.exposureRisk)} / 疑心 ${formatNumber(rigidState.chongZhen.distrust)}`,
   ];
@@ -102,7 +114,7 @@ export function composeRigidModules(rigidState, context = {}) {
     "【六部奏章】工部：河工与城防并请增拨。",
     "【行在密报】行在舆情波动，流言渐盛。",
     buildInformationCocoonContradiction(rigidState),
-    `【紧急军情】江北边报称敌情 ${rigidState.military.qingTrend || "未知"}。`,
+    `【紧急军情】江北边报称${battleLabels.hostileTrendLabel}${rigidState.military.qingTrend || "未知"}。`,
   ];
 
   const module4 = [
@@ -122,7 +134,7 @@ export function composeRigidModules(rigidState, context = {}) {
   const module6 = historyCountdown.length
     ? historyCountdown.map((item) => {
       const cfg = (context.historyConfigs || []).find((event) => event.id === item.id);
-      const detail = formatHistoryEventLine(cfg);
+      const detail = formatHistoryEventLine(cfg, eraInfo);
       return `${detail}；剩余 ${item.monthsLeft} 月（可变空间：${item.variableSpace}）`;
     })
     : ["核心历史节点已进入尾段。"];
@@ -164,6 +176,7 @@ export function buildRigidStoryData(state, presets = []) {
       triggerEvents: [],
       historyEvents: [],
       historyConfigs: [],
+      worldviewState: state,
     });
 
   const lineText = (line) => String(line || "").replace(/^【[^】]+】\s*/, "").trim();
@@ -285,7 +298,7 @@ export function buildRigidStoryData(state, presets = []) {
 
   return {
     header: {
-      time: `建炎${(rigid?.calendar?.year || 1627) - 1626}年${rigid?.calendar?.month || 8}月`,
+      time: formatEraTimeByAbsoluteYear(state, rigid?.calendar?.year || 1627, rigid?.calendar?.month || 8),
       season: rigid?.calendar?.season || "秋",
       weather: state.weather || "阴",
       location: "行在",

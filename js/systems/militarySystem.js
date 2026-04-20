@@ -8,6 +8,8 @@
  * handleChoice 使用，以保持与现有 resolveHostileForcesAfterChoice 的一致性。
  */
 
+import { resolveWorldviewBattleLabels } from "../worldview/worldviewRuntimeAccessor.js";
+
 /* ─────────────────────────────────────────────────────────
    一、兵种配置（JSON 友好，支持后续迁移至 config 文件）
    ───────────────────────────────────────────────────────── */
@@ -543,6 +545,7 @@ function renderBattlePhase(overlay, session, choice, state, targetForce, onCompl
   const avgPlayerMorale = Math.round(
     session.playerUnits.reduce((s, u) => s + u.morale, 0) / session.playerUnits.length
   );
+  const battleLabels = resolveWorldviewBattleLabels(state);
 
   inner.appendChild(el("div", "mil-phase-title", `⚔️ 第 ${session.round} / ${session.maxRounds} 回合 — 与${targetForce.name}交战`));
 
@@ -560,7 +563,7 @@ function renderBattlePhase(overlay, session, choice, state, targetForce, onCompl
 
   // 战场态势
   const statusRow = el("div", "mil-status-row");
-  statusRow.appendChild(buildStatusCard("🏳 明军", playerTotal, avgPlayerMorale, "player"));
+  statusRow.appendChild(buildStatusCard(`🏳 ${battleLabels.playerForceLabel}`, playerTotal, avgPlayerMorale, "player"));
   statusRow.appendChild(buildStatusCard(`🚩 ${targetForce.name}`, enemyTotal, Math.round(session.enemyUnits.reduce((s, u) => s + u.morale, 0) / session.enemyUnits.length), "enemy"));
   inner.appendChild(statusRow);
 
@@ -666,6 +669,7 @@ function renderSummaryPhase(overlay, session, outcome, choice, state, targetForc
   inner.innerHTML = "";
 
   const isVictory = outcome === "victory";
+  const battleLabels = resolveWorldviewBattleLabels(state);
   const playerSurvivorCount = session.playerUnits.reduce((s, u) => s + u.count, 0);
   const initialPlayerCount = session.initialPlayerCount || (5000 + (state.playerAbilities?.military || 0) * 500);
   const survivorRatio = initialPlayerCount > 0 ? playerSurvivorCount / initialPlayerCount : 0.8;
@@ -687,7 +691,7 @@ function renderSummaryPhase(overlay, session, outcome, choice, state, targetForc
   const stats = [
     { label: "作战回合", value: `${session.round} 回合` },
     { label: "我方存活", value: `${playerSurvivorCount.toLocaleString()}人（${Math.round(survivorRatio * 100)}%）` },
-    { label: "我军平均士气", value: `${playerMoraleAvg}/100` },
+    { label: `${battleLabels.playerForceLabel}平均士气`, value: `${playerMoraleAvg}/100` },
     { label: "目标势力", value: `${targetForce.name}` },
     { label: "战果评定", value: isVictory ? "✅ 胜利" : "❌ 败退" },
   ];
@@ -737,7 +741,7 @@ function renderSummaryPhase(overlay, session, outcome, choice, state, targetForc
   continueBtn.type = "button";
   continueBtn.addEventListener("click", () => {
     overlay.remove();
-    const summary = buildSummaryText(session, outcome, targetForce);
+    const summary = buildSummaryText(session, outcome, targetForce, state);
     onComplete({
       outcome,
       effectsPatch,
@@ -819,10 +823,12 @@ function buildImpactLines(patch, isVictory) {
   return lines;
 }
 
-function buildSummaryText(session, outcome, targetForce) {
+function buildSummaryText(session, outcome, targetForce, state) {
   const isVictory = outcome === "victory";
+  const battleLabels = resolveWorldviewBattleLabels(state);
+  const playerForceLabel = battleLabels.playerForceLabel || "我军";
   const roundsText = session.roundHistory.map((r) => `第${r.round}回合：${r.decision}`).join("；");
   return isVictory
-    ? `历经 ${session.round} 回合激战（${roundsText}），明军大破${targetForce.name}，敌势力值大幅下降。`
-    : `历经 ${session.round} 回合（${roundsText}），攻势受阻，明军鸣金撤军，${targetForce.name}趁机反扑。`;
+    ? `历经 ${session.round} 回合激战（${roundsText}），${playerForceLabel}大破${targetForce.name}，敌势力值大幅下降。`
+    : `历经 ${session.round} 回合（${roundsText}），攻势受阻，${playerForceLabel}鸣金撤军，${targetForce.name}趁机反扑。`;
 }

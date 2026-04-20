@@ -13,6 +13,7 @@ import { mergePlayerRuntimeConfig } from "./playerRuntimeConfig.js";
 import { hydratePersistentLocalStorage } from "./persistentBrowserStorage.js";
 import { repairImpossibleNaturalDeaths } from "./utils/characterStatusRepair.js";
 import { loadCustomWorldview } from "./worldview/worldviewStorage.js";
+import { isRigidModeAllowed } from "./worldview/worldviewRuntimeAccessor.js";
 
 function normalizeCharacterId(rawId, aliasToCanonical) {
   if (typeof rawId !== "string") return "";
@@ -66,6 +67,21 @@ async function preloadBasicData(preferredMode = null) {
     resolvedWorldviewData = resolvedWorldviewData || {};
   }
 
+  const worldviewConfigPatch = {
+    ...(resolvedWorldviewData?.gameTitle ? { gameTitle: resolvedWorldviewData.gameTitle } : {}),
+    ...(resolvedWorldviewData?.phaseLabels && typeof resolvedWorldviewData.phaseLabels === "object"
+      ? { phaseLabels: resolvedWorldviewData.phaseLabels }
+      : {}),
+  };
+  const overridesConfigPatch = customWorldview?.overrides?.config && typeof customWorldview.overrides.config === "object"
+    ? customWorldview.overrides.config
+    : {};
+  const resolvedConfig = {
+    ...(config || {}),
+    ...worldviewConfigPatch,
+    ...overridesConfigPatch,
+  };
+
   const allCharacters = characters.characters || characters.ministers || [];
   const aliasToCanonical = (() => {
     const map = new Map();
@@ -84,6 +100,11 @@ async function preloadBasicData(preferredMode = null) {
   });
 
   const current = getState();
+  const resolvedPlayer = {
+    ...(current.player || {}),
+    ...(resolvedWorldviewData?.playerRole?.name ? { name: resolvedWorldviewData.playerRole.name } : {}),
+    ...(resolvedWorldviewData?.playerRole?.title ? { title: resolvedWorldviewData.playerRole.title } : {}),
+  };
   const existingLoyalty = current.loyalty || {};
   const mergedLoyalty = { ...loyalty };
   for (const [k, v] of Object.entries(existingLoyalty)) {
@@ -103,7 +124,7 @@ async function preloadBasicData(preferredMode = null) {
         corruptionLevel: nationInit.corruptionLevel || 80,
       };
 
-  const coreState = initializeCoreGameplayState(current, factions, config, nationInit);
+  const coreState = initializeCoreGameplayState(current, factions, resolvedConfig, nationInit);
   const mergedFactions = Array.isArray(current.factions) && current.factions.length ? current.factions : factions;
   const externalPowers = (() => {
     const initMap = {};
@@ -184,8 +205,11 @@ async function preloadBasicData(preferredMode = null) {
   const normalizedExistingAppointments = normalizeAppointmentsMap(current.appointments, aliasToCanonical);
   const normalizedDefaultAppointments = normalizeAppointmentsMap(defaultAppointments, aliasToCanonical);
 
-  const selectedMode = current.mode || preferredMode || config?.gameplayMode || "classic";
-  const worldVersion = customWorldview?.worldview?.id || getConfiguredWorldVersion(config);
+  const requestedMode = current.mode || preferredMode || resolvedConfig?.gameplayMode || "classic";
+  const selectedMode = requestedMode === "rigid_v1" && !isRigidModeAllowed({ config: { worldviewOverrides: customWorldview?.overrides } })
+    ? "classic"
+    : requestedMode;
+  const worldVersion = customWorldview?.worldview?.id || getConfiguredWorldVersion(resolvedConfig);
   const resolvedRigidState = current.rigid && typeof current.rigid === "object"
     ? current.rigid
     : createDefaultRigidState(rigidInitialData || DEFAULT_RIGID_INITIAL);
@@ -205,7 +229,7 @@ async function preloadBasicData(preferredMode = null) {
 
   setState({
     config: {
-      ...mergePlayerRuntimeConfig(config || {}),
+      ...mergePlayerRuntimeConfig(resolvedConfig || {}),
       worldVersion,
       worldviewData: resolvedWorldviewData,
       worldviewOverrides: customWorldview?.overrides || undefined,
@@ -231,6 +255,7 @@ async function preloadBasicData(preferredMode = null) {
     positionsMeta: positionsData || { positions: [], departments: [] },
     mode: selectedMode,
     worldVersion,
+    player: resolvedPlayer,
     currentQuarterAgenda: [],
     currentQuarterFocus: null,
     rigid: resolvedRigidState,

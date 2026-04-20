@@ -58,6 +58,27 @@ describe("buildStoryRequestBody", () => {
     expect(ctx.unlockedPolicyTitleMap?.politics_east_factory).toBe("察事耳目收束");
   });
 
+  it("injects readonly worldview context when worldviewData exists", () => {
+    const ctx = buildSharedContextFromState({
+      player: { name: "赵构", title: "官家" },
+      factions: [{ id: "donglin", name: "主战清议" }],
+      config: {
+        gameTitle: "南宋中兴模拟器",
+        worldviewData: {
+          id: "southern_song_v1",
+          title: "南宋中兴",
+          playerRole: { name: "宋高宗赵构", title: "官家" },
+          storyPrompt: { worldview: ["南宋初立"] },
+        },
+      },
+    });
+
+    expect(ctx.worldview?.id).toBe("southern_song_v1");
+    expect(ctx.worldview?.title).toBe("南宋中兴");
+    expect(ctx.worldview?.playerRole?.title).toBe("官家");
+    expect(ctx.worldview?.factionNames).toEqual(["主战清议"]);
+  });
+
   it("includes dynamic extra characters in minister chat payload", () => {
     const body = buildMinisterChatRequestBody({
       appointments: { bingbu_shangshu: "talent_1" },

@@ -1,6 +1,7 @@
 import { router } from "./router.js";
 import { showGoalPanel } from "./ui/goalPanel.js";
 import { checkGoalCompleted } from "./systems/goalCheck.js";
+import { formatEraTimeByRelativeYear } from "./worldview/worldviewRuntimeAccessor.js";
 
 export function initLayout() {
   const topbar = document.getElementById("topbar");
@@ -123,7 +124,7 @@ export function updateTopbarByState(state) {
   const year = state.currentYear || 3;
   const month = state.currentMonth || 4;
 
-  el.textContent = `建炎${year}年·${month}月·${phaseLabel}`;
+  el.textContent = `${formatEraTimeByRelativeYear(state, year, month)}·${phaseLabel}`;
 
   const weatherEl = state.weather;
   if (weatherEl) {

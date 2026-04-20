@@ -16,6 +16,7 @@ import { getAppointedCharactersFromState, getKnownCharactersFromState } from "..
 import { createActionButton, createElement, createFeedCard, createGameplayPageTemplate, createOverlayPanel, createSectionCard, createStatCard, createTag } from "./viewPrimitives.js";
 import { renderTalentView, ensureTalentViewDataLoaded } from "./talentView.js";
 import { renderPolicyView } from "./policyView.js";
+import { formatEraTimeByRelativeYear } from "../worldview/worldviewRuntimeAccessor.js";
 
 let currentMinisterChatId = null;
 let tagsConfigCache = null;
@@ -254,8 +255,9 @@ export async function showKejuPanel() {
 
   const summary = document.createElement("div");
   summary.className = "keju-summary";
+  const eraTime = formatEraTimeByRelativeYear(currentState, currentState.currentYear || 1, currentState.currentMonth || 1);
   summary.innerHTML = `
-    <div class="keju-summary__meta">建炎${currentState.currentYear || 1}年 · ${currentState.currentMonth || 1}月 · ${season}</div>
+    <div class="keju-summary__meta">${eraTime} · ${season}</div>
     <div class="keju-summary__meta">当前阶段：${stageLabel}</div>
     <div class="keju-summary__meta">在册考生：${kejuState.candidatePool.length} 人</div>
     <div class="keju-summary__meta">礼部科举声望：${kejuState.bureauMomentum}</div>
@@ -2401,10 +2403,13 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
       const row = document.createElement("div");
       row.className = "chat-row " + (msg.from === "player" ? "chat-row--me" : "chat-row--minister");
 
+      const playerName = latestState?.player?.name || "主上";
+      const playerTitle = latestState?.player?.title || "主上";
+
       const avatar = document.createElement("div");
       avatar.className = "chat-avatar-small";
       if (msg.from === "player") {
-        avatar.appendChild(createAvatarImg("赵构", "帝"));
+        avatar.appendChild(createAvatarImg(playerName, playerTitle));
       } else {
         avatar.appendChild(createAvatarImg(displayName, displayName ? displayName.charAt(0) : "臣"));
       }
@@ -2412,7 +2417,7 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
       const bubble = document.createElement("div");
       bubble.className = "chat-bubble " + (msg.from === "player" ? "chat-bubble--me" : "chat-bubble--minister");
       const speakerLabel = msg.from === "player"
-        ? "官家·赵构"
+        ? `${playerTitle}·${playerName}`
         : `${resolveMinisterRoleLabel(minister, latestRoleMap)}·${displayName}`;
       bubble.textContent = `${speakerLabel}：${msg.text || ""}`;
 
@@ -2531,15 +2536,15 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
 }
 
 function getAutoReplies(minister, playerText) {
-  const responses = {
-    bi_ziyan: "官家放心，臣会先从漕运、仓场与节用三处着手，把可挪出的财力尽量腾出来。",
-    liang_tingdong: "官家所虑极是。若要稳住局势，先得整诸军号令，再议战守进退。",
-    wen_tiren: "官家圣断自有深意。臣以为东南根本未固之前，凡事都宜多算一步。",
-    sun_chengzong: "老臣领旨。只要朝廷不先失人心，江山就还有转圜和恢复的根本。",
-    cao_huachun: "官家放心，禁中与外朝的动静，臣都会替您盯着，不让消息断线。",
-    hong_chengchou: "臣领旨。江防贵在稳，臣会先把军心、饷道与布防顺次理清。",
-  };
-  return responses[minister.id] || "臣领旨，定当尽心竭力。";
+  const state = getState();
+  const rulerTitle = state?.player?.title || "主上";
+  if (typeof minister?.openingLine === "string" && minister.openingLine.trim()) {
+    return minister.openingLine.trim();
+  }
+  if (typeof minister?.attitude === "string" && minister.attitude.trim()) {
+    return `${rulerTitle}，${minister.attitude.trim()}`;
+  }
+  return `${rulerTitle}明鉴，臣领旨，定当尽心竭力。`;
 }
 
 function showAppointmentDialog(position, state) {

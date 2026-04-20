@@ -21,6 +21,50 @@ const STORAGE_KEY = "czsim_custom_worldview_v1";
 const MIN_CHARACTERS = 5;
 const MIN_FACTIONS = 2;
 
+function validateExternalThreats(value, errors, fieldName) {
+  if (value == null) return;
+  if (!Array.isArray(value)) {
+    errors.push(`${fieldName} 必须是数组`);
+    return;
+  }
+  value.forEach((item, index) => {
+    if (!item || typeof item !== "object") {
+      errors.push(`${fieldName}[${index}] 必须是对象`);
+      return;
+    }
+    const hasName = typeof item.name === "string" && item.name.trim();
+    const hasId = typeof item.id === "string" && item.id.trim();
+    if (!hasName && !hasId) {
+      errors.push(`${fieldName}[${index}] 需提供 name 或 id`);
+    }
+    if (Object.prototype.hasOwnProperty.call(item, "power") && typeof item.power !== "number") {
+      errors.push(`${fieldName}[${index}].power 必须是数字`);
+    }
+  });
+}
+
+function validateProvinces(value, errors, fieldName) {
+  if (value == null) return;
+  if (!Array.isArray(value)) {
+    errors.push(`${fieldName} 必须是数组`);
+    return;
+  }
+  value.forEach((item, index) => {
+    if (!item || typeof item !== "object") {
+      errors.push(`${fieldName}[${index}] 必须是对象`);
+      return;
+    }
+    if (typeof item.name !== "string" || !item.name.trim()) {
+      errors.push(`${fieldName}[${index}].name 缺失或不是字符串`);
+    }
+    ["taxSilver", "taxGrain", "recruits", "morale", "corruption", "disaster"].forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(item, key) && typeof item[key] !== "number") {
+        errors.push(`${fieldName}[${index}].${key} 必须是数字`);
+      }
+    });
+  });
+}
+
 /**
  * 校验世界观包的结构完整性。
  * 返回 { valid: boolean, errors: string[], warnings: string[] }
@@ -71,6 +115,24 @@ export function validateWorldviewPackage(pkg) {
     if (factionCount < MIN_FACTIONS) {
       warnings.push(`派系数量不足（${factionCount}），建议至少 ${MIN_FACTIONS} 个以支撑朝局分歧`);
     }
+
+    const nationInit = ov.nationInit && typeof ov.nationInit === "object" ? ov.nationInit : null;
+    const hasExternalThreats = Object.prototype.hasOwnProperty.call(nationInit || {}, "externalThreats")
+      || Object.prototype.hasOwnProperty.call(ov, "externalThreats");
+    const hasProvinceProfiles = Object.prototype.hasOwnProperty.call(nationInit || {}, "provinces")
+      || Object.prototype.hasOwnProperty.call(ov, "provinces");
+
+    validateExternalThreats(nationInit?.externalThreats, errors, "overrides.nationInit.externalThreats");
+    validateExternalThreats(ov.externalThreats, errors, "overrides.externalThreats");
+    validateProvinces(nationInit?.provinces, errors, "overrides.nationInit.provinces");
+    validateProvinces(ov.provinces, errors, "overrides.provinces");
+
+    if (!hasExternalThreats) {
+      warnings.push("未提供 externalThreats 覆盖，敌对势力将沿用默认世界观");
+    }
+    if (!hasProvinceProfiles) {
+      warnings.push("未提供 provinces 覆盖，各省态势文案将沿用默认世界观");
+    }
   }
 
   return { valid: errors.length === 0, errors, warnings };
@@ -91,6 +153,60 @@ export function buildWorldviewPackage(worldviewJson, overridesJson) {
       importedAt: new Date().toISOString(),
     },
   };
+}
+
+const WORLDVIEW_SECTION_MARKER = "=== worldview.json ===";
+const OVERRIDES_SECTION_MARKER = "=== worldviewOverrides.json ===";
+
+/**
+ * 解析单文件导入包文本（worldview.import.bundle.txt）。
+ * 文件必须包含两个分段：
+ * 1) === worldview.json ===
+ * 2) === worldviewOverrides.json ===
+ */
+export function parseWorldviewBundleText(bundleText) {
+  if (typeof bundleText !== "string" || bundleText.trim() === "") {
+    throw new Error("导入包内容为空");
+  }
+
+  const worldviewMarkerIndex = bundleText.indexOf(WORLDVIEW_SECTION_MARKER);
+  const overridesMarkerIndex = bundleText.indexOf(OVERRIDES_SECTION_MARKER);
+
+  if (worldviewMarkerIndex < 0 || overridesMarkerIndex < 0) {
+    throw new Error("导入包格式错误：缺少 worldview.json 或 worldviewOverrides.json 分段");
+  }
+
+  if (overridesMarkerIndex <= worldviewMarkerIndex) {
+    throw new Error("导入包格式错误：分段顺序不正确");
+  }
+
+  const worldviewJsonText = bundleText
+    .slice(worldviewMarkerIndex + WORLDVIEW_SECTION_MARKER.length, overridesMarkerIndex)
+    .trim();
+  const overridesJsonText = bundleText
+    .slice(overridesMarkerIndex + OVERRIDES_SECTION_MARKER.length)
+    .trim();
+
+  if (!worldviewJsonText || !overridesJsonText) {
+    throw new Error("导入包格式错误：worldview.json 或 worldviewOverrides.json 内容为空");
+  }
+
+  let worldviewJson;
+  let overridesJson;
+
+  try {
+    worldviewJson = JSON.parse(worldviewJsonText);
+  } catch {
+    throw new Error("导入包中的 worldview.json 不是有效 JSON");
+  }
+
+  try {
+    overridesJson = JSON.parse(overridesJsonText);
+  } catch {
+    throw new Error("导入包中的 worldviewOverrides.json 不是有效 JSON");
+  }
+
+  return buildWorldviewPackage(worldviewJson, overridesJson);
 }
 
 // ─── 存储 CRUD ───────────────────────────────────────────────────────────

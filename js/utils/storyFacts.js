@@ -1,4 +1,5 @@
 import { resolveCharacterDisplayName, resolvePositionDisplayName } from "./sharedConstants.js";
+import { formatEraTimeByRelativeYear } from "../worldview/worldviewRuntimeAccessor.js";
 
 function toArray(value) {
   return Array.isArray(value) ? value : [];
@@ -76,7 +77,7 @@ export function buildStoryFactsFromState(state) {
 
   defeatedHostiles.forEach((item) => {
     const when = item.defeatedYear && item.defeatedMonth
-      ? `（建炎${item.defeatedYear}年${item.defeatedMonth}月）`
+      ? `（${formatEraTimeByRelativeYear(state, item.defeatedYear, item.defeatedMonth)}）`
       : "";
     hardFacts.push(`敌对势力「${item.name}」已灭亡${when}，不得在后续剧情中以存活势力复活。`);
   });

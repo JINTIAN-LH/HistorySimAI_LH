@@ -5,17 +5,17 @@ import { getStatBarClass } from "../systems/nationSystem.js";
 import { PLAYER_ABILITY_KEYS, getPolicyCatalog, spendAbilityPoint, unlockPolicy } from "../systems/coreGameplaySystem.js";
 import { formatDisplayMetricValue, getDisplayMetricBarValue, getDisplayMetricsBySection } from "../utils/displayStateMetrics.js";
 import { isRigidMode } from "../rigid/config.js";
+import { formatEraTimeByRelativeYear } from "../worldview/worldviewRuntimeAccessor.js";
 
 let nationInitCache = null;
 let provinceRulesCache = null;
 
 const DEFAULT_PROVINCE_RULES = {
   regionRules: [
-    { namePattern: "江淮|沿江", default: { threat: "critical", status: "金军压力犹存，沿江防线需持续戒备。" } },
-    { namePattern: "江淮|河南", default: { threat: "high", status: "兵火与流民问题仍需持续处置。" } },
-    { namePattern: "山东", default: { threat: "medium", status: "军务可控，但需防局部哗变反复。" } },
-    { namePattern: "两浙|江南|湖广", default: { threat: "low", status: "税粮产出稳定，仍是行在财政与粮运的主要支撑。" } },
-    { namePattern: "四川", default: { threat: "low", status: "整体安稳，可作为战略后方调度区域。" } },
+    { namePattern: "边|frontier|north|西|北", default: { threat: "critical", status: "边境压力持续，需保持高等级戒备。" } },
+    { namePattern: "江|河|湖|港|海", default: { threat: "high", status: "交通与补给线仍受干扰，需要持续整治。" } },
+    { namePattern: "都|京|中枢", default: { threat: "medium", status: "中枢秩序总体可控，但仍需防范突发扰动。" } },
+    { namePattern: ".*", default: { threat: "low", status: "地方局势基本稳定，可推进恢复与建设。" } },
   ],
 };
 
@@ -207,10 +207,13 @@ function appendClassicSections(root, state, container) {
       general: "综合微幅加成",
     };
     customPolicies.forEach((policy) => {
+      const createdAt = Number.isFinite(Number(policy.createdYear)) && Number.isFinite(Number(policy.createdMonth))
+        ? formatEraTimeByRelativeYear(state, policy.createdYear, policy.createdMonth)
+        : "设立时间未记录";
       body.appendChild(createCard({
         icon: "🏛️",
         title: policy.name,
-        summary: `${categoryText[policy.category] || categoryText.general} · 设立于建炎${policy.createdYear || "?"}年${policy.createdMonth || "?"}月`,
+        summary: `${categoryText[policy.category] || categoryText.general} · ${createdAt}`,
       }).card);
     });
   }));
@@ -307,12 +310,15 @@ function appendSharedSections(root, state) {
 export function renderNationView(container) {
   const state = getState();
   const root = createNode("div", "nation-root");
+  const worldviewTitle = state?.config?.worldviewData?.title || state?.config?.gameTitle || "当前世界";
+  const nationTitle = `${worldviewTitle}国势`;
+  const governanceTitle = `${worldviewTitle}朝局总览`;
 
   if (isRigidMode(state)) {
-    appendMetricGrid(root, state, "rigid", "建炎·南宋国势");
+    appendMetricGrid(root, state, "rigid", nationTitle);
   } else {
-    appendMetricGrid(root, state, "nation", "南宋国势");
-    appendMetricGrid(root, state, "governance", "朝局总览");
+    appendMetricGrid(root, state, "nation", nationTitle);
+    appendMetricGrid(root, state, "governance", governanceTitle);
     appendClassicSections(root, state, container);
   }
 

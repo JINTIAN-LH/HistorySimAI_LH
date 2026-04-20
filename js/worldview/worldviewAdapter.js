@@ -93,6 +93,40 @@ export function adaptPolicyCatalogData(data, worldviewOverrides = defaultWorldvi
   return applyOverrideList(data, resolvedOverrides.policies || {});
 }
 
+export function adaptNationInitData(data, worldviewOverrides = defaultWorldviewOverrides) {
+  const resolvedOverrides = resolveWorldviewOverrides(worldviewOverrides);
+  const nationInitOverride = resolvedOverrides.nationInit && typeof resolvedOverrides.nationInit === "object"
+    ? resolvedOverrides.nationInit
+    : {};
+
+  const provinces = Array.isArray(nationInitOverride.provinces)
+    ? cloneRecord(nationInitOverride.provinces)
+    : (Array.isArray(resolvedOverrides.provinces) ? cloneRecord(resolvedOverrides.provinces) : undefined);
+
+  const externalThreats = Array.isArray(nationInitOverride.externalThreats)
+    ? cloneRecord(nationInitOverride.externalThreats)
+    : (Array.isArray(resolvedOverrides.externalThreats) ? cloneRecord(resolvedOverrides.externalThreats) : undefined);
+
+  return {
+    ...(data || {}),
+    ...cloneRecord(nationInitOverride),
+    ...(provinces ? { provinces } : {}),
+    ...(externalThreats ? { externalThreats } : {}),
+  };
+}
+
+export function adaptProvinceRulesData(data, worldviewOverrides = defaultWorldviewOverrides) {
+  const resolvedOverrides = resolveWorldviewOverrides(worldviewOverrides);
+  const override = resolvedOverrides.provinceRules;
+  if (!override || typeof override !== "object") return data;
+  const regionRules = Array.isArray(override.regionRules) ? cloneRecord(override.regionRules) : undefined;
+  return {
+    ...(data || {}),
+    ...cloneRecord(override),
+    ...(regionRules ? { regionRules } : {}),
+  };
+}
+
 // ─── 派系名映射（用于 AI 生成人才的 faction/factionLabel 修正）────────────────
 
 // Ming-era labels → faction id lookup (hardcoded because the overrides JSON only
@@ -168,5 +202,7 @@ export function adaptWorldviewData(path, data, worldviewOverrides = defaultWorld
   if (path.endsWith("data/factions.json")) return adaptFactionsData(data, worldviewOverrides);
   if (path.endsWith("data/courtChats.json")) return adaptCourtChatsData(data, worldviewOverrides);
   if (path.endsWith("data/positions.json")) return adaptPositionsData(data, worldviewOverrides);
+  if (path.endsWith("data/nationInit.json")) return adaptNationInitData(data, worldviewOverrides);
+  if (path.endsWith("data/provinceRules.json")) return adaptProvinceRulesData(data, worldviewOverrides);
   return data;
 }

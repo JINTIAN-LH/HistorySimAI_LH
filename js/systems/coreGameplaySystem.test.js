@@ -182,6 +182,39 @@ describe("refreshQuarterAgendaByState worldview mapping", () => {
     expect(policies.find((item) => item.id === "diplomacy_macao")?.title).toBe("海商互市");
     expect(policies.find((item) => item.id === "diplomacy_rome")?.description).toContain("诸蕃");
   });
+
+  it("uses semanticLabels for diplomacy hostile-force wording", () => {
+    const policies = getPolicyCatalog({
+      worldVersion: "southern_song_v1",
+      config: {
+        worldVersion: "southern_song_v1",
+        worldviewData: {
+          semanticLabels: {
+            primaryHostileName: "北境强敌",
+          },
+        },
+      },
+    });
+
+    expect(policies.find((item) => item.id === "diplomacy_mongol")?.description).toContain("北境强敌");
+    expect(policies.find((item) => item.id === "diplomacy_korea")?.description).toContain("北境强敌");
+  });
+
+  it("applies semanticLabels to diplomacy wording in worldview policy catalog", () => {
+    const policies = getPolicyCatalog({
+      worldVersion: "southern_song_v1",
+      config: {
+        worldVersion: "southern_song_v1",
+        worldviewData: {
+          semanticLabels: {
+            primaryHostileName: "北境强敌",
+          },
+        },
+      },
+    });
+
+    expect(policies.find((item) => item.id === "diplomacy_mongol")?.description).toContain("北境强敌");
+  });
 });
 
 describe("scaleEffectsByExecution", () => {

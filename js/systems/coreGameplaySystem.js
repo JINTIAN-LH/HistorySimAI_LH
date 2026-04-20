@@ -1,5 +1,6 @@
 import { getConfiguredWorldVersion } from "../worldVersion.js";
 import { adaptPolicyCatalogData } from "../worldview/southernSongAdapter.js";
+import { resolveWorldviewSemanticLabels } from "../worldview/worldviewRuntimeAccessor.js";
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -186,8 +187,8 @@ export const POLICY_CATALOG = [
   { id: "tech_medicine", branch: "科技", title: "医学典籍整理", cost: 1, requires: ["tech_ship"], description: "推广防疫知识。" },
   { id: "tech_math", branch: "科技", title: "算学馆设立", cost: 1, requires: ["tech_medicine"], description: "培养算学人才，服务工程与历法。" },
 
-  { id: "diplomacy_mongol", branch: "外交", title: "联外制敌", cost: 1, requires: [], description: "联络周边势力，牵制金军。" },
-  { id: "diplomacy_korea", branch: "外交", title: "邻邦羁縻", cost: 1, requires: ["diplomacy_mongol"], description: "防止周边势力倒向金军。" },
+  { id: "diplomacy_mongol", branch: "外交", title: "联外制敌", cost: 1, requires: [], description: "联络周边势力，牵制北方敌军。" },
+  { id: "diplomacy_korea", branch: "外交", title: "邻邦羁縻", cost: 1, requires: ["diplomacy_mongol"], description: "防止周边势力倒向北方敌军。" },
   { id: "diplomacy_macao", branch: "外交", title: "澳门通商", cost: 1, requires: ["diplomacy_korea"], description: "获取火器与技术。" },
   { id: "diplomacy_japan", branch: "外交", title: "日本勘合贸易重启", cost: 1, requires: ["diplomacy_macao"], description: "恢复官方贸易，抑制倭患。" },
   { id: "diplomacy_rome", branch: "外交", title: "遣使罗马", cost: 1, requires: ["diplomacy_japan"], description: "争取西方军事援助。" },
@@ -260,12 +261,42 @@ function resolvePolicyCatalogWorldVersion(source) {
   return getConfiguredWorldVersion();
 }
 
+function applySemanticDescriptionsToPolicyCatalog(catalog, source) {
+  const semanticLabels = resolveWorldviewSemanticLabels(
+    source && typeof source === "object"
+      ? source
+      : null
+  );
+  const worldviewOverrides = source?.config?.worldviewOverrides || source?.worldviewOverrides;
+  const policyOverrides = worldviewOverrides?.policies && typeof worldviewOverrides.policies === "object"
+    ? worldviewOverrides.policies
+    : {};
+  const diplomacyDescriptions = {
+    diplomacy_mongol: {
+      next: `联络周边势力，牵制${semanticLabels.primaryHostileName}。`,
+    },
+    diplomacy_korea: {
+      next: `防止周边势力倒向${semanticLabels.primaryHostileName}。`,
+    },
+  };
+
+  return (Array.isArray(catalog) ? catalog : []).map((item) => {
+    const patch = diplomacyDescriptions[item.id];
+    if (!patch) return item;
+    if (policyOverrides[item.id]) return item;
+    return {
+      ...item,
+      description: patch.next,
+    };
+  });
+}
+
 export function getPolicyCatalog(source) {
   const worldVersion = resolvePolicyCatalogWorldVersion(source);
   if (worldVersion === "southern_song_v1") {
-    return adaptPolicyCatalogData(POLICY_CATALOG);
+    return applySemanticDescriptionsToPolicyCatalog(adaptPolicyCatalogData(POLICY_CATALOG), source);
   }
-  return POLICY_CATALOG;
+  return applySemanticDescriptionsToPolicyCatalog(POLICY_CATALOG, source);
 }
 
 export function getPolicyBonusSummary(unlockedPolicies, balanceConfig) {
@@ -570,7 +601,7 @@ function buildStorylineTag(name) {
   return `${String(name || "未知势力").replace(/\s+/g, "")}_线`;
 }
 
-function buildHostileAliases(force) {
+function buildHostileAliases(force, semanticLabels = resolveWorldviewSemanticLabels()) {
   const aliases = new Set();
   const add = (value) => {
     if (typeof value !== "string") return;
@@ -585,13 +616,13 @@ function buildHostileAliases(force) {
 
   const name = String(force?.name || "");
   if (name.includes("农民军") || name.includes("地方叛军")) {
-    ["流寇", "流民军", "地方乱军", "地方叛军", "兵乱"].forEach(add);
+    semanticLabels.rebelForceAliases.forEach(add);
   }
-  if (name.includes("后金") || name.includes("金军")) {
-    ["后金", "建奴", "金军", "北方敌军", "江北敌军", "满清"].forEach(add);
+  if (semanticLabels.northernHostileAliases.some((alias) => alias && name.includes(alias))) {
+    semanticLabels.northernHostileAliases.forEach(add);
   }
   if (name.includes("登州叛军")) {
-    ["登州", "登州兵变", "孔有德部", "孔有德", "叛军"].forEach(add);
+    semanticLabels.dengzhouRebelAliases.forEach(add);
   }
 
   return Array.from(aliases).filter(Boolean);
@@ -1354,15 +1385,16 @@ function evolveProvinceStats(state) {
   return changed ? next : null;
 }
 
-function extractHostileTargetsFromText(choiceText, hostileForces) {
+function extractHostileTargetsFromText(choiceText, hostileForces, state) {
   const text = String(choiceText || "");
   const hasMilitaryIntent = /征讨|北伐|平叛|开拓|讨伐|灭|剿|出师|围剿|进兵|用兵|突击|攻城/.test(text);
   if (!hasMilitaryIntent) return [];
 
   const active = (hostileForces || []).filter((item) => !item.isDefeated);
+  const semanticLabels = resolveWorldviewSemanticLabels(state);
   const targets = [];
   active.forEach((item) => {
-    const aliases = buildHostileAliases(item);
+    const aliases = buildHostileAliases(item, semanticLabels);
     if (aliases.some((name) => text.includes(name))) {
       targets.push(item.id);
     }
@@ -1385,7 +1417,7 @@ export function resolveHostileForcesAfterChoice(state, choiceText, effects, year
   const nextHostiles = hostileForces.map((item) => ({ ...item }));
   const damageMap = parseHostileDamageFromEffects(effects);
   const explicitBattleOutcome = parseBattleOutcomeFromEffects(effects);
-  const inferredTargets = extractHostileTargetsFromText(choiceText, nextHostiles);
+  const inferredTargets = extractHostileTargetsFromText(choiceText, nextHostiles, state);
 
   if (!Object.keys(damageMap).length && !tags.military && !inferredTargets.length && !explicitBattleOutcome) {
     return null;
