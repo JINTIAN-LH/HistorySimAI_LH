@@ -73,6 +73,140 @@
     "opposeLabel": "反对",
     "neutralLabel": "持重",
     "historyLabel": "往议记录"
+  },
+  "startPageCopy": {
+    "heroTitle": "南宋中兴模拟器",
+    "heroSubtitle": "国祚飘摇，行在草创，且看官家如何定中兴之局",
+    "startButtonLabel": "即刻临朝",
+    "continueButtonLabel": "续理旧局"
+  },
+  "openingTurn": {
+    "briefingTitle": "开局廷议",
+    "briefingLines": [
+      "行在未稳，百司草创，朝廷需先定人心。",
+      "北境军情压境，江防与财赋皆不可偏废。"
+    ],
+    "openingChoices": [
+      {
+        "id": "stabilize_court",
+        "label": "先整朝纲",
+        "summary": "优先稳住中枢秩序与政令执行"
+      },
+      {
+        "id": "secure_frontier",
+        "label": "先固江防",
+        "summary": "优先压制外患与边防风险"
+      }
+    ]
+  },
+  "chronicleFormat": {
+    "eraLabel": "建炎",
+    "yearUnit": "年",
+    "monthUnit": "月",
+    "displayPattern": "{era}{year}{yearUnit}{month}{monthUnit}",
+    "fallbackPattern": "第{year}年{month}月"
+  },
+  "courtViewCopy": {
+    "headerTitle": "朝堂中枢",
+    "headerSubtitle": "百官争议并起，圣断当裁轻重",
+    "quickActionLabel": "速议",
+    "emptyStateText": "暂无可用廷议，请稍候再议"
+  },
+  "policyTreeCopy": {
+    "treeTitle": "中兴国策",
+    "treeSubtitle": "定纲举要，循序推进",
+    "branchLabels": {
+      "military": "经武备边",
+      "internal": "整饬内政",
+      "economy": "财赋振兴"
+    }
+  },
+  "rulerAbilityCopy": {
+    "panelTitle": "官家权衡",
+    "abilityLabels": {
+      "authority": "御极威望",
+      "command": "军政节度",
+      "insight": "识人断事"
+    },
+    "abilityHint": "皇权能力决定关键决策的上下限"
+  },
+  "worldEventCopy": {
+    "sectionTitle": "天下大事",
+    "emptyStateText": "近日暂无重大变局",
+    "severityLabels": {
+      "high": "社稷震荡",
+      "medium": "局势波动",
+      "low": "地方异动"
+    }
+  },
+  "publicOpinionCopy": {
+    "sectionTitle": "民间舆论",
+    "positiveLabel": "民心向治",
+    "neutralLabel": "观望未定",
+    "negativeLabel": "民议汹汹",
+    "emptyStateText": "暂未形成显著舆情"
+  },
+  "uiSurfaceCopy": {
+    "policy": {
+      "inputPlaceholder": "输入要垂询群臣的问题，或点上方议题快速填入…",
+      "followupPlaceholder": "基于当前议题继续追问…",
+      "emptyQuestionError": "请先输入或选择议题。",
+      "emptyEdictError": "诏令内容不得为空。",
+      "askFailedError": "廷议失败，请稍后重试。",
+      "followupFailedError": "追问失败，请稍后重试。",
+      "issueFailedError": "颁旨失败，请稍后重试。",
+      "issueSuccess": "诏旨已拟定，待你本轮选择旨意时一并生效。",
+      "closeSessionLabel": "结束廷议",
+      "summaryPrefix": "综议：",
+      "adoptAdviceLabel": "采纳此议",
+      "followupLabel": "继续追问群臣：",
+      "followupButtonLabel": "追问",
+      "followupBusyLabel": "议…",
+      "historyTitle": "历次廷议"
+    },
+    "edict": {
+      "pageTitle": "诏书中枢",
+      "pageSubtitle": "将剧情正文、诏令选择、奏报与自拟诏书入口固定在统一玩法骨架内，后续主玩法扩展继续沿用这一页模板。",
+      "actionsTitle": "诏令选择",
+      "actionsHint": "固定保留选择区与自拟诏书入口，季度议题锁定后也在这里继续操作。",
+      "dataTitle": "奏报与回响",
+      "dataHint": "把新闻流和舆论反馈固定在数据区，减少主玩法页面的信息漂移。",
+      "mainTitle": "诏书正文",
+      "mainHint": "正文区继续承载历史记录、当回合文本、批注和数值反馈。"
+    },
+    "court": {
+      "kejuPanelTitle": "科举大典",
+      "kejuPanelSubtitle": "统一弹窗骨架后，文官选拔、待录用推荐与后续人才系统都走同一套面板结构。",
+      "wujuPanelTitle": "武举",
+      "wujuPanelSubtitle": "统一朝堂人才弹窗骨架，武举与科举共享同类信息布局与操作区。",
+      "talentPanelTitle": "人才储备",
+      "talentPanelSubtitle": "延揽招募与职位任用，同科举武举共用弹窗结构。",
+      "policyPanelTitle": "问政廷议",
+      "policyPanelSubtitle": "廷议群臣、建言采纳与诏令起草，统一弹窗骨架。",
+      "appointByPositionSubtitle": "统一任命类弹窗骨架，后续扩展筛选、排序与推荐逻辑时不再重复写外层结构。",
+      "appointByMinisterSubtitle": "统一任命弹窗骨架，官员与官职两种调整路径沿用同一外层模板。",
+      "appointLegacySubtitle": "统一老任命路径的弹窗骨架，保留现有角色筛选与确认逻辑。",
+      "positionSelectSubtitle": "统一官职选择弹窗骨架，保持任命与调岗流程使用同一套外层结构。",
+      "ministerDetailSubtitle": "统一详情弹窗骨架，内部仍保留头像、忠诚、态度与转岗入口。",
+      "factionPanelSubtitle": "统一派系弹窗骨架，后续可继续接入派系成员、忠诚与党争信息。",
+      "ministerPanelSubtitle": "统一群臣列表弹窗骨架，保留点击人物进入奏对与详情的现有流转。",
+      "unknownError": "未知错误",
+      "appointFailedPrefix": "任命失败: ",
+      "adjustFailedPrefix": "调整失败: ",
+      "kejuStartSuccess": "乡试已开启，考生名单已入册。",
+      "kejuHuishiSuccess": "会试候选名单已生成。",
+      "kejuDianshiSuccess": "殿试候选名单已生成。",
+      "kejuPublishSuccess": "殿试放榜完成。",
+      "kejuReserveSavedSuccess": "已写入待录用名单。",
+      "kejuEntryAppliedSuccess": "科举入仕已生效。",
+      "officeAppointmentAppliedSuccess": "官职任免已生效",
+      "positionOccupiedRegenerateError": "该官职已有人在任，请重新生成推荐名单。",
+      "positionOccupiedRegenerateSimpleError": "该官职已有人在任，请重新生成名单。",
+      "candidateDeadCannotAppointError": "该人物已故，无法任命。",
+      "candidateDeadCannotAdjustError": "该人物已故，无法调岗。",
+      "candidateDeadCannotGrantError": "该人物已故，无法授予官职。",
+      "ministerDeadCannotDiscussError": "该人物已故，无法继续议事。请返回朝堂。"
+    }
   }
 }
 

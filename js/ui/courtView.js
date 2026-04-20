@@ -16,7 +16,11 @@ import { getAppointedCharactersFromState, getKnownCharactersFromState } from "..
 import { createActionButton, createElement, createFeedCard, createGameplayPageTemplate, createOverlayPanel, createSectionCard, createStatCard, createTag } from "./viewPrimitives.js";
 import { renderTalentView, ensureTalentViewDataLoaded } from "./talentView.js";
 import { renderPolicyView } from "./policyView.js";
-import { formatEraTimeByRelativeYear } from "../worldview/worldviewRuntimeAccessor.js";
+import {
+  formatEraTimeByRelativeYear,
+  resolveWorldviewCourtViewCopy,
+  resolveWorldviewUiSurfaceCopy,
+} from "../worldview/worldviewRuntimeAccessor.js";
 
 let currentMinisterChatId = null;
 let tagsConfigCache = null;
@@ -46,6 +50,14 @@ const courtModuleUIState = {
 };
 
 const COURT_SWIPE_HINT_STORAGE_KEY = "courtSwipeHintSeenV1";
+
+function getCourtUiCopy(state = getState()) {
+  return resolveWorldviewUiSurfaceCopy(state).court;
+}
+
+function buildPrefixedMessage(prefix, detail, fallback) {
+  return `${prefix}${detail || fallback}`;
+}
 
 function useLegacyLayoutForContainer(container) {
   return container?.dataset?.legacyLayout === "true";
@@ -237,14 +249,15 @@ export async function showKejuPanel() {
   if (!app) return;
 
   const currentState = getState();
+  const courtUiCopy = getCourtUiCopy(currentState);
   const kejuState = getKejuStateSnapshot(currentState);
 
   const existing = document.getElementById("keju-panel-overlay");
   if (existing) existing.remove();
   const panel = createDismissibleOverlayPanel({
     overlayId: "keju-panel-overlay",
-    title: "科举大典",
-    subtitle: "统一弹窗骨架后，文官选拔、待录用推荐与后续人才系统都走同一套面板结构。",
+    title: courtUiCopy.kejuPanelTitle,
+    subtitle: courtUiCopy.kejuPanelSubtitle,
     panelClassName: "keju-panel-card",
     bodyClassName: "keju-panel-body",
   });
@@ -306,13 +319,13 @@ export async function showKejuPanel() {
     );
     patchKejuState(nextKeju);
     if (latestKeju.stage === "idle") {
-      showSuccess("乡试已开启，考生名单已入册。", 1800);
+      showSuccess(courtUiCopy.kejuStartSuccess, 1800);
     } else if (latestKeju.stage === "xiangshi") {
-      showSuccess("会试候选名单已生成。", 1800);
+      showSuccess(courtUiCopy.kejuHuishiSuccess, 1800);
     } else if (latestKeju.stage === "huishi") {
-      showSuccess("殿试候选名单已生成。", 1800);
+      showSuccess(courtUiCopy.kejuDianshiSuccess, 1800);
     } else if (latestKeju.stage === "dianshi") {
-      showSuccess("殿试放榜完成。", 1800);
+      showSuccess(courtUiCopy.kejuPublishSuccess, 1800);
     }
     showKejuPanel();
   });
@@ -363,7 +376,7 @@ export async function showKejuPanel() {
         ),
         note: "前三甲已加入待录用名单（仅记录，不自动任命）。",
       });
-      showSuccess("已写入待录用名单。", 1800);
+      showSuccess(courtUiCopy.kejuReserveSavedSuccess, 1800);
       showKejuPanel();
     });
     actions.appendChild(reserveBtn);
@@ -431,13 +444,14 @@ export async function showKejuPanel() {
       appointBtn.addEventListener("click", async () => {
         if (!item.positionId) return;
         const latestState = getState();
+        const latestCopy = getCourtUiCopy(latestState);
         if ((latestState.appointments || {})[item.positionId]) {
-          showError("该官职已有人在任，请重新生成推荐名单。", 2200);
+          showError(latestCopy.positionOccupiedRegenerateError, 2200);
           showKejuPanel();
           return;
         }
         if (!isAliveCharacter(latestState, item.candidateId)) {
-          showError("该人物已故，无法任命。", 2200);
+          showError(latestCopy.candidateDeadCannotAppointError, 2200);
           return;
         }
         appointBtn.disabled = true;
@@ -445,7 +459,7 @@ export async function showKejuPanel() {
         try {
           const result = await requestAppoint(item.positionId, item.candidateId);
           if (result?.success === false) {
-            showError(`任命失败: ${result.error || "未知错误"}`);
+            showError(buildPrefixedMessage(latestCopy.appointFailedPrefix, result.error, latestCopy.unknownError));
             showKejuPanel();
             return;
           }
@@ -466,11 +480,11 @@ export async function showKejuPanel() {
               note: `${item.candidateName} 已授 ${item.positionName}，忠诚度提升。`,
             }),
           });
-          showSuccess("科举入仕已生效。", 1800);
+          showSuccess(latestCopy.kejuEntryAppliedSuccess, 1800);
           showKejuPanel();
           rerenderCourtMainView();
         } catch (error) {
-          showError(`任命失败: ${error.message}`);
+          showError(buildPrefixedMessage(latestCopy.appointFailedPrefix, error.message, latestCopy.unknownError));
           showKejuPanel();
         }
       });
@@ -481,8 +495,9 @@ export async function showKejuPanel() {
       adjustBtn.textContent = "调岗推荐";
       adjustBtn.addEventListener("click", () => {
         const latestState = getState();
+        const latestCopy = getCourtUiCopy(latestState);
         if (!isAliveCharacter(latestState, item.candidateId)) {
-          showError("该人物已故，无法调岗。", 2200);
+          showError(latestCopy.candidateDeadCannotAdjustError, 2200);
           return;
         }
           close();
@@ -517,14 +532,15 @@ export async function showWujuPanel() {
   if (!app) return;
 
   const currentState = getState();
+  const courtUiCopy = getCourtUiCopy(currentState);
   const wujuState = getWujuStateSnapshot(currentState);
 
   const existing = document.getElementById("wuju-panel-overlay");
   if (existing) existing.remove();
   const panel = createDismissibleOverlayPanel({
     overlayId: "wuju-panel-overlay",
-    title: "武举",
-    subtitle: "统一朝堂人才弹窗骨架，武举与科举共享同类信息布局与操作区。",
+    title: courtUiCopy.wujuPanelTitle,
+    subtitle: courtUiCopy.wujuPanelSubtitle,
     panelClassName: "keju-panel-card",
     bodyClassName: "keju-panel-body",
   });
@@ -641,13 +657,14 @@ export async function showWujuPanel() {
         if (!item.positionId) return;
         const latestState = getState();
         if ((latestState.appointments || {})[item.positionId]) {
-          showError("该官职已有人在任，请重新生成名单。", 2200);
+          showError(getCourtUiCopy(latestState).positionOccupiedRegenerateSimpleError, 2200);
           showWujuPanel();
           return;
         }
         const result = await requestAppoint(item.positionId, item.candidateId);
         if (result?.success === false) {
-          showError(`任命失败: ${result.error || "未知错误"}`);
+          const latestCopy = getCourtUiCopy(latestState);
+          showError(buildPrefixedMessage(latestCopy.appointFailedPrefix, result.error, latestCopy.unknownError));
           return;
         }
         const appointmentEffects = buildAppointmentOutcomeEffects(latestState, result?.appointments, result?.effects);
@@ -697,11 +714,12 @@ export async function showTalentPanel() {
   if (existing) existing.remove();
 
   await ensureTalentViewDataLoaded();
+  const courtUiCopy = getCourtUiCopy();
 
   const panel = createDismissibleOverlayPanel({
     overlayId: "talent-panel-overlay",
-    title: "人才储备",
-    subtitle: "延揽招募与职位任用，同科举武举共用弹窗结构。",
+    title: courtUiCopy.talentPanelTitle,
+    subtitle: courtUiCopy.talentPanelSubtitle,
     panelClassName: "keju-panel-card",
     bodyClassName: "keju-panel-body",
   });
@@ -719,11 +737,12 @@ export async function showPolicyPanel() {
 
   const existing = document.getElementById("policy-panel-overlay");
   if (existing) existing.remove();
+  const courtUiCopy = getCourtUiCopy();
 
   const panel = createDismissibleOverlayPanel({
     overlayId: "policy-panel-overlay",
-    title: "问政廷议",
-    subtitle: "廷议群臣、建言采纳与诏令起草，统一弹窗骨架。",
+    title: courtUiCopy.policyPanelTitle,
+    subtitle: courtUiCopy.policyPanelSubtitle,
     panelClassName: "keju-panel-card",
     bodyClassName: "keju-panel-body",
   });
@@ -912,7 +931,7 @@ async function showAppointmentDialogByPosition(positionId) {
   const panel = createDismissibleOverlayPanel({
     overlayId: "appointment-dialog-overlay",
     title: `任命 ${position.name}`,
-    subtitle: "统一任命类弹窗骨架，后续扩展筛选、排序与推荐逻辑时不再重复写外层结构。",
+    subtitle: getCourtUiCopy(state).appointByPositionSubtitle,
     panelClassName: "appointment-dialog-card",
     bodyClassName: "appointment-dialog-card__body",
     footerClassName: "appointment-dialog-card__footer",
@@ -1075,7 +1094,8 @@ async function showAppointmentDialogByPosition(positionId) {
     try {
       const result = await requestAppoint(positionId, selectedCharacter.id);
       if (result?.success === false) {
-        showError(`任命失败: ${result.error || "未知错误"}`);
+        const copy = getCourtUiCopy(getState());
+        showError(buildPrefixedMessage(copy.appointFailedPrefix, result.error, copy.unknownError));
         return;
       }
 
@@ -1090,7 +1110,8 @@ async function showAppointmentDialogByPosition(positionId) {
       overlay.remove();
       rerenderCourtLegacyView();
     } catch (e) {
-      showError(`任命失败: ${e.message}`);
+      const copy = getCourtUiCopy(getState());
+      showError(buildPrefixedMessage(copy.appointFailedPrefix, e.message, copy.unknownError));
     } finally {
       appointing = false;
       confirmBtn.textContent = "确认任命";
@@ -1127,7 +1148,7 @@ async function showAppointmentDialogByMinister(ministerId) {
   const minister = allCharacters.find(m => m.id === ministerId);
   if (!minister) return;
   if (!isAliveCharacter(state, ministerId)) {
-    showError("该人物已故，无法授予官职。");
+    showError(getCourtUiCopy(state).candidateDeadCannotGrantError);
     return;
   }
 
@@ -1140,7 +1161,7 @@ async function showAppointmentDialogByMinister(ministerId) {
   const panel = createDismissibleOverlayPanel({
     overlayId: "appointment-dialog-overlay",
     title: `调整官职：${getDisplayName(minister.name)}`,
-    subtitle: "统一任命弹窗骨架，官员与官职两种调整路径沿用同一外层模板。",
+    subtitle: getCourtUiCopy(state).appointByMinisterSubtitle,
     panelClassName: "appointment-dialog-card",
     bodyClassName: "appointment-dialog-card__body",
     footerClassName: "appointment-dialog-card__footer",
@@ -1242,7 +1263,8 @@ async function showAppointmentDialogByMinister(ministerId) {
     try {
       const result = await requestAppoint(selectedPosition.id, ministerId);
       if (result?.success === false) {
-        showError(`调整失败: ${result.error || "未知错误"}`);
+        const copy = getCourtUiCopy(getState());
+        showError(buildPrefixedMessage(copy.adjustFailedPrefix, result.error, copy.unknownError));
         return;
       }
 
@@ -1265,7 +1287,8 @@ async function showAppointmentDialogByMinister(ministerId) {
       overlay.remove();
       rerenderCourtLegacyView();
     } catch (e) {
-      showError(`调整失败: ${e.message}`);
+      const copy = getCourtUiCopy(getState());
+      showError(buildPrefixedMessage(copy.adjustFailedPrefix, e.message, copy.unknownError));
     } finally {
       appointing = false;
       confirmBtn.textContent = "确认调整";
@@ -1446,7 +1469,7 @@ function showMinisterDetail(minister, state, tagsConfig) {
   const panel = createDismissibleOverlayPanel({
     overlayId: "minister-detail-overlay",
     title: "大臣详情",
-    subtitle: "统一详情弹窗骨架，内部仍保留头像、忠诚、态度与转岗入口。",
+    subtitle: getCourtUiCopy(state).ministerDetailSubtitle,
     panelClassName: "minister-detail-card",
     bodyClassName: "minister-detail-card__body",
     footerClassName: "relationship-panel-card__footer",
@@ -1528,7 +1551,7 @@ async function showPositionSelectDialog(minister, state) {
   const panel = createDismissibleOverlayPanel({
     overlayId: "position-select-overlay",
     title: `为 ${getDisplayName(minister.name)} 调整官职`,
-    subtitle: "统一官职选择弹窗骨架，保持任命与调岗流程使用同一套外层结构。",
+    subtitle: getCourtUiCopy(state).positionSelectSubtitle,
     panelClassName: "appointment-dialog-card",
     bodyClassName: "appointment-dialog-card__body",
     footerClassName: "appointment-dialog-card__footer",
@@ -1608,7 +1631,8 @@ async function showPositionSelectDialog(minister, state) {
     try {
       const result = await requestAppoint(selectedPosition.id, minister.id);
       if (result?.success === false) {
-        showError(`调整失败: ${result.error || "未知错误"}`);
+        const copy = getCourtUiCopy(getState());
+        showError(buildPrefixedMessage(copy.adjustFailedPrefix, result.error, copy.unknownError));
         return;
       }
 
@@ -1620,7 +1644,8 @@ async function showPositionSelectDialog(minister, state) {
       overlay.remove();
       rerenderCourtLegacyView();
     } catch (e) {
-      showError(`调整失败: ${e.message}`);
+      const copy = getCourtUiCopy(getState());
+      showError(buildPrefixedMessage(copy.adjustFailedPrefix, e.message, copy.unknownError));
     } finally {
       appointing = false;
       confirmBtn.textContent = "确认调整";
@@ -1650,8 +1675,8 @@ export function showFactionPanel(state) {
   if (existing) existing.remove();
   const panel = createDismissibleOverlayPanel({
     overlayId: "relationship-panel-overlay",
-    title: "朝堂派系",
-    subtitle: "统一派系弹窗骨架，后续可继续接入派系成员、忠诚与党争信息。",
+    title: `${resolveWorldviewCourtViewCopy(state).headerTitle}派系`,
+    subtitle: getCourtUiCopy(state).factionPanelSubtitle,
     bodyClassName: "relationship-panel-card__body",
     footerClassName: "relationship-panel-card__footer",
   });
@@ -1809,8 +1834,8 @@ export function showMinisterPanel(state, tagsConfig) {
   if (existing) existing.remove();
   const panel = createDismissibleOverlayPanel({
     overlayId: "minister-panel-overlay",
-    title: "朝堂群臣",
-    subtitle: "统一群臣列表弹窗骨架，保留点击人物进入奏对与详情的现有流转。",
+    title: `${resolveWorldviewCourtViewCopy(state).headerTitle}群臣`,
+    subtitle: getCourtUiCopy(state).ministerPanelSubtitle,
     panelClassName: "minister-panel-card",
     bodyClassName: "minister-panel-body",
     footerClassName: "relationship-panel-card__footer",
@@ -1829,10 +1854,11 @@ export function showMinisterPanel(state, tagsConfig) {
 
 function renderMinisterList(container, state, tagsConfig) {
   const ministers = getCourtMinistersFromState(state);
+  const courtCopy = resolveWorldviewCourtViewCopy(state);
 
   const panel = createSectionCard({
     className: "court-minister-card",
-    title: `朝堂群臣 ${ministers?.length || 0} 人`,
+    title: `${courtCopy.headerTitle}群臣 ${ministers?.length || 0} 人`,
     hint: "",
   });
 
@@ -1968,14 +1994,15 @@ function createCourtPositionItem({ pos, holder, state }) {
 }
 
 async function renderCourtPageShell(container, state, { mainTitle, mainHint, renderMain }) {
+  const courtCopy = resolveWorldviewCourtViewCopy(state);
   const currentModeLabel = state.mode === "rigid_v1" ? "困难模式" : "经典模式";
   const { root, actionsBody, dataBody, mainBody } = createGameplayPageTemplate({
     pageClass: "court-page",
-    title: "朝堂总览",
-    subtitle: "固定保留标题区、操作区、数据区与主内容区，后续新增官职、议政和人才模块时可直接复用。",
-    actionsTitle: "快捷入口",
+    title: courtCopy.headerTitle,
+    subtitle: courtCopy.headerSubtitle || "固定保留标题区、操作区、数据区与主内容区，后续新增官职、议政和人才模块时可直接复用。",
+    actionsTitle: courtCopy.quickActionLabel,
     actionsHint: "把群臣、派系、科举和武举等高频入口固定在这里。",
-    dataTitle: "朝堂数据",
+    dataTitle: `${courtCopy.headerTitle}数据`,
     dataHint: "统一放朝堂最先需要判断的核心状态，减少每个页面都单独拼统计区。",
     mainTitle,
     mainHint,
@@ -2016,7 +2043,7 @@ async function renderCourtPageShell(container, state, { mainTitle, mainHint, ren
   [
     createStatCard({ label: "未读奏对", value: String(unreadCount), detail: "等待玩家查看的大臣回复。" }),
     createStatCard({ label: "在任官员", value: `${activeHolderCount}/${positionCount}`, detail: `空缺 ${vacancyCount} 个官职` }),
-    createStatCard({ label: "朝堂派系", value: String((state.factions || []).length), detail: "当前已入场的主要政治集团。" }),
+    createStatCard({ label: `${courtCopy.headerTitle}派系`, value: String((state.factions || []).length), detail: "当前已入场的主要政治集团。" }),
     createStatCard({ label: "文武储备", value: `${kejuStage} / ${wujuStage}`, detail: "科举与武举当前推进阶段。" }),
   ].forEach((card) => statsGrid.appendChild(card));
   dataBody.appendChild(statsGrid);
@@ -2469,7 +2496,7 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
 
     updateTopbarByState(after);
     if (appointmentsChanged) {
-      showSuccess("官职任免已生效");
+      showSuccess(getCourtUiCopy(after).officeAppointmentAppliedSuccess);
     }
   };
 
@@ -2477,7 +2504,7 @@ function renderMinisterChat(container, state, tagsConfig, minister) {
     const content = input.value.trim();
     if (!content || sendingFlags[ministerId]) return;
     if (!isAliveCharacter(getState(), ministerId)) {
-      showError("该人物已故，无法继续议事。请返回朝堂。");
+      showError(getCourtUiCopy(getState()).ministerDeadCannotDiscussError);
       return;
     }
     appendMessage("player", content);
@@ -2590,7 +2617,7 @@ async function showAppointmentDialogAsync(position, state) {
   const panel = createDismissibleOverlayPanel({
     overlayId: "appointment-dialog-overlay",
     title: `任命 ${position.name}`,
-    subtitle: "统一老任命路径的弹窗骨架，保留现有角色筛选与确认逻辑。",
+    subtitle: getCourtUiCopy(state).appointLegacySubtitle,
     panelClassName: "appointment-dialog-card",
     bodyClassName: "appointment-dialog-card__body",
     footerClassName: "appointment-dialog-card__footer",
@@ -2712,7 +2739,8 @@ async function showAppointmentDialogAsync(position, state) {
     try {
       const result = await requestAppoint(position.id, selectedCharacter.id);
       if (result?.success === false) {
-        showError(`任命失败: ${result.error || "未知错误"}`);
+        const copy = getCourtUiCopy(getState());
+        showError(buildPrefixedMessage(copy.appointFailedPrefix, result.error, copy.unknownError));
         return;
       }
 
@@ -2731,7 +2759,8 @@ async function showAppointmentDialogAsync(position, state) {
         renderCourtInteractiveView(container, { useLegacyLayout: useLegacyLayoutForContainer(container) });
       }
     } catch (e) {
-      showError(`任命失败: ${e.message}`);
+      const copy = getCourtUiCopy(getState());
+      showError(buildPrefixedMessage(copy.appointFailedPrefix, e.message, copy.unknownError));
     } finally {
       appointing = false;
       confirmBtn.textContent = "确认任命";

@@ -15,7 +15,12 @@ import { ensureRigidState, getRigidPresets } from "../rigid/engine.js";
 import { isRigidMode } from "../rigid/config.js";
 import { isMilitaryCombatChoice, runMilitarySystem } from "./militarySystem.js";
 import { createElement, createFeedCard, createSectionCard, createStatCard, createTag } from "../ui/viewPrimitives.js";
-import { formatEraTimeByRelativeYear } from "../worldview/worldviewRuntimeAccessor.js";
+import {
+  formatEraTimeByRelativeYear,
+  resolveWorldviewOpeningTurn,
+  resolveWorldviewPublicOpinionCopy,
+  resolveWorldviewWorldEventCopy,
+} from "../worldview/worldviewRuntimeAccessor.js";
 
 let storyCache = { key: null, data: null };
 let lastAppliedKey = null;
@@ -1071,9 +1076,11 @@ function renderStorySidePanels(container, state, phaseLabels) {
   const currentPhaseLabel = phaseLabels[phaseKey] || phaseKey;
   const news = Array.isArray(state.newsToday) ? state.newsToday : [];
   const publicOpinion = Array.isArray(state.publicOpinion) ? state.publicOpinion : [];
+  const worldEventCopy = resolveWorldviewWorldEventCopy(state);
+  const publicOpinionCopy = resolveWorldviewPublicOpinionCopy(state);
 
   const metaRow = createElement("div", { className: "gameplay-page__meta-row" });
-  metaRow.appendChild(createTag(`第${state.currentYear || 1}年 ${state.currentMonth || 1}月`));
+  metaRow.appendChild(createTag(formatEraTimeByRelativeYear(state, state.currentYear || 1, state.currentMonth || 1)));
   metaRow.appendChild(createTag(currentPhaseLabel));
   if (state.weather) {
     metaRow.appendChild(createTag(state.weather));
@@ -1083,18 +1090,18 @@ function renderStorySidePanels(container, state, phaseLabels) {
   const statsGrid = createElement("div", { className: "gameplay-page__stat-grid" });
   [
     createStatCard({ label: "待选诏令", value: String((state.currentStoryTurn?.data?.choices || []).length || 0), detail: "当前系统生成的可选旨意。" }),
-    createStatCard({ label: "奏折速报", value: String(news.length), detail: "当回合汇总的军国信息。" }),
-    createStatCard({ label: "民间回响", value: String(publicOpinion.length), detail: "本回合形成的舆论反馈。" }),
+    createStatCard({ label: worldEventCopy.sectionTitle, value: String(news.length), detail: "当回合汇总的军国信息。" }),
+    createStatCard({ label: publicOpinionCopy.sectionTitle, value: String(publicOpinion.length), detail: "本回合形成的舆论反馈。" }),
     createStatCard({ label: "拟诏模式", value: "系统 + 自拟", detail: "可直接选择系统旨意，或亲笔自拟诏书。" }),
   ].forEach((card) => statsGrid.appendChild(card));
   dataTarget.appendChild(statsGrid);
 
   const newsSection = createSectionCard({
-    title: "奏折速报",
+    title: worldEventCopy.sectionTitle,
     hint: "把当回合最重要的军国消息固定到数据区，避免再漂浮在页面外层。",
   });
   if (!news.length) {
-    newsSection.body.appendChild(createStoryEmptyState("暂无奏报，推进剧情后将出现新的军国消息。"));
+    newsSection.body.appendChild(createStoryEmptyState(worldEventCopy.emptyStateText));
   } else {
     news.forEach((item) => {
       const { card } = createFeedCard({
@@ -1109,14 +1116,18 @@ function renderStorySidePanels(container, state, phaseLabels) {
   dataTarget.appendChild(newsSection.section);
 
   const opinionSection = createSectionCard({
-    title: "民间回响",
+    title: publicOpinionCopy.sectionTitle,
     hint: "统一放剧情引发的即时舆情，便于主玩法页固定查看。",
   });
   if (!publicOpinion.length) {
-    opinionSection.body.appendChild(createStoryEmptyState("暂无民间回响。"));
+    opinionSection.body.appendChild(createStoryEmptyState(publicOpinionCopy.emptyStateText));
   } else {
     publicOpinion.forEach((item) => {
-      const tone = item.type === "loyal" ? "拥戴" : item.type === "angry" ? "愤懑" : "中立";
+      const tone = item.type === "loyal"
+        ? publicOpinionCopy.positiveLabel
+        : item.type === "angry"
+          ? publicOpinionCopy.negativeLabel
+          : publicOpinionCopy.neutralLabel;
       const { card } = createFeedCard({
         title: item.user || "百姓",
         summary: item.text || "",
@@ -1205,7 +1216,7 @@ function renderStoryHistory(container, history, phaseLabels, state, renderId) {
     
     const label = document.createElement("div");
     label.className = "story-history-label";
-    label.textContent = `第${year}年 ${month}月 · ${phaseLabel}`;
+    label.textContent = `${formatEraTimeByRelativeYear(state, Number(year) || 1, Number(month) || 1)} · ${phaseLabel}`;
     mainTarget.appendChild(label);
     
     const block = document.createElement("div");
@@ -1225,6 +1236,46 @@ function renderStoryHistory(container, history, phaseLabels, state, renderId) {
     }
   }
   return true;
+}
+
+function applyOpeningTurnWorldviewOverride(data, state, isFirstTurn) {
+  if (!isFirstTurn || !data || typeof data !== "object") return data;
+
+  const openingTurn = resolveWorldviewOpeningTurn(state);
+  const hasBriefingLines = Array.isArray(openingTurn.briefingLines) && openingTurn.briefingLines.length > 0;
+  const hasOpeningChoices = Array.isArray(openingTurn.openingChoices) && openingTurn.openingChoices.length > 0;
+  const hasBriefingTitle = typeof openingTurn.briefingTitle === "string" && openingTurn.briefingTitle.trim();
+
+  if (!hasBriefingLines && !hasOpeningChoices && !hasBriefingTitle) {
+    return data;
+  }
+
+  const next = { ...data };
+  if (hasBriefingLines || hasBriefingTitle) {
+    const lines = [];
+    if (hasBriefingTitle) {
+      lines.push(`【${openingTurn.briefingTitle}】`);
+    }
+    if (hasBriefingLines) {
+      lines.push(...openingTurn.briefingLines);
+    }
+    next.storyParagraphs = lines;
+  }
+
+  if (hasOpeningChoices) {
+    const templateChoices = Array.isArray(data.choices) ? data.choices : [];
+    next.choices = openingTurn.openingChoices.map((item, index) => {
+      const fallback = templateChoices[index] || templateChoices[0] || {};
+      return {
+        id: item.id,
+        text: item.label,
+        hint: item.summary || fallback.hint || "",
+        effects: fallback.effects,
+      };
+    });
+  }
+
+  return next;
 }
 
 function mergeQuarterDisplayEffectsDedup(baseEffects, quarterEffects) {
@@ -1400,6 +1451,8 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
       },
     };
   }
+
+  data = applyOpeningTurnWorldviewOverride(data, state, isFirstTurn);
 
   const normalizedData = data && typeof data === "object" ? data : {};
   storyCache = { key: cacheKey, data: normalizedData };

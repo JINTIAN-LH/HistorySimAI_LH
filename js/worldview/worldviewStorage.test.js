@@ -148,6 +148,59 @@ describe("worldviewStorage", () => {
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.includes("provinces"))).toBe(true);
     });
+
+    it("应在 8 组文案字段类型错误时报错", () => {
+      const pkg = buildWorldviewPackage(
+        makeMinimalWorldview({
+          startPageCopy: "bad",
+          openingTurn: { briefingLines: "bad-array" },
+          chronicleFormat: { displayPattern: 123 },
+          courtViewCopy: { headerTitle: 10 },
+          policyTreeCopy: { branchLabels: [] },
+          rulerAbilityCopy: { abilityLabels: [] },
+          worldEventCopy: { severityLabels: [] },
+          publicOpinionCopy: { sectionTitle: 99 },
+          uiSurfaceCopy: { policy: [], court: { kejuPanelTitle: 123 } },
+        }),
+        makeMinimalOverrides()
+      );
+      const result = validateWorldviewPackage(pkg);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes("startPageCopy"))).toBe(true);
+      expect(result.errors.some((e) => e.includes("openingTurn.briefingLines"))).toBe(true);
+      expect(result.errors.some((e) => e.includes("chronicleFormat.displayPattern"))).toBe(true);
+      expect(result.errors.some((e) => e.includes("policyTreeCopy.branchLabels"))).toBe(true);
+      expect(result.errors.some((e) => e.includes("rulerAbilityCopy.abilityLabels"))).toBe(true);
+      expect(result.errors.some((e) => e.includes("worldEventCopy.severityLabels"))).toBe(true);
+      expect(result.errors.some((e) => e.includes("uiSurfaceCopy.policy"))).toBe(true);
+      expect(result.errors.some((e) => e.includes("uiSurfaceCopy.court.kejuPanelTitle"))).toBe(true);
+    });
+
+    it("应在关键文案字段缺失时给出 warning", () => {
+      const pkg = buildWorldviewPackage(
+        makeMinimalWorldview({
+          startPageCopy: {},
+          openingTurn: {},
+          chronicleFormat: {},
+          courtViewCopy: {},
+          policyTreeCopy: {},
+          rulerAbilityCopy: {},
+          worldEventCopy: {},
+          publicOpinionCopy: {},
+        }),
+        makeMinimalOverrides()
+      );
+      const result = validateWorldviewPackage(pkg);
+      expect(result.valid).toBe(true);
+      expect(result.warnings.some((w) => w.includes("startPageCopy.heroTitle"))).toBe(true);
+      expect(result.warnings.some((w) => w.includes("openingTurn.briefingLines"))).toBe(true);
+      expect(result.warnings.some((w) => w.includes("chronicleFormat.displayPattern"))).toBe(true);
+      expect(result.warnings.some((w) => w.includes("courtViewCopy.headerTitle"))).toBe(true);
+      expect(result.warnings.some((w) => w.includes("policyTreeCopy.treeTitle"))).toBe(true);
+      expect(result.warnings.some((w) => w.includes("rulerAbilityCopy.panelTitle"))).toBe(true);
+      expect(result.warnings.some((w) => w.includes("worldEventCopy.sectionTitle"))).toBe(true);
+      expect(result.warnings.some((w) => w.includes("publicOpinionCopy.sectionTitle"))).toBe(true);
+    });
   });
 
   // ── buildWorldviewPackage ──

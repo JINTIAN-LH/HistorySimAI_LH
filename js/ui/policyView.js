@@ -25,6 +25,7 @@ import {
 import {
   getPolicyConfigFromState,
 } from "../worldview/talentPolicyWorldviewAdapter.js";
+import { resolveWorldviewUiSurfaceCopy } from "../worldview/worldviewRuntimeAccessor.js";
 import { requestMinisterAdvise } from "../api/policyDiscussionApi.js";
 import { createElement, createOverlayPanel } from "./viewPrimitives.js";
 
@@ -141,6 +142,7 @@ function _buildIssueSelector(state, cfg, container) {
 // ─── 部件：问题输入区 ─────────────────────────────────────────────────────────
 
 function _buildQuestionArea(cfg, state, container) {
+  const uiCopy = resolveWorldviewUiSurfaceCopy(state).policy;
   const area = createElement("div", { className: "policy-question-area" });
   area.appendChild(createElement("div", {
     className: "policy-question-area__label",
@@ -149,7 +151,7 @@ function _buildQuestionArea(cfg, state, container) {
 
   const textarea = createElement("textarea", {
     className: "policy-question-textarea",
-    attrs: { placeholder: "输入具体问题，或点击上方议题快速填入…", rows: "3" },
+    attrs: { placeholder: uiCopy.inputPlaceholder, rows: "3" },
   });
   if (_customQuestion) textarea.value = _customQuestion;
   textarea.addEventListener("input", () => {
@@ -166,7 +168,7 @@ function _buildQuestionArea(cfg, state, container) {
   askBtn.addEventListener("click", () => {
     const question = (textarea.value || "").trim();
     if (!question) {
-      showError("请先输入或选择议题。");
+      showError(uiCopy.emptyQuestionError);
       return;
     }
     _handleAskMinisterAdvise(question, cfg, container);
@@ -181,6 +183,7 @@ function _buildQuestionArea(cfg, state, container) {
 
 async function _handleAskMinisterAdvise(question, cfg, container) {
   const state = getState();
+  const uiCopy = resolveWorldviewUiSurfaceCopy(state).policy;
   if (state.policyDiscussion?.asking) return;
 
   // 创建新会话
@@ -198,7 +201,7 @@ async function _handleAskMinisterAdvise(question, cfg, container) {
     _selectedIssueKey = null;
     _customQuestion = "";
   } catch (err) {
-    showError(err?.message || "廷议失败，请稍后重试。");
+    showError(err?.message || uiCopy.askFailedError);
     setState({ policyDiscussion: { ...getState().policyDiscussion, asking: false } });
   }
 
@@ -208,6 +211,7 @@ async function _handleAskMinisterAdvise(question, cfg, container) {
 // ─── 部件：活跃廷议会话 ───────────────────────────────────────────────────────
 
 function _buildActiveSession(session, cfg, container) {
+  const uiCopy = resolveWorldviewUiSurfaceCopy(getState()).policy;
   const wrap = createElement("div", { className: "policy-session-panel" });
 
   // 议题标题
@@ -218,7 +222,7 @@ function _buildActiveSession(session, cfg, container) {
   }));
   const closeBtn = createElement("button", {
     className: "policy-advice-action-btn",
-    text: "结束廷议",
+    text: uiCopy.closeSessionLabel,
     attrs: { type: "button" },
   });
   closeBtn.addEventListener("click", () => {
@@ -235,7 +239,7 @@ function _buildActiveSession(session, cfg, container) {
     const summaryBar = createElement("div", { className: "policy-summary-bar" });
     summaryBar.appendChild(createElement("span", {
       className: "policy-summary-bar__label",
-      text: "综议：",
+      text: uiCopy.summaryPrefix,
     }));
     summaryBar.appendChild(createElement("span", { text: session.summary }));
     wrap.appendChild(summaryBar);
@@ -262,6 +266,7 @@ function _buildActiveSession(session, cfg, container) {
 // ─── 部件：大臣建言卡 ─────────────────────────────────────────────────────────
 
 function _buildAdviceCard(advice, cfg, session, container) {
+  const uiCopy = resolveWorldviewUiSurfaceCopy(getState()).policy;
   const attitude = advice.attitude || "neutral";
   const card = createElement("div", { className: "policy-advice-card" });
   const factionLabel = resolveFactionLabel(advice.faction);
@@ -323,7 +328,7 @@ function _buildAdviceCard(advice, cfg, session, container) {
   const actions = createElement("div", { className: "policy-advice-card__actions" });
   const adoptBtn = createElement("button", {
     className: "policy-advice-action-btn policy-advice-action-btn--adopt",
-    text: "采纳此议",
+    text: uiCopy.adoptAdviceLabel,
     attrs: { type: "button" },
   });
   adoptBtn.addEventListener("click", () => {
@@ -346,31 +351,32 @@ function _buildAdviceCard(advice, cfg, session, container) {
 // ─── 部件：追问 ───────────────────────────────────────────────────────────────
 
 function _buildFollowUpArea(cfg, session, container) {
+  const uiCopy = resolveWorldviewUiSurfaceCopy(getState()).policy;
   const area = createElement("div", {
     className: "policy-question-area",
     attrs: { style: "margin-top: 12px;" },
   });
   area.appendChild(createElement("div", {
     className: "policy-question-area__label",
-    text: "继续追问群臣：",
+    text: uiCopy.followupLabel,
   }));
   const textarea = createElement("textarea", {
     className: "policy-question-textarea",
-    attrs: { placeholder: "就此议题进一步垂询…", rows: "2" },
+    attrs: { placeholder: uiCopy.followupPlaceholder, rows: "2" },
   });
   area.appendChild(textarea);
 
   const actions = createElement("div", { className: "policy-question-actions" });
   const sendBtn = createElement("button", {
     className: "policy-ask-btn",
-    text: "追问",
+    text: uiCopy.followupButtonLabel,
     attrs: { type: "button" },
   });
   sendBtn.addEventListener("click", async () => {
     const question = (textarea.value || "").trim();
     if (!question) return;
     sendBtn.disabled = true;
-    sendBtn.textContent = "议…";
+    sendBtn.textContent = uiCopy.followupBusyLabel;
     textarea.value = "";
 
     appendPolicyConversation({ role: "user", content: question });
@@ -385,10 +391,10 @@ function _buildFollowUpArea(cfg, session, container) {
       setSessionAdvices(result.advices || [], result.summary || "");
       appendPolicyConversation({ role: "assistant", content: result.summary || "" });
     } catch (err) {
-      showError(err?.message || "追问失败，请稍后重试。");
+      showError(err?.message || uiCopy.followupFailedError);
     }
     sendBtn.disabled = false;
-    sendBtn.textContent = "追问";
+    sendBtn.textContent = uiCopy.followupButtonLabel;
     renderPolicyView(container);
   });
   actions.appendChild(sendBtn);
@@ -399,6 +405,7 @@ function _buildFollowUpArea(cfg, session, container) {
 // ─── 部件：诏令起草区 ─────────────────────────────────────────────────────────
 
 function _buildEdictArea(cfg, session, container) {
+  const uiCopy = resolveWorldviewUiSurfaceCopy(getState()).policy;
   const area = createElement("div", { className: "policy-edict-area" });
   area.appendChild(createElement("div", {
     className: "policy-edict-area__title",
@@ -423,7 +430,7 @@ function _buildEdictArea(cfg, session, container) {
   issueBtn.addEventListener("click", async () => {
     const content = (textarea.value || "").trim();
     if (!content) {
-      showError("诏令内容不得为空。");
+      showError(uiCopy.emptyEdictError);
       return;
     }
     try {
@@ -443,12 +450,12 @@ function _buildEdictArea(cfg, session, container) {
         setPendingIssuedEdict(content);
         archiveActiveSession();
       }
-      showSuccess(`${cfg.edictLabel || "诏旨"}已拟定，待你本轮选择旨意时一并生效。`);
+      showSuccess(uiCopy.issueSuccess.replace("诏旨", cfg.edictLabel || "诏旨"));
       _selectedIssueKey = null;
       _customQuestion = "";
       renderPolicyView(container);
     } catch (err) {
-      showError(err?.message || "颁旨失败，请稍后重试。");
+      showError(err?.message || uiCopy.issueFailedError);
       renderPolicyView(container);
     }
   });
@@ -460,10 +467,11 @@ function _buildEdictArea(cfg, session, container) {
 // ─── 部件：历史廷议 ───────────────────────────────────────────────────────────
 
 function _buildHistorySection(sessionHistory, cfg, container) {
+  const uiCopy = resolveWorldviewUiSurfaceCopy(getState()).policy;
   const section = createElement("div", { className: "policy-history-section" });
   section.appendChild(createElement("div", {
     className: "policy-history-section__title",
-    text: "历次廷议",
+    text: uiCopy.historyTitle,
   }));
 
   // 最多显示最近 10 条

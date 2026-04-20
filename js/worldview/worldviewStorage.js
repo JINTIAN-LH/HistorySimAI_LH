@@ -65,6 +65,215 @@ function validateProvinces(value, errors, fieldName) {
   });
 }
 
+function validateObject(value, errors, fieldName) {
+  if (value == null) return null;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    errors.push(`${fieldName} 必须是对象`);
+    return null;
+  }
+  return value;
+}
+
+function validateOptionalString(obj, key, errors, fieldName) {
+  if (!Object.prototype.hasOwnProperty.call(obj, key)) return;
+  if (typeof obj[key] !== "string") {
+    errors.push(`${fieldName}.${key} 必须是字符串`);
+  }
+}
+
+function validateOptionalStringArray(obj, key, errors, fieldName) {
+  if (!Object.prototype.hasOwnProperty.call(obj, key)) return;
+  if (!Array.isArray(obj[key])) {
+    errors.push(`${fieldName}.${key} 必须是字符串数组`);
+    return;
+  }
+  obj[key].forEach((item, index) => {
+    if (typeof item !== "string") {
+      errors.push(`${fieldName}.${key}[${index}] 必须是字符串`);
+    }
+  });
+}
+
+function validateOpeningChoices(obj, errors, fieldName) {
+  if (!Object.prototype.hasOwnProperty.call(obj, "openingChoices")) return;
+  if (!Array.isArray(obj.openingChoices)) {
+    errors.push(`${fieldName}.openingChoices 必须是数组`);
+    return;
+  }
+  obj.openingChoices.forEach((item, index) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      errors.push(`${fieldName}.openingChoices[${index}] 必须是对象`);
+      return;
+    }
+    ["id", "label", "summary"].forEach((key) => validateOptionalString(item, key, errors, `${fieldName}.openingChoices[${index}]`));
+  });
+}
+
+function validateOptionalRecord(obj, key, errors, fieldName) {
+  if (!Object.prototype.hasOwnProperty.call(obj, key)) return;
+  const value = obj[key];
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    errors.push(`${fieldName}.${key} 必须是对象`);
+    return;
+  }
+  Object.entries(value).forEach(([recordKey, recordValue]) => {
+    if (typeof recordValue !== "string") {
+      errors.push(`${fieldName}.${key}.${recordKey} 必须是字符串`);
+    }
+  });
+}
+
+function validateWorldviewCopyGroups(wv, errors, warnings) {
+  const startPageCopy = validateObject(wv.startPageCopy, errors, "worldview.startPageCopy");
+  if (startPageCopy) {
+    ["heroTitle", "heroSubtitle", "startButtonLabel", "continueButtonLabel"]
+      .forEach((key) => validateOptionalString(startPageCopy, key, errors, "worldview.startPageCopy"));
+    if (!startPageCopy.heroTitle) {
+      warnings.push("worldview.startPageCopy.heroTitle 缺失，将使用默认标题");
+    }
+  }
+
+  const openingTurn = validateObject(wv.openingTurn, errors, "worldview.openingTurn");
+  if (openingTurn) {
+    validateOptionalString(openingTurn, "briefingTitle", errors, "worldview.openingTurn");
+    validateOptionalStringArray(openingTurn, "briefingLines", errors, "worldview.openingTurn");
+    validateOpeningChoices(openingTurn, errors, "worldview.openingTurn");
+    if (!Array.isArray(openingTurn.briefingLines) || openingTurn.briefingLines.length === 0) {
+      warnings.push("worldview.openingTurn.briefingLines 缺失，首回合将沿用模板文案");
+    }
+  }
+
+  const chronicleFormat = validateObject(wv.chronicleFormat, errors, "worldview.chronicleFormat");
+  if (chronicleFormat) {
+    ["eraLabel", "yearUnit", "monthUnit", "displayPattern", "fallbackPattern"]
+      .forEach((key) => validateOptionalString(chronicleFormat, key, errors, "worldview.chronicleFormat"));
+    if (!chronicleFormat.displayPattern) {
+      warnings.push("worldview.chronicleFormat.displayPattern 缺失，将使用默认编年格式");
+    }
+  }
+
+  const courtViewCopy = validateObject(wv.courtViewCopy, errors, "worldview.courtViewCopy");
+  if (courtViewCopy) {
+    ["headerTitle", "headerSubtitle", "quickActionLabel", "emptyStateText"]
+      .forEach((key) => validateOptionalString(courtViewCopy, key, errors, "worldview.courtViewCopy"));
+    if (!courtViewCopy.headerTitle) {
+      warnings.push("worldview.courtViewCopy.headerTitle 缺失，将使用默认朝堂标题");
+    }
+  }
+
+  const policyTreeCopy = validateObject(wv.policyTreeCopy, errors, "worldview.policyTreeCopy");
+  if (policyTreeCopy) {
+    ["treeTitle", "treeSubtitle"].forEach((key) => validateOptionalString(policyTreeCopy, key, errors, "worldview.policyTreeCopy"));
+    validateOptionalRecord(policyTreeCopy, "branchLabels", errors, "worldview.policyTreeCopy");
+    if (!policyTreeCopy.treeTitle) {
+      warnings.push("worldview.policyTreeCopy.treeTitle 缺失，将使用默认国策树标题");
+    }
+  }
+
+  const rulerAbilityCopy = validateObject(wv.rulerAbilityCopy, errors, "worldview.rulerAbilityCopy");
+  if (rulerAbilityCopy) {
+    ["panelTitle", "abilityHint"].forEach((key) => validateOptionalString(rulerAbilityCopy, key, errors, "worldview.rulerAbilityCopy"));
+    validateOptionalRecord(rulerAbilityCopy, "abilityLabels", errors, "worldview.rulerAbilityCopy");
+    if (!rulerAbilityCopy.panelTitle) {
+      warnings.push("worldview.rulerAbilityCopy.panelTitle 缺失，将使用默认能力面板标题");
+    }
+  }
+
+  const worldEventCopy = validateObject(wv.worldEventCopy, errors, "worldview.worldEventCopy");
+  if (worldEventCopy) {
+    ["sectionTitle", "emptyStateText"].forEach((key) => validateOptionalString(worldEventCopy, key, errors, "worldview.worldEventCopy"));
+    validateOptionalRecord(worldEventCopy, "severityLabels", errors, "worldview.worldEventCopy");
+    if (!worldEventCopy.sectionTitle) {
+      warnings.push("worldview.worldEventCopy.sectionTitle 缺失，将使用默认天下大事标题");
+    }
+  }
+
+  const publicOpinionCopy = validateObject(wv.publicOpinionCopy, errors, "worldview.publicOpinionCopy");
+  if (publicOpinionCopy) {
+    ["sectionTitle", "positiveLabel", "neutralLabel", "negativeLabel", "emptyStateText"]
+      .forEach((key) => validateOptionalString(publicOpinionCopy, key, errors, "worldview.publicOpinionCopy"));
+    if (!publicOpinionCopy.sectionTitle) {
+      warnings.push("worldview.publicOpinionCopy.sectionTitle 缺失，将使用默认民间舆论标题");
+    }
+  }
+
+  const uiSurfaceCopy = validateObject(wv.uiSurfaceCopy, errors, "worldview.uiSurfaceCopy");
+  if (uiSurfaceCopy) {
+    const policy = validateObject(uiSurfaceCopy.policy, errors, "worldview.uiSurfaceCopy.policy");
+    if (policy) {
+      [
+        "inputPlaceholder",
+        "followupPlaceholder",
+        "emptyQuestionError",
+        "emptyEdictError",
+        "askFailedError",
+        "followupFailedError",
+        "issueFailedError",
+        "issueSuccess",
+        "closeSessionLabel",
+        "summaryPrefix",
+        "adoptAdviceLabel",
+        "followupLabel",
+        "followupButtonLabel",
+        "followupBusyLabel",
+        "historyTitle",
+      ].forEach((key) => validateOptionalString(policy, key, errors, "worldview.uiSurfaceCopy.policy"));
+    }
+
+    const edict = validateObject(uiSurfaceCopy.edict, errors, "worldview.uiSurfaceCopy.edict");
+    if (edict) {
+      [
+        "pageTitle",
+        "pageSubtitle",
+        "actionsTitle",
+        "actionsHint",
+        "dataTitle",
+        "dataHint",
+        "mainTitle",
+        "mainHint",
+      ].forEach((key) => validateOptionalString(edict, key, errors, "worldview.uiSurfaceCopy.edict"));
+    }
+
+    const court = validateObject(uiSurfaceCopy.court, errors, "worldview.uiSurfaceCopy.court");
+    if (court) {
+      [
+        "kejuPanelTitle",
+        "kejuPanelSubtitle",
+        "wujuPanelTitle",
+        "wujuPanelSubtitle",
+        "talentPanelTitle",
+        "talentPanelSubtitle",
+        "policyPanelTitle",
+        "policyPanelSubtitle",
+        "appointByPositionSubtitle",
+        "appointByMinisterSubtitle",
+        "appointLegacySubtitle",
+        "positionSelectSubtitle",
+        "ministerDetailSubtitle",
+        "factionPanelSubtitle",
+        "ministerPanelSubtitle",
+        "unknownError",
+        "appointFailedPrefix",
+        "adjustFailedPrefix",
+        "kejuStartSuccess",
+        "kejuHuishiSuccess",
+        "kejuDianshiSuccess",
+        "kejuPublishSuccess",
+        "kejuReserveSavedSuccess",
+        "kejuEntryAppliedSuccess",
+        "officeAppointmentAppliedSuccess",
+        "positionOccupiedRegenerateError",
+        "positionOccupiedRegenerateSimpleError",
+        "candidateDeadCannotAppointError",
+        "candidateDeadCannotAdjustError",
+        "candidateDeadCannotGrantError",
+        "ministerDeadCannotDiscussError",
+      ]
+        .forEach((key) => validateOptionalString(court, key, errors, "worldview.uiSurfaceCopy.court"));
+    }
+  }
+}
+
 /**
  * 校验世界观包的结构完整性。
  * 返回 { valid: boolean, errors: string[], warnings: string[] }
@@ -94,6 +303,7 @@ export function validateWorldviewPackage(pkg) {
     if (!wv.storyPrompt || typeof wv.storyPrompt !== "object") {
       warnings.push("worldview.storyPrompt 缺失，LLM 将使用默认提示词");
     }
+    validateWorldviewCopyGroups(wv, errors, warnings);
   }
 
   // ── overrides 校验 ──

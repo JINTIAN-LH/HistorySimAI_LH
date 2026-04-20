@@ -4,7 +4,7 @@ import { router } from "../router.js";
 import { loadJSON } from "../dataLoader.js";
 import { showGoalPanel } from "./goalPanel.js";
 import { createActionButton, createElement, createSectionCard, createViewShell } from "./viewPrimitives.js";
-import { isRigidModeAllowed } from "../worldview/worldviewRuntimeAccessor.js";
+import { isRigidModeAllowed, resolveWorldviewStartPageCopy } from "../worldview/worldviewRuntimeAccessor.js";
 
 let startPhase = "intro";
 
@@ -40,13 +40,22 @@ async function renderIntroView(container) {
     || runtimeState?.config?.worldviewData?.gameTitle
     || runtimeState?.config?.worldviewData?.title
     || "历史模拟器";
+  const startCopy = resolveWorldviewStartPageCopy(runtimeState);
+  const heroTitle = startCopy.heroTitle || runtimeTitle;
   const { root, header, content } = createViewShell({
     className: "start-intro-root",
     centered: true,
-    title: runtimeTitle,
+    title: heroTitle,
   });
   header?.firstChild?.classList.add("start-intro-title");
   header?.lastChild?.classList.add("start-intro-subtitle");
+  if (startCopy.heroSubtitle) {
+    const subtitle = createElement("div", {
+      className: "view-subtitle start-intro-subtitle",
+      text: startCopy.heroSubtitle,
+    });
+    header?.appendChild(subtitle);
+  }
 
   const block = createElement("div", {
     className: "edict-block start-intro-block",
@@ -109,7 +118,7 @@ async function renderIntroView(container) {
   const actions = createElement("div", { className: "start-intro-actions" });
 
   const startBtn = createActionButton({
-    label: "临朝执政",
+    label: startCopy.startButtonLabel,
     description: "载入当前模式的独立存档与目标追踪面板。",
     variant: "primary",
     className: "start-view-btn start-intro-start-btn",

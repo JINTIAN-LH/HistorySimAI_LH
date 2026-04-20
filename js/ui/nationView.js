@@ -5,7 +5,13 @@ import { getStatBarClass } from "../systems/nationSystem.js";
 import { PLAYER_ABILITY_KEYS, getPolicyCatalog, spendAbilityPoint, unlockPolicy } from "../systems/coreGameplaySystem.js";
 import { formatDisplayMetricValue, getDisplayMetricBarValue, getDisplayMetricsBySection } from "../utils/displayStateMetrics.js";
 import { isRigidMode } from "../rigid/config.js";
-import { formatEraTimeByRelativeYear } from "../worldview/worldviewRuntimeAccessor.js";
+import {
+  formatEraTimeByRelativeYear,
+  resolveWorldviewPolicyTreeCopy,
+  resolveWorldviewPublicOpinionCopy,
+  resolveWorldviewRulerAbilityCopy,
+  resolveWorldviewWorldEventCopy,
+} from "../worldview/worldviewRuntimeAccessor.js";
 
 let nationInitCache = null;
 let provinceRulesCache = null;
@@ -107,6 +113,8 @@ function rerender(container) {
 }
 
 function appendClassicSections(root, state, container) {
+  const policyTreeCopy = resolveWorldviewPolicyTreeCopy(state);
+  const rulerAbilityCopy = resolveWorldviewRulerAbilityCopy(state);
   const factionSupport = state.factionSupport || {};
   const quarterAgenda = state.currentQuarterAgenda || [];
   const provinceStats = state.provinceStats || {};
@@ -136,12 +144,15 @@ function appendClassicSections(root, state, container) {
   }));
 
   const abilityMeta = {
-    management: { label: "管理", desc: "提升季度财政与粮储效率。" },
-    military: { label: "军事", desc: "强化军事类诏书收益。" },
-    scholarship: { label: "学识", desc: "提高改革与农政收益。" },
-    politics: { label: "政治", desc: "提高执行率并缓和党争。" },
+    management: { label: rulerAbilityCopy.abilityLabels.management || "管理", desc: "提升季度财政与粮储效率。" },
+    military: { label: rulerAbilityCopy.abilityLabels.military || "军事", desc: "强化军事类诏书收益。" },
+    scholarship: { label: rulerAbilityCopy.abilityLabels.scholarship || "学识", desc: "提高改革与农政收益。" },
+    politics: { label: rulerAbilityCopy.abilityLabels.politics || "政治", desc: "提高执行率并缓和党争。" },
   };
-  root.appendChild(createFoldSection(`皇帝能力（可用点数 ${state.abilityPoints || 0}）`, (body) => {
+  root.appendChild(createFoldSection(`${rulerAbilityCopy.panelTitle}（可用点数 ${state.abilityPoints || 0}）`, (body) => {
+    if (rulerAbilityCopy.abilityHint) {
+      body.appendChild(createNode("div", "nation-feed-empty", rulerAbilityCopy.abilityHint));
+    }
     PLAYER_ABILITY_KEYS.forEach((key) => {
       const { card } = createCard({
         title: `${abilityMeta[key].label} · Lv.${state.playerAbilities?.[key] || 0}`,
@@ -164,17 +175,21 @@ function appendClassicSections(root, state, container) {
 
   const policies = getPolicyCatalog(state);
   const policyTitleMap = Object.fromEntries(policies.map((item) => [item.id, item.title]));
-  root.appendChild(createFoldSection(`国策树（可用点数 ${state.policyPoints || 0}）`, (body) => {
+  root.appendChild(createFoldSection(`${policyTreeCopy.treeTitle}（可用点数 ${state.policyPoints || 0}）`, (body) => {
+    if (policyTreeCopy.treeSubtitle) {
+      body.appendChild(createNode("div", "nation-feed-empty", policyTreeCopy.treeSubtitle));
+    }
     policies.forEach((policy) => {
       const unlocked = (state.unlockedPolicies || []).includes(policy.id);
       const canUnlock = !unlocked
         && (state.policyPoints || 0) >= policy.cost
         && (policy.requires || []).every((id) => (state.unlockedPolicies || []).includes(id));
+      const branchLabel = policyTreeCopy.branchLabels[policy.branch] || policy.branch;
       const requiresText = (policy.requires || []).length
         ? ` 前置：${(policy.requires || []).map((id) => policyTitleMap[id] || id).join("、")}`
         : "";
       const { card } = createCard({
-        title: `${policy.branch} · ${policy.title}${unlocked ? "（已实施）" : ""}`,
+        title: `${branchLabel} · ${policy.title}${unlocked ? "（已实施）" : ""}`,
         summary: `${policy.description} 消耗 ${policy.cost} 点。${requiresText}`,
       });
       if (!unlocked) {
@@ -244,6 +259,8 @@ function appendClassicSections(root, state, container) {
 }
 
 function appendSharedSections(root, state) {
+  const worldEventCopy = resolveWorldviewWorldEventCopy(state);
+  const publicOpinionCopy = resolveWorldviewPublicOpinionCopy(state);
   const hostileForces = Array.isArray(state.hostileForces) && state.hostileForces.length
     ? state.hostileForces
     : (nationInitCache?.externalThreats || []);
@@ -270,10 +287,10 @@ function appendSharedSections(root, state) {
   }
 
   const feed = createNode("div", "nation-feed");
-  feed.appendChild(createNode("div", "nation-feed-header", "天下大事"));
+  feed.appendChild(createNode("div", "nation-feed-header", worldEventCopy.sectionTitle));
   const news = state.newsToday || [];
   if (!news.length) {
-    feed.appendChild(createNode("div", "nation-feed-empty", "暂无奏报，推进剧情后将产生新的军国大事。"));
+    feed.appendChild(createNode("div", "nation-feed-empty", worldEventCopy.emptyStateText));
   } else {
     news.forEach((item) => {
       feed.appendChild(createCard({
@@ -286,17 +303,22 @@ function appendSharedSections(root, state) {
   root.appendChild(feed);
 
   const opinions = createNode("div", "nation-opinions");
-  opinions.appendChild(createNode("div", "nation-opinions-header", "民间舆论"));
+  opinions.appendChild(createNode("div", "nation-opinions-header", publicOpinionCopy.sectionTitle));
   const publicOpinion = state.publicOpinion || [];
   if (!publicOpinion.length) {
-    opinions.appendChild(createNode("div", "nation-feed-empty", "暂无民间舆论。"));
+    opinions.appendChild(createNode("div", "nation-feed-empty", publicOpinionCopy.emptyStateText));
   } else {
     publicOpinion.forEach((item) => {
       const line = createNode("div", "nation-opinion-item");
+      const userLabel = item.type === "loyal"
+        ? publicOpinionCopy.positiveLabel
+        : item.type === "angry"
+          ? publicOpinionCopy.negativeLabel
+          : publicOpinionCopy.neutralLabel;
       const user = createNode(
         "span",
         `nation-opinion-user ${item.type === "loyal" ? "nation-opinion-user--loyal" : item.type === "angry" ? "nation-opinion-user--angry" : "nation-opinion-user--neutral"}`,
-        item.user || "百姓"
+        item.user || userLabel || "百姓"
       );
       const text = createNode("span", "nation-opinion-text", item.text || "");
       line.appendChild(user);

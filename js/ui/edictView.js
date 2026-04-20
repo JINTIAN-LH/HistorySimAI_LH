@@ -1,6 +1,8 @@
 import { router } from "../router.js";
+import { getState } from "../state.js";
 import { runCurrentTurn } from "../systems/turnSystem.js";
 import { createGameplayPageTemplate } from "./viewPrimitives.js";
+import { resolveWorldviewUiSurfaceCopy } from "../worldview/worldviewRuntimeAccessor.js";
 
 const EDICT_SCROLL_FAB_ID = "edict-scroll-bottom-fab";
 const EDICT_SCROLL_FAB_OFFSET = 18;
@@ -144,6 +146,7 @@ function mountEdictScrollButton(container, scrollHost, useLegacyLayout) {
 
 export async function renderEdictView(container, options = {}) {
   const { useLegacyLayout = false } = options;
+  const uiCopy = resolveWorldviewUiSurfaceCopy(getState()).edict;
   removeEdictScrollButton(container);
   container.classList.add("main-view--edict");
   container.innerHTML = "";
@@ -163,14 +166,14 @@ export async function renderEdictView(container, options = {}) {
 
   const template = createGameplayPageTemplate({
     pageClass: "edict-page",
-    title: "诏书中枢",
-    subtitle: "将剧情正文、诏令选择、奏报与自拟诏书入口固定在统一玩法骨架内，后续主玩法扩展继续沿用这一页模板。",
-    actionsTitle: "诏令选择",
-    actionsHint: "固定保留选择区与自拟诏书入口，季度议题锁定后也在这里继续操作。",
-    dataTitle: "奏报与回响",
-    dataHint: "把新闻流和舆论反馈固定在数据区，减少主玩法页面的信息漂移。",
-    mainTitle: "诏书正文",
-    mainHint: "正文区继续承载历史记录、当回合文本、批注和数值反馈。",
+    title: uiCopy.pageTitle,
+    subtitle: uiCopy.pageSubtitle,
+    actionsTitle: uiCopy.actionsTitle,
+    actionsHint: uiCopy.actionsHint,
+    dataTitle: uiCopy.dataTitle,
+    dataHint: uiCopy.dataHint,
+    mainTitle: uiCopy.mainTitle,
+    mainHint: uiCopy.mainHint,
   });
 
   template.root._storyLayout = {

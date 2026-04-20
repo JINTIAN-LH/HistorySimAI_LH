@@ -5,7 +5,7 @@ import { getState, setState } from "@legacy/state.js";
 import { saveGame, setSavedGameplayMode } from "@legacy/storage.js";
 import { showGoalPanel } from "@ui/goalPanel.js";
 import { useLegacySelector } from "@client/ui/hooks/useLegacySelector.js";
-import { isRigidModeAllowed } from "@legacy/worldview/worldviewRuntimeAccessor.js";
+import { isRigidModeAllowed, resolveWorldviewStartPageCopy } from "@legacy/worldview/worldviewRuntimeAccessor.js";
 
 let startPhase = "intro";
 
@@ -42,6 +42,9 @@ export function StartView() {
     || runtimeState?.config?.worldviewData?.gameTitle
     || runtimeState?.config?.worldviewData?.title
     || "历史模拟器";
+  const startCopy = resolveWorldviewStartPageCopy(runtimeState);
+  const heroTitle = startCopy.heroTitle || runtimeTitle;
+  const heroSubtitle = startCopy.heroSubtitle || "";
   const [selectedMode, setSelectedMode] = useState(
     rigidModeAllowed && mode === "rigid_v1" ? "rigid_v1" : "classic"
   );
@@ -119,7 +122,8 @@ export function StartView() {
   return (
     <div className={`view-shell view-shell--centered start-intro-root${startPhase === "create" ? " start-intro-root--create" : ""}`}>
       <div className="view-shell__header">
-        <div className="view-title start-intro-title">{runtimeTitle}</div>
+        <div className="view-title start-intro-title">{heroTitle}</div>
+        {heroSubtitle ? <div className="view-subtitle start-intro-subtitle">{heroSubtitle}</div> : null}
       </div>
 
       <div className="view-shell__content">
@@ -176,7 +180,7 @@ export function StartView() {
                 disabled={!canStart}
                 onClick={handleStart}
               >
-                <div className="ui-btn__title">临朝执政</div>
+                <div className="ui-btn__title">{startCopy.startButtonLabel}</div>
                 <div className="ui-btn__desc">载入当前模式的独立存档与目标追踪面板。</div>
               </button>
             </div>

@@ -1,5 +1,42 @@
 # Commit 日志
 
+## 2026-04-21: feat: migrate worldview UI copy and import validation
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+完成世界观文案能力从“局部字段”到“同类入口全链路”的迁移：将启动页、首回合、编年、朝堂/国策/能力/大事/舆论以及 policy/edict/court 的 placeholder、toast、弹窗标题统一收敛到 runtime accessor。同步补齐导入校验与示例包，确保玩家上传世界观时可直接覆盖新增入口且行为可预期。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/worldview/worldviewRuntimeAccessor.js` | ✏️ 调整 | 新增并扩展 8 组 copy accessor 与 `uiSurfaceCopy`（policy/edict/court）默认字典 |
+| `js/worldview/worldviewStorage.js` | ✏️ 调整 | 导入校验器补齐 8 组字段与 `uiSurfaceCopy.court` 扩展键类型校验及关键 warning |
+| `js/worldview/worldviewStorage.test.js` | ✏️ 调整 | 新增/扩展校验测试，覆盖 8 组字段与 `uiSurfaceCopy.court` 类型错误场景 |
+| `js/ui/startView.js` | ✏️ 调整 | 启动页标题、副标题、开始按钮文案改为从世界观 copy 动态读取 |
+| `client/src/ui/views/start/StartView.jsx` | ✏️ 调整 | React 壳层启动页同步接入 `startPageCopy` |
+| `js/systems/storySystem.js` | ✏️ 调整 | 首回合开场文案/选项、编年时间、大事与舆论标题和空态改为 world copy 驱动 |
+| `js/ui/nationView.js` | ✏️ 调整 | 国策树分支名、皇帝能力、天下大事与舆论区文案改走 accessor |
+| `js/ui/policyView.js` | ✏️ 调整 | placeholder、追问、错误/成功提示、历史标题统一接入 `uiSurfaceCopy.policy` |
+| `js/ui/edictView.js` | ✏️ 调整 | 页面壳层 title/subtitle/actions/data/main 文案改走 `uiSurfaceCopy.edict` |
+| `js/ui/courtView.js` | ✏️ 调整 | 科举/武举/人才/问政弹窗及任命/调岗 toast 与 subtitle 全量迁移到 `uiSurfaceCopy.court` |
+| `public/data/import-samples/worldview.sample.json` | ✏️ 调整 | 补全 8 组字段与 `uiSurfaceCopy`（含 court 全量键）示例 |
+| `public/data/import-samples/worldview.import.bundle.txt` | ✏️ 调整 | 同步单文件导入包示例字段与 court 文案扩展键 |
+| `ChongzhenSim/世界观导入自动适配AI规范.md` | ✏️ 调整 | 增补 8 组字段语义、举一反三入口与 `uiSurfaceCopy` 规范说明 |
+
+### 价值
+
+- **全链路可配置**：同类 UI 入口不再散落硬编码，玩家上传包可一次性替换关键展示面
+- **导入更安全**：新增结构校验与 warning，降低错误包导致运行时异常的风险
+- **维护成本下降**：文案入口统一经 accessor 管理，后续扩展/换皮只需调整世界观字段
+
+### 验证
+
+- `npm run build` ✅ 通过
+- `npx vitest run js/worldview/worldviewStorage.test.js js/storage.test.js js/systems/storySystem.template.test.js js/systems/coreGameplaySystem.test.js` ✅ 通过
+
 ## 2026-04-21: feat: complete worldview semantic labels adaptation
 
 **Commit Hash**: `9370b5f`
