@@ -128,8 +128,12 @@ function validateWorldviewCopyGroups(wv, errors, warnings) {
   if (startPageCopy) {
     ["heroTitle", "heroSubtitle", "startButtonLabel", "continueButtonLabel"]
       .forEach((key) => validateOptionalString(startPageCopy, key, errors, "worldview.startPageCopy"));
+    validateOptionalStringArray(startPageCopy, "introLines", errors, "worldview.startPageCopy");
     if (!startPageCopy.heroTitle) {
       warnings.push("worldview.startPageCopy.heroTitle 缺失，将使用默认标题");
+    }
+    if (!Array.isArray(startPageCopy.introLines) || startPageCopy.introLines.length === 0) {
+      warnings.push("worldview.startPageCopy.introLines 缺失，启动页将沿用 data/intro.json");
     }
   }
 

@@ -75,7 +75,12 @@
     "heroTitle": "南宋中兴模拟器",
     "heroSubtitle": "国祚飘摇，行在草创，且看官家如何定中兴之局",
     "startButtonLabel": "即刻临朝",
-    "continueButtonLabel": "续理旧局"
+    "continueButtonLabel": "续理旧局",
+    "introLines": [
+      "建炎三年的江南行在，仍笼罩在仓皇南渡后的余悸之中。",
+      "江路漕运时断时续，沿江州县多经兵火，行在米价一日高过一日。",
+      "而你，宋高宗赵构，刚在江南立足，手中只握一副随时可能崩散的残局。"
+    ]
   },
   "openingTurn": {
     "briefingTitle": "开局廷议",

@@ -4,7 +4,11 @@ import { router } from "../router.js";
 import { loadJSON } from "../dataLoader.js";
 import { showGoalPanel } from "./goalPanel.js";
 import { createActionButton, createElement, createSectionCard, createViewShell } from "./viewPrimitives.js";
-import { isRigidModeAllowed, resolveWorldviewStartPageCopy } from "../worldview/worldviewRuntimeAccessor.js";
+import {
+  isRigidModeAllowed,
+  resolveWorldviewStartIntroLines,
+  resolveWorldviewStartPageCopy,
+} from "../worldview/worldviewRuntimeAccessor.js";
 
 let startPhase = "intro";
 
@@ -130,14 +134,19 @@ async function renderIntroView(container) {
   content.appendChild(startSection.section);
   container.appendChild(root);
 
+  const worldviewIntroLines = resolveWorldviewStartIntroLines(runtimeState);
   let data;
-  try {
-    data = await loadJSON("data/intro.json");
-  } catch (err) {
-    console.error("加载游戏介绍失败", err);
+  if (!worldviewIntroLines.length) {
+    try {
+      data = await loadJSON("data/intro.json");
+    } catch (err) {
+      console.error("加载游戏介绍失败", err);
+    }
   }
 
-  const lines = Array.isArray(data?.lines) ? data.lines : [];
+  const lines = worldviewIntroLines.length
+    ? worldviewIntroLines
+    : (Array.isArray(data?.lines) ? data.lines : []);
   if (!lines.length) {
     startBtn.disabled = false;
   } else {

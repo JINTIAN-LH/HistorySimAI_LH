@@ -193,6 +193,7 @@ describe("worldviewStorage", () => {
       const result = validateWorldviewPackage(pkg);
       expect(result.valid).toBe(true);
       expect(result.warnings.some((w) => w.includes("startPageCopy.heroTitle"))).toBe(true);
+      expect(result.warnings.some((w) => w.includes("startPageCopy.introLines"))).toBe(true);
       expect(result.warnings.some((w) => w.includes("openingTurn.briefingLines"))).toBe(true);
       expect(result.warnings.some((w) => w.includes("chronicleFormat.displayPattern"))).toBe(true);
       expect(result.warnings.some((w) => w.includes("courtViewCopy.headerTitle"))).toBe(true);
@@ -200,6 +201,21 @@ describe("worldviewStorage", () => {
       expect(result.warnings.some((w) => w.includes("rulerAbilityCopy.panelTitle"))).toBe(true);
       expect(result.warnings.some((w) => w.includes("worldEventCopy.sectionTitle"))).toBe(true);
       expect(result.warnings.some((w) => w.includes("publicOpinionCopy.sectionTitle"))).toBe(true);
+    });
+
+    it("应在 startPageCopy.introLines 类型错误时报错", () => {
+      const pkg = buildWorldviewPackage(
+        makeMinimalWorldview({
+          startPageCopy: {
+            heroTitle: "测试",
+            introLines: "bad-lines",
+          },
+        }),
+        makeMinimalOverrides()
+      );
+      const result = validateWorldviewPackage(pkg);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes("startPageCopy.introLines"))).toBe(true);
     });
   });
 

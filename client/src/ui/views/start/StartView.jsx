@@ -5,7 +5,11 @@ import { getState, setState } from "@legacy/state.js";
 import { saveGame, setSavedGameplayMode } from "@legacy/storage.js";
 import { showGoalPanel } from "@ui/goalPanel.js";
 import { useLegacySelector } from "@client/ui/hooks/useLegacySelector.js";
-import { isRigidModeAllowed, resolveWorldviewStartPageCopy } from "@legacy/worldview/worldviewRuntimeAccessor.js";
+import {
+  isRigidModeAllowed,
+  resolveWorldviewStartIntroLines,
+  resolveWorldviewStartPageCopy,
+} from "@legacy/worldview/worldviewRuntimeAccessor.js";
 
 let startPhase = "intro";
 
@@ -58,6 +62,14 @@ export function StartView() {
 
   useEffect(() => {
     let disposed = false;
+    const worldviewIntroLines = resolveWorldviewStartIntroLines(runtimeState);
+
+    if (worldviewIntroLines.length) {
+      setIntroLines(worldviewIntroLines);
+      return () => {
+        disposed = true;
+      };
+    }
 
     loadJSON("data/intro.json")
       .then((data) => {
@@ -79,7 +91,7 @@ export function StartView() {
     return () => {
       disposed = true;
     };
-  }, []);
+  }, [runtimeState?.config?.worldviewData, runtimeState?.config?.worldviewOverrides]);
 
   useEffect(() => {
     if (!introLines.length) {

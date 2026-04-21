@@ -1,5 +1,36 @@
 # Commit 日志
 
+## 2026-04-21: feat: map start intro rolling lines into worldview layer
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+将“启动页滚动开场段落”纳入与 `startPageCopy` 相同的世界观映射层。启动页现在优先读取玩家导入包中的 `startPageCopy.introLines`，缺失时自动回退到 `public/data/intro.json`，确保兼容旧包与旧资源。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/worldview/worldviewRuntimeAccessor.js` | ✏️ 调整 | 新增 `resolveWorldviewStartIntroLines()`，统一从 `startPageCopy.introLines` 读取并归一化字符串数组 |
+| `client/src/ui/views/start/StartView.jsx` | ✏️ 调整 | React 启动页接入世界观开场段落，改为“世界观优先、intro.json 回退” |
+| `js/ui/startView.js` | ✏️ 调整 | 旧 UI 启动页同步接入同一逻辑，保持两套入口一致 |
+| `js/worldview/worldviewStorage.js` | ✏️ 调整 | 导入校验新增 `worldview.startPageCopy.introLines` 的类型校验与缺失 warning |
+| `js/worldview/worldviewStorage.test.js` | ✏️ 调整 | 新增 `introLines` 相关 warning/error 断言，覆盖错误类型场景 |
+| `public/data/import-samples/worldview.sample.json` | ✏️ 调整 | 样例包新增 `startPageCopy.introLines` 模板 |
+| `public/data/import-samples/worldview.import.bundle.txt` | ✏️ 调整 | 单文件导入模板同步新增 `startPageCopy.introLines` |
+
+### 价值
+
+- **玩家可自定义开场滚动文案**：世界观上传后即可替换启动页滚动段落
+- **兼容旧资源**：未提供 `introLines` 时无缝回退 `intro.json`
+- **导入更稳健**：新增字段校验，减少错误数据导致的运行时异常
+
+### 验证
+
+- `npm run build` ✅ 通过
+- `npm test -- js/worldview/worldviewStorage.test.js` ✅ 通过（26 tests）
+
 ## 2026-04-21: fix: avoid duplicate upload version collisions
 
 **Commit Hash**: `9538de3`

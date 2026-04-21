@@ -163,6 +163,11 @@ export function resolveWorldviewStartPageCopy(state) {
   };
 }
 
+export function resolveWorldviewStartIntroLines(state) {
+  const section = getWorldviewSection(state, "startPageCopy");
+  return toStringArray(section.introLines);
+}
+
 export function resolveWorldviewOpeningTurn(state) {
   const section = getWorldviewSection(state, "openingTurn");
   const choices = Array.isArray(section.openingChoices) ? section.openingChoices : [];
