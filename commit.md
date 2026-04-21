@@ -1,5 +1,43 @@
 # Commit 日志
 
+## 2026-04-21: feat: prioritize cross-world default with southern-song fallback
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+将默认世界观切换为“穿越世界模板”，并明确加载优先级为“运行时自定义 > 默认穿越 > 南宋 fallback”。同步完成 `public/data` 叙事与配置清理，确保默认路径不再残留南宋语义，同时保留南宋作为第二优先兜底资源。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/worldVersion.js` | ✏️ 调整 | 默认世界版本切换为 `cross_world_default_v1` |
+| `js/worldview/worldviewAdapter.js` | ✏️ 调整 | 新增默认/兜底双层 worldview 与 overrides 解析策略 |
+| `js/worldview/worldviewPriority.test.js` | ➕ 新增 | 覆盖“自定义优先、默认次之、南宋兜底”优先级测试 |
+| `public/data/worldview.json` | ✏️ 调整 | 默认 worldview 替换为穿越世界配置 |
+| `public/data/worldviewOverrides.json` | ✏️ 调整 | 默认 overrides 替换为穿越世界角色/派系/政策数据 |
+| `public/data/fallbacks/southernSong.worldview.json` | ➕ 新增 | 保留南宋 worldview 作为 fallback 资源 |
+| `public/data/fallbacks/southernSong.worldviewOverrides.json` | ➕ 新增 | 保留南宋 overrides 作为 fallback 资源 |
+| `public/data/intro.json` | ✏️ 调整 | 开场文案切换为跨世界穿越语义 |
+| `public/data/story/day1_morning.json` | ✏️ 调整 | 首回合叙事与 loyalty 映射改为 hero 体系 |
+| `public/data/story/hard_mode_day1_morning.json` | ✏️ 调整 | 困难模式开场语义切换为穿越据点叙事 |
+| `public/data/positions.json` | ✏️ 调整 | 清理“皇帝/六部”等默认路径历史词残留 |
+| `public/data/provinceRules.json` | ✏️ 调整 | 区域规则重写为跨世界地名与状态描述 |
+| `public/data/nationInit.json` | ✏️ 调整 | 国情与外部威胁切换为跨世界初始化数据 |
+| `public/data/rigidHistoryEvents.json` | ✏️ 调整 | 保留机制数值，替换事件名称/文案历史指向 |
+
+### 价值
+
+- 默认体验稳定落到穿越模板，避免开局叙事与数据语义错位
+- 保留南宋 fallback，满足“第二优先兜底”与兼容旧包需求
+- 通过优先级测试与定向回归，降低后续世界观切换回归风险
+
+### 验证
+
+- `npm run build` ✅ 通过
+- `npx vitest run js/worldVersion.test.js js/systems/storySystem.template.test.js js/worldview/worldviewPriority.test.js` ✅ 通过
+
 ## 2026-04-21: feat: map start intro rolling lines into worldview layer
 
 **Commit Hash**: (pending)

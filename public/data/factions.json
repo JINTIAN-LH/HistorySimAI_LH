@@ -2,43 +2,65 @@
   "factions": [
     {
       "id": "donglin",
-      "name": "清议士人",
+      "name": "智慧无双",
       "color": "#2e7d32",
-      "description": "以江南士大夫为主体的政治集团，主张清议、正直与整肃纲纪。在行在新立后重新活跃，把持部分中枢要职，但内部同样存在派系分歧。",
-      "stance": "主张强硬对外，反对轻言退让；主张轻徭薄赋，反对一味加征军费。",
-      "members": ["bi_ziyan", "sun_chengzong"]
+      "description": "以智谋、洞察、规划为主的伙伴，擅长布局、算计、规避风险。",
+      "stance": "理性决策，规划最优路线，保障宿主安全发展。",
+      "members": [
+        "hero_02",
+        "hero_10"
+      ]
     },
     {
       "id": "eunuch",
-      "name": "内廷旧系",
-      "color": "#c62828",
-      "description": "依附内廷与旧日权力网络的政治势力。表面上已与旧党切割，暗中仍以迎合圣意、排挤异己为手段维护自身利益。",
-      "stance": "无明确政见，以迎合君主、排斥异己与维持自身权势为主要策略，善于权术斗争。",
-      "members": ["wen_tiren"]
+      "name": "隐秘潜行",
+      "color": "#8d6e63",
+      "description": "擅长隐秘、侦查、暗杀、情报的伙伴，是宿主最隐秘的力量。",
+      "stance": "暗中行动，清除障碍，收集情报，保护宿主安全。",
+      "members": [
+        "hero_04",
+        "hero_11"
+      ]
     },
     {
       "id": "neutral",
-      "name": "中立派",
+      "name": "全能辅助",
       "color": "#1565c0",
-      "description": "不依附特定党派的务实官员，以实际能力与政绩立足。在行在草创、议论纷纭的局面中，他们往往成为各方拉拢或打击的对象。",
-      "stance": "务实为主，更关心具体问题的处置方案，不愿深陷党争。",
-      "members": ["liang_tingdong", "wang_yongguang", "lin_qian", "han_jisi", "zhang_fengxiang"]
+      "description": "擅长治疗、科技、炼丹、商业、魔法的全能型伙伴，提供全方位支持。",
+      "stance": "专注辅助，提升团队实力，保障资源供给。",
+      "members": [
+        "hero_03",
+        "hero_05",
+        "hero_07",
+        "hero_12",
+        "hero_13",
+        "hero_15"
+      ]
     },
     {
       "id": "military",
-      "name": "军事将领",
+      "name": "战力巅峰",
       "color": "#e65100",
-      "description": "统兵在外的方面大员，远离朝堂争论，却深受军粮、军械与调度问题困扰。他们的忠诚在很大程度上取决于朝廷是否还能保障军需供给。",
-      "stance": "优先关注军费供给、沿江防线与战略部署，对朝堂空谈缺乏耐心。",
-      "members": ["hong_chengchou"]
+      "description": "拥有超强战力的伙伴，擅长战斗、冲锋、扩张、镇压强敌。",
+      "stance": "横扫一切敌人，攻城略地，保障宿主势力扩张。",
+      "members": [
+        "hero_01",
+        "hero_06",
+        "hero_08",
+        "hero_09",
+        "hero_14"
+      ]
     },
     {
       "id": "imperial",
-      "name": "帝党",
+      "name": "宿主亲卫",
       "color": "#6a1b9a",
-      "description": "直接效忠皇帝的内廷力量，以近侍与机要体系为核心。新朝廷草创之后，他们仍是皇帝了解朝堂内外风向、贯彻旨意的重要耳目。",
-      "stance": "惟皇命是从，是皇帝掌握内外消息与推动政令落地的重要工具。",
-      "members": ["cao_huachun"]
+      "description": "绝对忠诚于宿主的亲卫伙伴，只执行宿主指令，守护宿主安危。",
+      "stance": "绝对忠诚，寸步不离，用生命守护宿主。",
+      "members": [
+        "hero_04",
+        "hero_08"
+      ]
     }
   ]
 }

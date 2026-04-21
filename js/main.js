@@ -34,6 +34,24 @@ function normalizeAppointmentsMap(appointments, aliasToCanonical) {
   return out;
 }
 
+async function loadWorldviewDataWithFallback() {
+  const worldviewCandidates = [
+    "data/worldview.json",
+    "data/fallbacks/southernSong.worldview.json",
+  ];
+  for (const path of worldviewCandidates) {
+    try {
+      const res = await fetch(path, { cache: "no-cache" });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Try next candidate.
+    }
+  }
+  return {};
+}
+
 async function preloadBasicData(preferredMode = null) {
   // ── 自定义世界观注入 ──
   const customWorldview = loadCustomWorldview();
@@ -60,11 +78,7 @@ async function preloadBasicData(preferredMode = null) {
 
   // 若无自定义世界观，从默认 worldview.json 加载
   if (!resolvedWorldviewData) {
-    try {
-      const res = await fetch("data/worldview.json", { cache: "no-cache" });
-      if (res.ok) resolvedWorldviewData = await res.json();
-    } catch { /* 使用空对象兜底 */ }
-    resolvedWorldviewData = resolvedWorldviewData || {};
+    resolvedWorldviewData = await loadWorldviewDataWithFallback();
   }
 
   const worldviewConfigPatch = {

@@ -9,6 +9,7 @@ import {
   adaptPositionsData,
   mapFactionLabel,
   resolveFactionId,
+  southernSongFallbackWorldviewOverrides,
 } from "./worldviewAdapter.js";
 
 describe("worldviewAdapter", () => {
@@ -20,7 +21,7 @@ describe("worldviewAdapter", () => {
         { id: "wen_tiren", name: "温体仁", positions: ["neige_shoufu"] },
         { id: "unused_old_id", name: "旧人物" },
       ],
-    });
+    }, southernSongFallbackWorldviewOverrides);
 
     expect(result.characters.some((item) => item.id === "unused_old_id")).toBe(false);
     expect(result.characters.find((item) => item.id === "bi_ziyan")?.name).toBe("叶梦得");
@@ -28,8 +29,8 @@ describe("worldviewAdapter", () => {
   });
 
   it("should rewrite factions and court chats into Southern Song context", () => {
-    const factions = adaptFactionsData({ factions: [{ id: "donglin", name: "东林党" }] });
-    const chats = adaptCourtChatsData({});
+    const factions = adaptFactionsData({ factions: [{ id: "donglin", name: "东林党" }] }, southernSongFallbackWorldviewOverrides);
+    const chats = adaptCourtChatsData({}, southernSongFallbackWorldviewOverrides);
 
     expect(factions.factions.find((item) => item.id === "donglin")?.name).toBe("主战清议");
     expect(chats.bi_ziyan?.[0]?.text).toContain("东南财赋");
@@ -40,7 +41,7 @@ describe("worldviewAdapter", () => {
       modules: [{ id: "neige", name: "内阁" }],
       departments: [{ id: "dutcheng", name: "都察院" }],
       positions: [{ id: "neige_shoufu", name: "内阁首辅" }],
-    });
+    }, southernSongFallbackWorldviewOverrides);
 
     expect(positions.modules[0].name).toBe("中枢");
     expect(positions.departments[0].name).toBe("御史台");
@@ -52,7 +53,7 @@ describe("worldviewAdapter", () => {
     const policies = adaptPolicyCatalogData([
       { id: "politics_east_factory", title: "东厂职能收缩", description: "防止厂卫滥权。" },
       { id: "diplomacy_macao", title: "澳门通商", description: "获取火器与技术。" },
-    ]);
+    ], southernSongFallbackWorldviewOverrides);
 
     expect(policies[0].id).toBe("politics_east_factory");
     expect(policies[0].title).toBe("察事耳目收束");
@@ -93,55 +94,55 @@ describe("worldviewAdapter", () => {
 
 describe("mapFactionLabel – AI talent faction mapping", () => {
   it("should map faction IDs to Southern Song names", () => {
-    expect(mapFactionLabel("donglin")).toBe("主战清议");
-    expect(mapFactionLabel("neutral")).toBe("务实经世");
-    expect(mapFactionLabel("imperial")).toBe("行在近臣");
-    expect(mapFactionLabel("military")).toBe("江防宿将");
-    expect(mapFactionLabel("eunuch")).toBe("和议近习");
+    expect(mapFactionLabel("donglin", southernSongFallbackWorldviewOverrides)).toBe("主战清议");
+    expect(mapFactionLabel("neutral", southernSongFallbackWorldviewOverrides)).toBe("务实经世");
+    expect(mapFactionLabel("imperial", southernSongFallbackWorldviewOverrides)).toBe("行在近臣");
+    expect(mapFactionLabel("military", southernSongFallbackWorldviewOverrides)).toBe("江防宿将");
+    expect(mapFactionLabel("eunuch", southernSongFallbackWorldviewOverrides)).toBe("和议近习");
   });
 
   it("should map Ming-era Chinese labels to Southern Song names", () => {
-    expect(mapFactionLabel("东林党")).toBe("主战清议");
-    expect(mapFactionLabel("帝党")).toBe("行在近臣");
-    expect(mapFactionLabel("阉党")).toBe("和议近习");
-    expect(mapFactionLabel("中立")).toBe("务实经世");
-    expect(mapFactionLabel("中立派")).toBe("务实经世");
-    expect(mapFactionLabel("军事将领")).toBe("江防宿将");
+    expect(mapFactionLabel("东林党", southernSongFallbackWorldviewOverrides)).toBe("主战清议");
+    expect(mapFactionLabel("帝党", southernSongFallbackWorldviewOverrides)).toBe("行在近臣");
+    expect(mapFactionLabel("阉党", southernSongFallbackWorldviewOverrides)).toBe("和议近习");
+    expect(mapFactionLabel("中立", southernSongFallbackWorldviewOverrides)).toBe("务实经世");
+    expect(mapFactionLabel("中立派", southernSongFallbackWorldviewOverrides)).toBe("务实经世");
+    expect(mapFactionLabel("军事将领", southernSongFallbackWorldviewOverrides)).toBe("江防宿将");
   });
 
   it("should pass through already-correct Southern Song labels", () => {
-    expect(mapFactionLabel("主战清议")).toBe("主战清议");
-    expect(mapFactionLabel("务实经世")).toBe("务实经世");
-    expect(mapFactionLabel("江防宿将")).toBe("江防宿将");
+    expect(mapFactionLabel("主战清议", southernSongFallbackWorldviewOverrides)).toBe("主战清议");
+    expect(mapFactionLabel("务实经世", southernSongFallbackWorldviewOverrides)).toBe("务实经世");
+    expect(mapFactionLabel("江防宿将", southernSongFallbackWorldviewOverrides)).toBe("江防宿将");
   });
 
   it("should return unknown labels as-is", () => {
-    expect(mapFactionLabel("未知派系")).toBe("未知派系");
+    expect(mapFactionLabel("未知派系", southernSongFallbackWorldviewOverrides)).toBe("未知派系");
   });
 
   it("should handle empty or missing input", () => {
-    expect(mapFactionLabel("")).toBe("");
-    expect(mapFactionLabel(null)).toBe("");
-    expect(mapFactionLabel(undefined)).toBe("");
+    expect(mapFactionLabel("", southernSongFallbackWorldviewOverrides)).toBe("");
+    expect(mapFactionLabel(null, southernSongFallbackWorldviewOverrides)).toBe("");
+    expect(mapFactionLabel(undefined, southernSongFallbackWorldviewOverrides)).toBe("");
   });
 });
 
 describe("resolveFactionId – AI talent faction ID resolution", () => {
   it("should resolve faction IDs to themselves", () => {
-    expect(resolveFactionId("donglin")).toBe("donglin");
-    expect(resolveFactionId("military")).toBe("military");
+    expect(resolveFactionId("donglin", southernSongFallbackWorldviewOverrides)).toBe("donglin");
+    expect(resolveFactionId("military", southernSongFallbackWorldviewOverrides)).toBe("military");
   });
 
   it("should resolve Chinese labels to faction IDs", () => {
-    expect(resolveFactionId("东林党")).toBe("donglin");
-    expect(resolveFactionId("帝党")).toBe("imperial");
-    expect(resolveFactionId("军事将领")).toBe("military");
-    expect(resolveFactionId("中立")).toBe("neutral");
+    expect(resolveFactionId("东林党", southernSongFallbackWorldviewOverrides)).toBe("donglin");
+    expect(resolveFactionId("帝党", southernSongFallbackWorldviewOverrides)).toBe("imperial");
+    expect(resolveFactionId("军事将领", southernSongFallbackWorldviewOverrides)).toBe("military");
+    expect(resolveFactionId("中立", southernSongFallbackWorldviewOverrides)).toBe("neutral");
   });
 
   it("should fallback to neutral for unknown input", () => {
-    expect(resolveFactionId("未知")).toBe("neutral");
-    expect(resolveFactionId("")).toBe("neutral");
-    expect(resolveFactionId(null)).toBe("neutral");
+    expect(resolveFactionId("未知", southernSongFallbackWorldviewOverrides)).toBe("neutral");
+    expect(resolveFactionId("", southernSongFallbackWorldviewOverrides)).toBe("neutral");
+    expect(resolveFactionId(null, southernSongFallbackWorldviewOverrides)).toBe("neutral");
   });
 });

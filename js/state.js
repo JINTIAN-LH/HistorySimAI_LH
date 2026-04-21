@@ -12,8 +12,8 @@ const initialState = {
   worldVersion: DEFAULT_WORLD_VERSION,
 
   player: {
-    name: "赵构",
-    title: "宋高宗",
+    name: "穿越者",
+    title: "宿主",
     age: 20,
   },
 
@@ -33,16 +33,7 @@ const initialState = {
   factions: [],
   loyalty: {},
 
-  appointments: {
-    "neige_shoufu": "zhou_yanru",
-    "libu_shangshu": "wang_yongguang",
-    "hubu_shangshu": "bi_ziyan",
-    "libu_li_shangshu": "li_tengfang",
-    "bingbu_shangshu": "liang_tingdong",
-    "xingbu_shangshu": "han_jisi",
-    "gongbu_shangshu": "cao_guang",
-    "dutcheng_duchayuan_zuoduyushi": "cao_yubian"
-  },
+  appointments: {},
   characterStatus: {},
   // 外部势力势力值（如 { "北方敌军": 100, "地方叛军": 80 }）
   externalPowers: {},

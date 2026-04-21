@@ -1,4 +1,4 @@
-export const DEFAULT_WORLD_VERSION = "southern_song_v1";
+export const DEFAULT_WORLD_VERSION = "cross_world_default_v1";
 
 export function getConfiguredWorldVersion(config) {
   const version = String(config?.worldVersion || "").trim();

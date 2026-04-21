@@ -4,15 +4,15 @@
     {
       "id": "neige",
       "name": "内阁",
-      "description": "皇帝的决策咨询机构，辅佐皇帝处理政务",
+      "description": "宿主的决策咨询机构，辅佐宿主处理核心事务",
       "color": "#8B0000",
       "order": 1,
       "departments": ["neige"]
     },
     {
       "id": "liubu",
-      "name": "六部",
-      "description": "中央行政六部：吏、户、礼、兵、刑、工",
+      "name": "六司",
+      "description": "核心行政六司：吏、户、礼、兵、刑、工",
       "color": "#1565c0",
       "order": 2,
       "departments": ["libu", "hubu", "libu_li", "bingbu", "xingbu", "gongbu"]
@@ -56,7 +56,7 @@
       "name": "内阁",
       "moduleId": "neige",
       "color": "#8B0000",
-      "description": "皇帝的决策咨询机构，辅佐皇帝处理政务"
+      "description": "宿主的决策咨询机构，辅佐宿主处理核心事务"
     },
     {
       "id": "libu",
@@ -173,7 +173,7 @@
       "department": "neige",
       "rank": 1,
       "grade": "正一品",
-      "description": "内阁之首，辅佐皇帝处理政务，票拟批答",
+      "description": "内阁之首，辅佐宿主处理政务，统筹决策执行",
       "maxHolders": 1,
       "importance": 10
     },
@@ -203,7 +203,7 @@
       "department": "libu",
       "rank": 3,
       "grade": "正二品",
-      "description": "掌天下官吏选授、封勋、考课之政令，六部之首",
+      "description": "掌核心成员选授、封勋、考课之政令，为六司之首",
       "maxHolders": 1,
       "importance": 10
     },
@@ -523,7 +523,7 @@
       "department": "neiting",
       "rank": 1,
       "grade": "正一品",
-      "description": "司礼监核心成员，代皇帝批红",
+      "description": "司礼监核心成员，负责关键指令签发",
       "maxHolders": 2,
       "importance": 8
     },

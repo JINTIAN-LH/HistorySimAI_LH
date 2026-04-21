@@ -1,4 +1,5 @@
 import defaultWorldviewOverrides from "../../public/data/worldviewOverrides.json";
+import southernSongFallbackWorldviewOverrides from "../../public/data/fallbacks/southernSong.worldviewOverrides.json";
 
 function cloneRecord(value) {
   return value && typeof value === "object" ? JSON.parse(JSON.stringify(value)) : value;
@@ -12,13 +13,29 @@ function mapById(list) {
   );
 }
 
-function resolveWorldviewOverrides(worldviewOverrides) {
-  return worldviewOverrides && typeof worldviewOverrides === "object"
-    ? worldviewOverrides
-    : defaultWorldviewOverrides;
+function isValidWorldviewOverrides(value) {
+  if (!value || typeof value !== "object") return false;
+  if (!Array.isArray(value.allowedCharacterIds) || value.allowedCharacterIds.length === 0) return false;
+  if (!value.characters || typeof value.characters !== "object") return false;
+  return true;
 }
 
-export { defaultWorldviewOverrides };
+export function resolveWorldviewOverrides(worldviewOverrides, options = {}) {
+  const preferredDefault = options.defaultOverrides || defaultWorldviewOverrides;
+  const preferredFallback = options.fallbackOverrides || southernSongFallbackWorldviewOverrides;
+  if (worldviewOverrides && typeof worldviewOverrides === "object") {
+    return worldviewOverrides;
+  }
+  if (isValidWorldviewOverrides(preferredDefault)) {
+    return preferredDefault;
+  }
+  if (isValidWorldviewOverrides(preferredFallback)) {
+    return preferredFallback;
+  }
+  return {};
+}
+
+export { defaultWorldviewOverrides, southernSongFallbackWorldviewOverrides };
 
 export function adaptCharactersData(data, worldviewOverrides = defaultWorldviewOverrides) {
   const resolvedOverrides = resolveWorldviewOverrides(worldviewOverrides);

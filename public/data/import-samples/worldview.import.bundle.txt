@@ -1,216 +1,218 @@
-这是一个包含 worldview.json 和 worldviewOverrides.json 示例内容的导入包。请根据需要参考以下各节内容。
+﻿杩欐槸涓€涓寘鍚?worldview.json 鍜?worldviewOverrides.json 绀轰緥鍐呭鐨勫鍏ュ寘銆傝鏍规嵁闇€瑕佸弬鑰冧互涓嬪悇鑺傚唴瀹广€?
 
 === worldview.json ===
 {
-  "id": "southern_song_v1",
-  "title": "南宋中兴",
-  "gameTitle": "南宋中兴模拟器",
+  "id": "cross_world_simulator_v1",
+  "title": "绌胯秺涓栫晫妯℃嫙鍣?,
+  "gameTitle": "绌胯秺涓栫晫妯℃嫙鍣?,
   "playerRole": {
-    "name": "宋高宗赵构",
-    "title": "官家"
+    "name": "绌胯秺鑰?,
+    "title": "瀹夸富"
   },
   "storyPrompt": {
-    "role": "你是《南宋中兴模拟器》游戏的剧情写手。",
+    "role": "浣犳槸銆婄┛瓒婁笘鐣屾ā鎷熷櫒銆嬫父鎴忕殑鍓ф儏鍐欐墜銆?,
     "worldview": [
-      "世界观固定为南宋初立、赵构南渡甫定之后的局势。",
-      "玩家固定扮演宋高宗赵构，朝廷处于建炎年间，行在未稳、金军南压、地方骚动未平。"
+      "涓栫晫瑙備负澶氬厓瀹囧畽绌胯秺浣撶郴锛岀帺瀹朵綔涓烘剰澶栬閱掔┛瓒婅兘鍔涚殑瀹夸富锛屽彲闅忔満鎴栧畾鍚戣繘鍏ヤ笉鍚屼笘鐣屻€?,
+      "鐜╁鍥哄畾鎵紨绌胯秺鑰咃紝鍒濆鏃犺韩浠姐€佹棤璧勬簮銆佹棤鍔垮姏锛屼粠闆跺紑濮嬪湪闄岀敓涓栫晫鐢熷瓨銆佸彂灞曘€佺櫥椤躲€?,
+      "涓栫晫绫诲瀷鍖呭惈锛氬彜浠ｇ帇鏈濄€佷慨浠欑巹骞汇€佹湯涓栧簾鍦熴€佹槦闄呯骞汇€侀瓟娉曞骞汇€佺幇浠ｉ兘甯傘€佹湯鏃ヤ抚灏搞€佹椽鑽掔璇濄€佸紓鐣岄涓汇€佽禌鍗氭湅鍏嬨€?
     ],
     "gameplayConstraints": [
-      "保留现有资源结构、回合节奏与玩法循环，只改变叙事背景与历史名词，不要擅自新增机制。"
+      "淇濈暀鐜版湁璧勬簮缁撴瀯銆佸洖鍚堣妭濂忎笌鐜╂硶寰幆锛屽彧鏀瑰彉鍙欎簨鑳屾櫙涓庡悕璇嶏紝涓嶆柊澧炴満鍒躲€?,
+      "鎵€鏈変笘鐣岄伒寰粺涓€瑙勫垯锛氬睘鎬ф垚闀裤€佷汉鎵嶆嫑鍕熴€佹斂绛栧喅绛栥€佷簨浠跺簲瀵广€佸娍鍔涙墿寮犮€佷笘鐣岃穬杩併€?
     ]
   },
   "semanticLabels": {
-    "primaryHostileName": "金廷",
-    "northernHostileAliases": ["金廷", "金军", "后金", "建奴", "满清", "北方敌军", "江北敌军"],
-    "rebelForceAliases": ["地方叛军", "流寇", "流民军", "兵乱"],
-    "dengzhouRebelAliases": ["登州叛军", "登州", "孔有德部", "叛军"]
+    "primaryHostileName": "鏁屽鍔垮姏",
+    "northernHostileAliases": ["寮烘晫", "寮傛棌", "濡栧吔", "铏棌", "鏈烘鍐涘洟", "榛戞殫鍔垮姏", "鍙涘啗", "鏁屽鐜╁"],
+    "rebelForceAliases": ["涔辨皯", "鍙涘厷", "閭慨", "鍙樺紓浣?, "鍙嶆姉鍐?, "寮傜"],
+    "dengzhouRebelAliases": ["鍦版柟涔卞啗", "鍓叉嵁鍔垮姏", "閲庢€洟浼?, "鎺犲ず鑰?]
   },
   "talentConfig": {
-    "tabLabel": "人才",
-    "tabIcon": "🎓",
-    "viewTitle": "人才储备",
-    "viewSubtitle": "广纳贤才，择优任用，方可中兴大业",
-    "recruitLabel": "延揽",
+    "tabLabel": "浼欎即",
+    "tabIcon": "馃",
+    "viewTitle": "浼欎即鍐涘洟",
+    "viewSubtitle": "闆嗙粨鍚勮矾寮鸿€咃紝缁勫缓涓撳睘鍥㈤槦锛屽緛鏈嶄竾鍗冧笘鐣?,
+    "recruitLabel": "鎷涘嫙",
     "recruitTypes": {
-      "imperial_exam": "科举荐举",
-      "recommend": "征辟访才",
-      "search": "寻访奇俊"
+      "imperial_exam": "鏈虹紭閭傞€?,
+      "recommend": "鍔垮姏寮曡崘",
+      "search": "瀹氬悜瀵昏"
     },
     "qualityLabels": {
-      "ordinary": "寒士俊彦",
-      "excellent": "贤才良臣",
-      "epic": "名臣大将"
+      "ordinary": "鏅€氫紮浼?,
+      "excellent": "绮捐嫳寮鸿€?,
+      "epic": "浼犺澶╅獎"
     },
     "abilityFields": {
-      "military": "韬略",
-      "politics": "经世",
-      "economy": "理财",
-      "culture": "文史"
+      "military": "鎴樺姏",
+      "politics": "缁熷尽",
+      "economy": "璧勬簮",
+      "culture": "鏅烘収"
     },
-    "rulerTitle": "官家",
-    "talentNoun": "臣子",
-    "poolLabel": "候选人才",
-    "interactVerb": "召见",
-    "appointVerb": "任用",
-    "trainVerb": "培育",
+    "rulerTitle": "瀹夸富",
+    "talentNoun": "浼欎即",
+    "poolLabel": "鍊欓€変紮浼?,
+    "interactVerb": "浜よ皥",
+    "appointVerb": "濮斾换",
+    "trainVerb": "鍩瑰吇",
     "recruitCostResource": "prestige",
-    "recruitCostLabel": "声望"
+    "recruitCostLabel": "澹版湜"
   },
   "policyConfig": {
-    "tabLabel": "问政",
-    "tabIcon": "📋",
-    "viewTitle": "廷议中枢",
-    "viewSubtitle": "兼听则明，偏信则暗，广询臣工以决国是",
-    "sessionLabel": "廷议",
-    "edictLabel": "诏旨",
-    "issueLabel": "议题",
-    "ministerLabel": "臣工",
-    "adviceLabel": "建言",
-    "rulerTitle": "官家",
-    "askVerb": "垂询",
-    "issueVerb": "颁旨",
-    "supportLabel": "赞同",
-    "opposeLabel": "反对",
-    "neutralLabel": "持重",
-    "historyLabel": "往议记录"
+    "tabLabel": "鍐崇瓥",
+    "tabIcon": "鈿栵笍",
+    "viewTitle": "涓栫晫鍐崇瓥",
+    "viewSubtitle": "鏉冭　鍒╁紛锛屽喅鏂湭鏉ワ紝鎺屾帶涓栫晫璧板悜",
+    "sessionLabel": "璁簨",
+    "edictLabel": "鎸囦护",
+    "issueLabel": "璁",
+    "ministerLabel": "浼欎即",
+    "adviceLabel": "寤鸿",
+    "rulerTitle": "瀹夸富",
+    "askVerb": "璇㈤棶",
+    "issueVerb": "涓嬭揪",
+    "supportLabel": "璧炲悓",
+    "opposeLabel": "鍙嶅",
+    "neutralLabel": "涓珛",
+    "historyLabel": "鍐崇瓥璁板綍"
   },
   "startPageCopy": {
-    "heroTitle": "南宋中兴模拟器",
-    "heroSubtitle": "国祚飘摇，行在草创，且看官家如何定中兴之局",
-    "startButtonLabel": "即刻临朝",
-    "continueButtonLabel": "续理旧局",
+    "heroTitle": "绌胯秺涓栫晫妯℃嫙鍣?,
+    "heroSubtitle": "鏃犻檺涓栫晫锛屾棤闄愬彲鑳斤紝浠庝粖澶╁紑濮嬶紝浣犲皢涓诲鑷繁鐨勭┛瓒婁汉鐢?,
+    "startButtonLabel": "寮€濮嬬┛瓒?,
+    "continueButtonLabel": "缁х画鏃呯▼",
     "introLines": [
-      "建炎三年的江南行在，仍笼罩在仓皇南渡后的余悸之中。",
-      "江路漕运时断时续，沿江州县多经兵火，行在米价一日高过一日。",
-      "而你，宋高宗赵构，刚在江南立足，手中只握一副随时可能崩散的残局。"
+      "涓€閬撶绉樺厜鑺掗棯杩囷紝浣犵獊鐒舵嫢鏈変簡绌挎涓囧崈涓栫晫鐨勮兘鍔涖€?,
+      "娌℃湁绯荤粺銆佹病鏈夋柊鎵嬬ぜ鍖咃紝鍙湁涓€韬嚒韬拰涓€棰椾笉鐢樺钩鍑＄殑蹇冦€?,
+      "鑰屼綘锛屽皢鍦ㄤ竴涓釜鍏夋€檰绂荤殑涓栫晫涓紝鎸ｆ墡姹傜敓锛岄€嗚鐧婚《锛屾垚涓哄鍏冨畤瀹欑殑浼犺銆?
     ]
   },
   "openingTurn": {
-    "briefingTitle": "开局廷议",
+    "briefingTitle": "棣栨绌胯秺",
     "briefingLines": [
-      "行在未稳，百司草创，朝廷需先定人心。",
-      "北境军情压境，江防与财赋皆不可偏废。"
+      "浣犻檷涓村湪闄岀敓涓栫晫锛屼竴鏃犳墍鏈夛紝鍗辨満鍥涗紡銆?,
+      "鐢熷瓨鏄涓€瑕佸姟锛屽彂灞曟槸闀挎湡鐩爣锛屼綘蹇呴』鍋氬嚭鍏抽敭閫夋嫨銆?
     ],
     "openingChoices": [
       {
-        "id": "stabilize_court",
-        "label": "先整朝纲",
-        "summary": "优先稳住中枢秩序与政令执行"
+        "id": "stabilize_survive",
+        "label": "鍏堟眰鐢熷瓨",
+        "summary": "浼樺厛瑙ｅ喅娓╅ケ銆佸畨鍏紝绋冲畾褰撳墠澶勫"
       },
       {
-        "id": "secure_frontier",
-        "label": "先固江防",
-        "summary": "优先压制外患与边防风险"
+        "id": "secure_develop",
+        "label": "鍏堣皨鍙戝睍",
+        "summary": "浼樺厛鑾峰彇璧勬簮銆佷俊鎭紝涓烘湭鏉ユ墿寮犻摵璺?
       }
     ]
   },
   "chronicleFormat": {
-    "eraLabel": "建炎",
-    "yearUnit": "年",
-    "monthUnit": "月",
+    "eraLabel": "绌胯秺鍘?,
+    "yearUnit": "骞?,
+    "monthUnit": "鏈?,
     "displayPattern": "{era}{year}{yearUnit}{month}{monthUnit}",
-    "fallbackPattern": "第{year}年{month}月"
+    "fallbackPattern": "绗瑊year}骞磠month}鏈?
   },
   "courtViewCopy": {
-    "headerTitle": "朝堂中枢",
-    "headerSubtitle": "百官争议并起，圣断当裁轻重",
-    "quickActionLabel": "速议",
-    "emptyStateText": "暂无可用廷议，请稍候再议"
+    "headerTitle": "瀹夸富涓灑",
+    "headerSubtitle": "缁熷尽浼欎即锛屽喅绛栦簨鍔★紝鎺屾帶鍏ㄥ眬",
+    "quickActionLabel": "閫熷喅",
+    "emptyStateText": "鏆傛棤寰呭喅绛栦簨鍔★紝璇风◢鍚庡啀璇?
   },
   "policyTreeCopy": {
-    "treeTitle": "中兴国策",
-    "treeSubtitle": "定纲举要，循序推进",
+    "treeTitle": "绌胯秺涔嬭矾",
+    "treeSubtitle": "瑙勫垝璺嚎锛岀ǔ姝ュ彉寮猴紝寰佹湇涓栫晫",
     "branchLabels": {
-      "military": "经武备边",
-      "internal": "整饬内政",
-      "economy": "财赋振兴"
+      "military": "鎴樺姏鎻愬崌",
+      "internal": "鍔垮姏寤鸿",
+      "economy": "璧勬簮绉疮"
     }
   },
   "rulerAbilityCopy": {
-    "panelTitle": "官家权衡",
+    "panelTitle": "瀹夸富鑳藉姏",
     "abilityLabels": {
-      "authority": "御极威望",
-      "command": "军政节度",
-      "insight": "识人断事"
+      "authority": "绌胯秺鏉冮檺",
+      "command": "缁熷尽涔嬪姏",
+      "insight": "涓栫晫娲炲療"
     },
-    "abilityHint": "皇权能力决定关键决策的上下限"
+    "abilityHint": "瀹夸富鑳藉姏鍐冲畾绌胯秺涓婇檺涓庡彂灞曢€熷害"
   },
   "worldEventCopy": {
-    "sectionTitle": "天下大事",
-    "emptyStateText": "近日暂无重大变局",
+    "sectionTitle": "涓栫晫浜嬩欢",
+    "emptyStateText": "褰撳墠涓栫晫鏆傛棤閲嶅ぇ鍙樻晠",
     "severityLabels": {
-      "high": "社稷震荡",
-      "medium": "局势波动",
-      "low": "地方异动"
+      "high": "涓栫晫鍗辨満",
+      "medium": "鍖哄煙鍔ㄨ崱",
+      "low": "灞€閮ㄥ紓鍔?
     }
   },
   "publicOpinionCopy": {
-    "sectionTitle": "民间舆论",
-    "positiveLabel": "民心向治",
-    "neutralLabel": "观望未定",
-    "negativeLabel": "民议汹汹",
-    "emptyStateText": "暂未形成显著舆情"
+    "sectionTitle": "涓栫晫澹版湜",
+    "positiveLabel": "涓囨皯鏁话",
+    "neutralLabel": "榛橀粯鏃犻椈",
+    "negativeLabel": "澹板悕鐙艰棄",
+    "emptyStateText": "鏆傛湭褰㈡垚鏄捐憲澹版湜"
   },
   "uiSurfaceCopy": {
     "policy": {
-      "inputPlaceholder": "输入要垂询群臣的问题，或点上方议题快速填入…",
-      "followupPlaceholder": "基于当前议题继续追问…",
-      "emptyQuestionError": "请先输入或选择议题。",
-      "emptyEdictError": "诏令内容不得为空。",
-      "askFailedError": "廷议失败，请稍后重试。",
-      "followupFailedError": "追问失败，请稍后重试。",
-      "issueFailedError": "颁旨失败，请稍后重试。",
-      "issueSuccess": "诏旨已拟定，待你本轮选择旨意时一并生效。",
-      "closeSessionLabel": "结束廷议",
-      "summaryPrefix": "综议：",
-      "adoptAdviceLabel": "采纳此议",
-      "followupLabel": "继续追问群臣：",
-      "followupButtonLabel": "追问",
-      "followupBusyLabel": "议…",
-      "historyTitle": "历次廷议"
+      "inputPlaceholder": "杈撳叆瑕佽闂紮浼寸殑闂锛屾垨鐐逛笂鏂硅棰樺揩閫熷～鍏モ€?,
+      "followupPlaceholder": "鍩轰簬褰撳墠璁缁х画杩介棶鈥?,
+      "emptyQuestionError": "璇峰厛杈撳叆鎴栭€夋嫨璁銆?,
+      "emptyEdictError": "鎸囦护鍐呭涓嶅緱涓虹┖銆?,
+      "askFailedError": "璁簨澶辫触锛岃绋嶅悗閲嶈瘯銆?,
+      "followupFailedError": "杩介棶澶辫触锛岃绋嶅悗閲嶈瘯銆?,
+      "issueFailedError": "涓嬭揪澶辫触锛岃绋嶅悗閲嶈瘯銆?,
+      "issueSuccess": "鎸囦护宸叉嫙瀹氾紝寰呬綘鏈疆閫夋嫨鏃朵竴骞剁敓鏁堛€?,
+      "closeSessionLabel": "缁撴潫璁簨",
+      "summaryPrefix": "缁艰锛?,
+      "adoptAdviceLabel": "閲囩撼姝よ",
+      "followupLabel": "缁х画杩介棶浼欎即锛?,
+      "followupButtonLabel": "杩介棶",
+      "followupBusyLabel": "璁€?,
+      "historyTitle": "鍘嗘璁簨"
     },
     "edict": {
-      "pageTitle": "诏书中枢",
-      "pageSubtitle": "将剧情正文、诏令选择、奏报与自拟诏书入口固定在统一玩法骨架内，后续主玩法扩展继续沿用这一页模板。",
-      "actionsTitle": "诏令选择",
-      "actionsHint": "固定保留选择区与自拟诏书入口，季度议题锁定后也在这里继续操作。",
-      "dataTitle": "奏报与回响",
-      "dataHint": "把新闻流和舆论反馈固定在数据区，减少主玩法页面的信息漂移。",
-      "mainTitle": "诏书正文",
-      "mainHint": "正文区继续承载历史记录、当回合文本、批注和数值反馈。"
+      "pageTitle": "鎸囦护涓灑",
+      "pageSubtitle": "灏嗗墽鎯呮鏂囥€佹寚浠ら€夋嫨銆佸弽棣堜笌鑷嫙鎸囦护鍏ュ彛鍥哄畾鍦ㄧ粺涓€鐜╂硶楠ㄦ灦鍐?,
+      "actionsTitle": "鎸囦护閫夋嫨",
+      "actionsHint": "鍥哄畾淇濈暀閫夋嫨鍖轰笌鑷嫙鎸囦护鍏ュ彛锛岄攣瀹氬悗涔熷湪杩欓噷缁х画鎿嶄綔",
+      "dataTitle": "涓栫晫鍙嶉",
+      "dataHint": "鎶婁簨浠舵祦鍜屽０鏈涘弽棣堝浐瀹氬湪鏁版嵁鍖猴紝鍑忓皯淇℃伅婕傜Щ",
+      "mainTitle": "鎸囦护姝ｆ枃",
+      "mainHint": "姝ｆ枃鍖烘壙杞藉巻鍙茶褰曘€佸綋鍥炲悎鏂囨湰銆佹壒娉ㄥ拰鏁板€煎弽棣?
     },
     "court": {
-      "kejuPanelTitle": "科举大典",
-      "kejuPanelSubtitle": "统一弹窗骨架后，文官选拔、待录用推荐与后续人才系统都走同一套面板结构。",
-      "wujuPanelTitle": "武举",
-      "wujuPanelSubtitle": "统一朝堂人才弹窗骨架，武举与科举共享同类信息布局与操作区。",
-      "talentPanelTitle": "人才储备",
-      "talentPanelSubtitle": "延揽招募与职位任用，同科举武举共用弹窗结构。",
-      "policyPanelTitle": "问政廷议",
-      "policyPanelSubtitle": "廷议群臣、建言采纳与诏令起草，统一弹窗骨架。",
-      "appointByPositionSubtitle": "统一任命类弹窗骨架，后续扩展筛选、排序与推荐逻辑时不再重复写外层结构。",
-      "appointByMinisterSubtitle": "统一任命弹窗骨架，官员与官职两种调整路径沿用同一外层模板。",
-      "appointLegacySubtitle": "统一老任命路径的弹窗骨架，保留现有角色筛选与确认逻辑。",
-      "positionSelectSubtitle": "统一官职选择弹窗骨架，保持任命与调岗流程使用同一套外层结构。",
-      "ministerDetailSubtitle": "统一详情弹窗骨架，内部仍保留头像、忠诚、态度与转岗入口。",
-      "factionPanelSubtitle": "统一派系弹窗骨架，后续可继续接入派系成员、忠诚与党争信息。",
-      "ministerPanelSubtitle": "统一群臣列表弹窗骨架，保留点击人物进入奏对与详情的现有流转。",
-      "unknownError": "未知错误",
-      "appointFailedPrefix": "任命失败: ",
-      "adjustFailedPrefix": "调整失败: ",
-      "kejuStartSuccess": "乡试已开启，考生名单已入册。",
-      "kejuHuishiSuccess": "会试候选名单已生成。",
-      "kejuDianshiSuccess": "殿试候选名单已生成。",
-      "kejuPublishSuccess": "殿试放榜完成。",
-      "kejuReserveSavedSuccess": "已写入待录用名单。",
-      "kejuEntryAppliedSuccess": "科举入仕已生效。",
-      "officeAppointmentAppliedSuccess": "官职任免已生效",
-      "positionOccupiedRegenerateError": "该官职已有人在任，请重新生成推荐名单。",
-      "positionOccupiedRegenerateSimpleError": "该官职已有人在任，请重新生成名单。",
-      "candidateDeadCannotAppointError": "该人物已故，无法任命。",
-      "candidateDeadCannotAdjustError": "该人物已故，无法调岗。",
-      "candidateDeadCannotGrantError": "该人物已故，无法授予官职。",
-      "ministerDeadCannotDiscussError": "该人物已故，无法继续议事。请返回朝堂。"
+      "kejuPanelTitle": "鏈虹紭鎷涘嫙",
+      "kejuPanelSubtitle": "缁熶竴寮圭獥楠ㄦ灦锛岄倐閫呮嫑鍕熴€佸紩鑽愭嫑鍕熷叡鐢ㄩ潰鏉?,
+      "wujuPanelTitle": "寮鸿€呮嫑鍕?,
+      "wujuPanelSubtitle": "缁熶竴寮圭獥楠ㄦ灦锛屽己鑰呫€佸ぉ楠勬嫑鍕熷叡鐢ㄥ竷灞€",
+      "talentPanelTitle": "浼欎即鍐涘洟",
+      "talentPanelSubtitle": "鎷涘嫙銆佸浠汇€佸煿鍏诲叡鐢ㄥ脊绐楃粨鏋?,
+      "policyPanelTitle": "鍐崇瓥璁簨",
+      "policyPanelSubtitle": "璁簨銆侀噰绾炽€佷笅杈炬寚浠ょ粺涓€寮圭獥楠ㄦ灦",
+      "appointByPositionSubtitle": "缁熶竴濮斾换寮圭獥楠ㄦ灦锛屽悗缁墿灞曠瓫閫夈€佹帓搴?,
+      "appointByMinisterSubtitle": "缁熶竴濮斾换寮圭獥锛屼紮浼翠笌鑱屼綅鍏辩敤妯℃澘",
+      "appointLegacySubtitle": "缁熶竴鑰佸浠昏矾寰勫脊绐楋紝淇濈暀绛涢€変笌纭",
+      "positionSelectSubtitle": "缁熶竴鑱屼綅閫夋嫨寮圭獥锛屼繚鎸佸浠绘祦绋嬩竴鑷?,
+      "ministerDetailSubtitle": "缁熶竴璇︽儏寮圭獥锛屽寘鍚ご鍍忋€佸繝璇氥€佹€佸害",
+      "factionPanelSubtitle": "缁熶竴鍔垮姏寮圭獥锛屽悗缁帴鍏ユ垚鍛樸€佸繝璇氫俊鎭?,
+      "ministerPanelSubtitle": "缁熶竴浼欎即鍒楄〃寮圭獥锛岀偣鍑昏繘鍏ヨ鎯?,
+      "unknownError": "鏈煡閿欒",
+      "appointFailedPrefix": "濮斾换澶辫触: ",
+      "adjustFailedPrefix": "璋冩暣澶辫触: ",
+      "kejuStartSuccess": "鏈虹紭宸插紑鍚紝鍊欓€夊悕鍗曞凡鐢熸垚銆?,
+      "kejuHuishiSuccess": "閭傞€呭€欓€夊悕鍗曞凡鐢熸垚銆?,
+      "kejuDianshiSuccess": "寮鸿€呭€欓€夊悕鍗曞凡鐢熸垚銆?,
+      "kejuPublishSuccess": "鎷涘嫙瀹屾垚銆?,
+      "kejuReserveSavedSuccess": "宸插啓鍏ュ€欓€夊悕鍗曘€?,
+      "kejuEntryAppliedSuccess": "浼欎即鍔犲叆宸茬敓鏁堛€?,
+      "officeAppointmentAppliedSuccess": "浼欎即濮斾换宸茬敓鏁?,
+      "positionOccupiedRegenerateError": "璇ヨ亴浣嶅凡鏈変汉锛岄噸鏂扮敓鎴愭帹鑽愩€?,
+      "positionOccupiedRegenerateSimpleError": "璇ヨ亴浣嶅凡鏈変汉锛岄噸鏂扮敓鎴愬悕鍗曘€?,
+      "candidateDeadCannotAppointError": "璇ヤ紮浼村凡澶辫仈锛屾棤娉曞浠汇€?,
+      "candidateDeadCannotAdjustError": "璇ヤ紮浼村凡澶辫仈锛屾棤娉曡皟鏁淬€?,
+      "candidateDeadCannotGrantError": "璇ヤ紮浼村凡澶辫仈锛屾棤娉曟巿浜堣亴浣嶃€?,
+      "ministerDeadCannotDiscussError": "璇ヤ紮浼村凡澶辫仈锛屾棤娉曡浜嬨€?
     }
   }
 }
@@ -218,1229 +220,841 @@
 === worldviewOverrides.json ===
 {
   "allowedCharacterIds": [
-    "bi_ziyan",
-    "liang_tingdong",
-    "wen_tiren",
-    "sun_chengzong",
-    "cao_huachun",
-    "hong_chengchou",
-    "wang_yongguang",
-    "lin_qian",
-    "han_jisi",
-    "zhang_fengxiang",
-    "zhou_yanru",
-    "yang_sichang",
-    "lu_xiangsheng",
-    "sun_chuanting",
-    "zuodashou",
-    "wu_sangui",
-    "zuo_liangyu",
-    "cao_wenzhao",
-    "chen_xinjia",
-    "ni_yuanlu",
-    "fan_jingwen",
-    "li_banghua",
-    "shi_kefa",
-    "huang_daozhou",
-    "li_tengfang",
-    "cao_guang",
-    "cao_yubian"
+    "hero_01",
+    "hero_02",
+    "hero_03",
+    "hero_04",
+    "hero_05",
+    "hero_06",
+    "hero_07",
+    "hero_08",
+    "hero_09",
+    "hero_10",
+    "hero_11",
+    "hero_12",
+    "hero_13",
+    "hero_14",
+    "hero_15"
   ],
   "characters": {
-    "bi_ziyan": {
-      "name": "叶梦得",
-      "courtesyName": "少蕴",
-      "birthYear": 1077,
-      "deathYear": 1148,
-      "hometown": "苏州吴县",
-      "positions": [
-        "hubu_shangshu"
-      ],
-      "faction": "neutral",
-      "factionLabel": "务实经世",
-      "loyalty": 58,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "财赋",
-        "转运",
-        "老成"
-      ],
-      "summary": "叶梦得，字少蕴，苏州吴县人，北宋名臣，南渡后久在江东措置财赋与军需。其人熟悉漕运、仓储与州县供输，主张先稳东南根本，再图恢复中原。",
-      "attitude": "重视财赋与漕运，主张以节用、整饬转运支撑持久战。",
-      "openingLine": "官家，江东财赋尚可周转，但若军需与赈济并举，仍须先理清漕运与仓储。"
-    },
-    "liang_tingdong": {
-      "name": "张浚",
-      "courtesyName": "德远",
-      "birthYear": 1097,
-      "deathYear": 1164,
-      "hometown": "绵竹",
-      "positions": [
-        "bingbu_shangshu"
-      ],
+    "hero_01": {
+      "name": "鍑岃景",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "鐜勯粍澶т笘鐣?,
+      "positions": ["鎴樺姏缁熷竻"],
       "faction": "military",
-      "factionLabel": "恢复主战",
-      "loyalty": 64,
+      "factionLabel": "鎴樺姏宸呭嘲",
+      "loyalty": 90,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": [
-        "主战",
-        "统筹",
-        "北伐"
-      ],
-      "summary": "张浚，字德远，绵竹人，南宋中兴名相，主张整军经武、联络诸帅、恢复中原。其人精力强、行动快，善于总揽大局，但也常因操切而招致争议。",
-      "attitude": "坚持主战，认为行在若久守不进，士气与国势都会日益衰颓。",
-      "openingLine": "官家，今日之患不在兵少，而在号令未一。若朝廷定胆略，诸军自可整练再进。"
+      "tags": ["淇粰", "鍓戦亾", "鏃犳晫"],
+      "summary": "鍑岃景锛屾潵鑷慨浠欏ぇ涓栫晫鐨勫墤閬撳ぉ楠勶紝涓€鍓戠牬涓囨硶锛屾垬鍔涘啝缁濆彜浠婏紝蹇犺瘹鍙潬锛屾槸瀹夸富鏈€鍧氬疄鐨勬垬鍔涘睆闅溿€?,
+      "attitude": "涓€蹇冭緟浣愬涓伙紝妯壂涓€鍒囧己鏁岋紝杩芥眰姝﹂亾鏋佽嚧銆?,
+      "openingLine": "瀹夸富锛屾湁鎴戝湪锛屼笘闂存棤浜哄彲浼や綘鍒嗘锛?
     },
-    "wen_tiren": {
-      "name": "秦桧",
-      "courtesyName": "会之",
-      "birthYear": 1090,
-      "deathYear": 1155,
-      "hometown": "江宁",
-      "positions": [
-        "neige_cifu"
-      ],
-      "faction": "eunuch",
-      "factionLabel": "和议近习",
-      "loyalty": 46,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "和议",
-        "权术",
-        "相业"
-      ],
-      "summary": "秦桧，字会之，江宁人，南宋著名权相。其人长于揣摩上意与整肃异己，主张以和议换取喘息之机，认为东南未固之前不宜穷兵。",
-      "attitude": "主张收束兵权、压低边衅、先安行在与财赋，再议恢复。",
-      "openingLine": "官家圣断所及，当以社稷根本为先。若东南未固，轻议大战，只会再动天下。"
-    },
-    "sun_chengzong": {
-      "name": "李纲",
-      "courtesyName": "伯纪",
-      "birthYear": 1083,
-      "deathYear": 1140,
-      "hometown": "邵武",
-      "positions": [
-        "neige_shoufu"
-      ],
+    "hero_02": {
+      "name": "鑻忔竻鏈?,
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "闈掍笜绉樺",
+      "positions": ["鏅烘収鍐涘笀"],
       "faction": "donglin",
-      "factionLabel": "主战清议",
-      "loyalty": 78,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "社稷重臣",
-        "主战",
-        "中兴"
-      ],
-      "summary": "李纲，字伯纪，邵武人，北宋末南宋初的中兴名臣。其人敢言任事，主张坚守与恢复并行，被视为朝野主战士气的象征。",
-      "attitude": "认为立国之初不可先折锐气，必须整饬朝纲、鼓舞人心、示天下以恢复之志。",
-      "openingLine": "官家，今日立国之本，在于先定人心。若朝廷自示怯弱，则州县与诸军更难用命。"
-    },
-    "cao_huachun": {
-      "name": "蓝珪",
-      "courtesyName": null,
-      "birthYear": 1095,
-      "deathYear": 1158,
-      "hometown": "临安",
-      "positions": [
-        "siliji_bingbi_taijian"
-      ],
-      "faction": "imperial",
-      "factionLabel": "行在近臣",
-      "loyalty": 82,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "内侍",
-        "机要",
-        "近习"
-      ],
-      "summary": "蓝珪，南宋内侍近臣，长期出入禁中与枢要之间。其人精于传达旨意、探听朝论，是行在君主掌握内廷风向的重要耳目。",
-      "attitude": "凡事以官家安危与禁中秩序为先，重视耳目与防变。",
-      "openingLine": "官家放心，禁中与机务臣都会替您盯紧，朝堂稍有异动，臣即刻回报。"
-    },
-    "hong_chengchou": {
-      "name": "刘锜",
-      "courtesyName": "信叔",
-      "birthYear": 1098,
-      "deathYear": 1162,
-      "hometown": "德顺军",
-      "positions": [
-        "jiliao_dushi"
-      ],
-      "faction": "military",
-      "factionLabel": "江防宿将",
-      "loyalty": 72,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "宿将",
-        "江防",
-        "抗金"
-      ],
-      "summary": "刘锜，字信叔，德顺军人，南宋名将。其人善守善战，尤长于在兵力劣势中稳住阵脚，素为江淮防线所倚重。",
-      "attitude": "主张先固江防、后图进取，反对在粮运未继前仓促大举。",
-      "openingLine": "官家，江防之利在稳。只要粮道不断、军心不散，金人也难轻易越江。"
-    },
-    "wang_yongguang": {
-      "name": "胡寅",
-      "courtesyName": "明仲",
-      "birthYear": 1098,
-      "deathYear": 1156,
-      "hometown": "建宁崇安",
-      "positions": [
-        "libu_shangshu"
-      ],
-      "faction": "donglin",
-      "factionLabel": "主战清议",
-      "loyalty": 66,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "名教",
-        "铨选",
-        "敢言"
-      ],
-      "summary": "胡寅，字明仲，崇安人，南宋前期理学与政论重臣。其人强调名器不可滥授，主张整饬选人用人之法，以挽救官僚体系的颓败。",
-      "attitude": "强调名器、考课与官箴，反对因私恩和近习干扰铨选。",
-      "openingLine": "官家，若名器不正、官人不择，纵有良法也终究下不出中书。"
-    },
-    "lin_qian": {
-      "name": "汪藻",
-      "courtesyName": "彦章",
-      "birthYear": 1079,
-      "deathYear": 1154,
-      "hometown": "饶州德兴",
-      "positions": [
-        "libu_li_shangshu"
-      ],
-      "faction": "neutral",
-      "factionLabel": "务实经世",
-      "loyalty": 59,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "制诰",
-        "礼仪",
-        "文翰"
-      ],
-      "summary": "汪藻，字彦章，德兴人，南宋初年文臣，擅长制诰礼仪与朝廷文告。其人注重典章体统，善于以文教安抚人心。",
-      "attitude": "主张先正朝仪与科场，再以文教收束南渡初年的离散人心。",
-      "openingLine": "官家，国体之立，未必尽在兵甲，也在典章礼制能否使天下知所归向。"
-    },
-    "han_jisi": {
-      "name": "李光",
-      "courtesyName": "泰发",
-      "birthYear": 1078,
-      "deathYear": 1159,
-      "hometown": "越州上虞",
-      "positions": [
-        "xingbu_shangshu"
-      ],
-      "faction": "donglin",
-      "factionLabel": "主战清议",
-      "loyalty": 69,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "直臣",
-        "法度",
-        "气节"
-      ],
-      "summary": "李光，字泰发，上虞人，南宋名臣，以刚直敢谏著称。其人重视法度与公议，主张刑赏必须出于国家纲纪而非一时好恶。",
-      "attitude": "宁可得罪权相，也不愿让国家法度沦为党争工具。",
-      "openingLine": "官家，法一失平，则天下之心皆疑。重典轻典，都当出于公而不出于私。"
-    },
-    "zhang_fengxiang": {
-      "name": "陈规",
-      "courtesyName": "元则",
-      "birthYear": 1072,
-      "deathYear": 1141,
-      "hometown": "德安府",
-      "positions": [
-        "gongbu_shangshu"
-      ],
-      "faction": "neutral",
-      "factionLabel": "务实经世",
-      "loyalty": 61,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "守城",
-        "工事",
-        "军器"
-      ],
-      "summary": "陈规，字元则，德安府人，南宋初年守御名臣，擅长城防、器械与工事修筑。其人最重实效，认为军器城防皆须落到工匠和粮料。",
-      "attitude": "主张优先修整城防、舟舰与军器，反对空谈恢复而后方毫无准备。",
-      "openingLine": "官家，江山要守得住，先得让城防、舟舰与军器都真能派上用场。"
-    },
-    "zhou_yanru": {
-      "name": "赵鼎",
-      "courtesyName": "元镇",
-      "birthYear": 1085,
-      "deathYear": 1147,
-      "hometown": "解州闻喜",
-      "positions": [
-        "neige_shoufu"
-      ],
-      "faction": "neutral",
-      "factionLabel": "务实经世",
-      "loyalty": 71,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "宰辅",
-        "持重",
-        "中兴"
-      ],
-      "summary": "赵鼎，字元镇，闻喜人，南宋前期重臣，历任宰辅，以持重公正、能团结朝局见长。其人善于在主战与守成之间求得平衡。",
-      "attitude": "主张先稳中枢、再整外朝，凡用兵理财都需回到长久之计。",
-      "openingLine": "官家，国是纷然之际，最要紧的是朝廷自己先稳住章程与人心。"
-    },
-    "yang_sichang": {
-      "name": "吕颐浩",
-      "courtesyName": "元直",
-      "birthYear": 1071,
-      "deathYear": 1139,
-      "hometown": "齐州",
-      "positions": [
-        "neige_cifu"
-      ],
-      "faction": "neutral",
-      "factionLabel": "务实经世",
-      "loyalty": 62,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "老成",
-        "善后",
-        "定策"
-      ],
-      "summary": "吕颐浩，字元直，齐州人，南渡初期中枢重臣。其人善于收拾残局、重整秩序，是行在草创阶段不可或缺的过渡型宰辅。",
-      "attitude": "重视秩序恢复与地方安集，认为朝廷必须先能活下去，才谈得上恢复。",
-      "openingLine": "官家，新朝草创，最怕四方无所措手。先把章程立住，诸务才有头绪。"
-    },
-    "lu_xiangsheng": {
-      "name": "岳飞",
-      "courtesyName": "鹏举",
-      "birthYear": 1103,
-      "deathYear": 1142,
-      "hometown": "相州汤阴",
-      "positions": [
-        "xuanda_zongdu"
-      ],
-      "faction": "military",
-      "factionLabel": "恢复主战",
+      "factionLabel": "鏅烘収鏃犲弻",
       "loyalty": 88,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": [
-        "名将",
-        "忠义",
-        "北伐"
-      ],
-      "summary": "岳飞，字鹏举，汤阴人，南宋最具代表性的抗金名将。其人治军严整，能以少击众，且深得士卒之心。",
-      "attitude": "主张以严军纪与稳步推进恢复失地，反对无准备的妥协。",
-      "openingLine": "官家，诸军可用，关键在朝廷信赏必罚、后方不断粮。臣愿为国效死。"
+      "tags": ["鏅鸿皨", "榄呮儜", "娲炲療"],
+      "summary": "鑻忔竻鏈堬紝闈掍笜涔濆熬澶╃嫄锛屾櫤璋嬫棤鍙岋紝鎿呴暱甯冨眬绠楄銆佹礊瀵熶汉蹇冿紝鑳戒负瀹夸富瑙勫垝鏈€瀹岀編鐨勫彂灞曡矾绾裤€?,
+      "attitude": "鐢ㄦ櫤鎱ц緟浣愬涓伙紝瑙勯伩椋庨櫓锛屾姝ヤ负钀ャ€?,
+      "openingLine": "瀹夸富锛屾竻鏈堝凡涓轰綘瑙勫垝濂藉綋鍓嶄笘鐣岀殑鏈€浼樿矾绾裤€?
     },
-    "sun_chuanting": {
-      "name": "韩世忠",
-      "courtesyName": "良臣",
-      "birthYear": 1089,
-      "deathYear": 1151,
-      "hometown": "绥德军",
-      "positions": [
-        "shanxi_xunfu"
-      ],
-      "faction": "military",
-      "factionLabel": "江防宿将",
-      "loyalty": 80,
+    "hero_03": {
+      "name": "澧ㄥ皹",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "鏈烘绁炲煙",
+      "positions": ["绉戞妧澶у笀"],
+      "faction": "neutral",
+      "factionLabel": "绉戞妧涓诲",
+      "loyalty": 85,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": [
-        "宿将",
-        "水战",
-        "江淮"
-      ],
-      "summary": "韩世忠，字良臣，绥德军人，南宋宿将。其人久经战阵，尤善水陆并用，常被视为江淮一线最可靠的方面统帅之一。",
-      "attitude": "强调将帅统属分明、军饷稳定与舟师训练，不赞成朝令夕改。",
-      "openingLine": "官家，兵可战，亦可守；但将帅最怕的是前线卖命、后方断饷。"
+      "tags": ["绉戞妧", "鍒堕€?, "鏈烘"],
+      "summary": "澧ㄥ皹锛屾潵鑷槦闄呯骞讳笘鐣岀殑椤剁骇绉戝瀹讹紝绮鹃€氭満姊般€佽兘婧愩€佸熀鍥犳妧鏈紝鑳藉埗閫犲悇绉嶉粦绉戞妧瑁呭銆?,
+      "attitude": "涓撴敞绉戞妧鐮斿彂锛屼负瀹夸富鎻愪緵鏈€寮虹鎶€鏀拺銆?,
+      "openingLine": "瀹夸富锛屾渶鏂扮鎶€瑁呭宸茬爺鍙戝畬鎴愶紝璇锋煡鏀躲€?
     },
-    "zuodashou": {
-      "name": "吴玠",
-      "courtesyName": "晋卿",
-      "birthYear": 1093,
-      "deathYear": 1139,
-      "hometown": "德顺军",
-      "positions": [
-        "sanbian_zongdu"
-      ],
-      "faction": "military",
-      "factionLabel": "恢复主战",
-      "loyalty": 76,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "川陕",
-        "防御",
-        "名将"
-      ],
-      "summary": "吴玠，字晋卿，德顺军人，川陕名将。其人善守险要，极擅经营防线，是西线稳定局势的关键支柱。",
-      "attitude": "主张据险持久，不使敌军轻入川陕，再伺机出击。",
-      "openingLine": "官家，川陕地势可恃，只要朝廷稳住后饷，臣便能守得敌军难越半步。"
-    },
-    "wu_sangui": {
-      "name": "吴璘",
-      "courtesyName": "唐卿",
-      "birthYear": 1102,
-      "deathYear": 1167,
-      "hometown": "德顺军",
-      "positions": [
-        "ningyuan_zongbing"
-      ],
-      "faction": "military",
-      "factionLabel": "江防宿将",
-      "loyalty": 67,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "边帅",
-        "骑战",
-        "川陕"
-      ],
-      "summary": "吴璘，字唐卿，吴玠之弟，南宋西线名将。其人善整边军，作风稳健，是维系西北防线的重要将领。",
-      "attitude": "重视边备与军纪，倾向稳守待机，而非逞一时之勇。",
-      "openingLine": "官家，边军最贵有常。若号令统一、粮械不绝，臣等自能守土制敌。"
-    },
-    "zuo_liangyu": {
-      "name": "张俊",
-      "courtesyName": "伯英",
-      "birthYear": 1086,
-      "deathYear": 1154,
-      "hometown": "凤翔成纪",
-      "positions": [
-        "liaodong_zongbing"
-      ],
-      "faction": "military",
-      "factionLabel": "江防宿将",
-      "loyalty": 48,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "宿将",
-        "资望",
-        "拥兵"
-      ],
-      "summary": "张俊，字伯英，成纪人，南宋开国名将之一。其人资望深厚、拥兵自重，战守皆有经验，但与朝廷和同僚之间常有掣肘。",
-      "attitude": "在意兵权与战区利益分配，若朝廷失信，其用命程度便会打折。",
-      "openingLine": "官家，诸军各有疆场苦衷。若朝廷赏罚分明，臣等自不会辜负行在所托。"
-    },
-    "cao_wenzhao": {
-      "name": "杨沂中",
-      "courtesyName": "正甫",
-      "birthYear": 1097,
-      "deathYear": 1166,
-      "hometown": "代州崞县",
-      "positions": [
-        "shanxi_zongbing"
-      ],
+    "hero_04": {
+      "name": "澶滃奖",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "鏆楀奖鐣?,
+      "positions": ["闅愮缁熼"],
       "faction": "imperial",
-      "factionLabel": "行在近臣",
-      "loyalty": 73,
+      "factionLabel": "鏆楀奖娼滆",
+      "loyalty": 92,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": [
-        "殿前司",
-        "近臣",
-        "宿卫"
-      ],
-      "summary": "杨沂中，字正甫，崞县人，南宋前期将领，出入宿卫与外镇之间。其人较受禁中信任，擅长执行性任务。",
-      "attitude": "看重官家信任与军令落实，倾向先保证行在安全与中枢威信。",
-      "openingLine": "官家只管下旨，禁军与宿卫如何调度，臣自会替您办稳妥。"
+      "tags": ["鏆楁潃", "渚︽煡", "闅愮"],
+      "summary": "澶滃奖锛屾殫褰辩晫椤跺皷鍒哄锛屾潵鏃犲奖鍘绘棤韪紝鎿呴暱渚︽煡銆佹殫鏉€銆佹儏鎶ユ敹闆嗭紝鏄涓绘渶闅愮鐨勫埄鍒冦€?,
+      "attitude": "缁濆蹇犺瘹锛屾墽琛屽涓讳竴鍒囬殣绉樻寚浠ゃ€?,
+      "openingLine": "瀹夸富锛屾儏鎶ュ凡鏀堕泦瀹屾瘯锛岄殢鏃跺彲浠ヨ鍔ㄣ€?
     },
-    "chen_xinjia": {
-      "name": "虞允文",
-      "courtesyName": "彬父",
-      "birthYear": 1110,
-      "deathYear": 1174,
-      "hometown": "隆州仁寿",
-      "positions": [
-        "neige_daxueshi"
-      ],
+    "hero_05": {
+      "name": "鏋楀鍏?,
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "绮剧伒妫灄",
+      "positions": ["鐢熷懡绁徃"],
       "faction": "neutral",
-      "factionLabel": "务实经世",
-      "loyalty": 68,
+      "factionLabel": "鐢熷懡瀹堟姢",
+      "loyalty": 86,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": [
-        "机断",
-        "文武兼资",
-        "采石"
-      ],
-      "summary": "虞允文，字彬父，仁寿人，以临机制变与统筹能力著称。其人不事空谈，遇急局时往往能够迅速整合资源、稳定军心。",
-      "attitude": "主张以务实手段解决战守与财计问题，不拘一格求成。",
-      "openingLine": "官家，局势虽急，最怕的是朝廷自己先乱。臣愿先替陛下把纷头理出条目。"
+      "tags": ["娌荤枟", "杈呭姪", "鑷劧"],
+      "summary": "鏋楀鍏紝绮剧伒鏃忓ぇ绁徃锛屾帉鎻＄敓鍛介瓟娉曪紝鎿呴暱娌荤枟銆佽緟鍔┿€佸噣鍖栵紝鑳戒繚闅滃洟闃熺敓瀛樿兘鍔涖€?,
+      "attitude": "瀹堟姢浼欎即锛屾不鎰堜激鐥涳紝缁存姢涓栫晫骞宠　銆?,
+      "openingLine": "瀹夸富锛屾湁鎴戝湪锛屼紮浼翠滑涓嶄細杞绘槗鍊掍笅銆?
     },
-    "ni_yuanlu": {
-      "name": "胡铨",
-      "courtesyName": "邦衡",
-      "birthYear": 1102,
-      "deathYear": 1180,
-      "hometown": "吉州庐陵",
-      "positions": [
-        "dutcheng_duchayuan_zuoduyushi"
-      ],
-      "faction": "donglin",
-      "factionLabel": "主战清议",
-      "loyalty": 75,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "直谏",
-        "台谏",
-        "气节"
-      ],
-      "summary": "胡铨，字邦衡，庐陵人，南宋最著名的台谏人物之一。其人刚烈敢言，尤反对屈辱和议，常以一身担当清议风骨。",
-      "attitude": "宁折不弯，主张朝廷必须以公论和气节号召天下。",
-      "openingLine": "官家，天下之气不可轻折。若朝廷自己先失其义，士民将何所系心？"
-    },
-    "fan_jingwen": {
-      "name": "陈康伯",
-      "courtesyName": "长卿",
-      "birthYear": 1097,
-      "deathYear": 1165,
-      "hometown": "信州弋阳",
-      "positions": [
-        "neige_daxueshi"
-      ],
-      "faction": "neutral",
-      "factionLabel": "务实经世",
-      "loyalty": 63,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "老成",
-        "中书",
-        "持衡"
-      ],
-      "summary": "陈康伯，字长卿，弋阳人，南宋宰辅。其人以稳重和持衡著称，善于在激烈朝争中维持政务运转。",
-      "attitude": "主张少作意气之争，多做能让国家真正转起来的事。",
-      "openingLine": "官家，诸臣争是常事，但中枢最要紧的，是让天下政令一日也不断档。"
-    },
-    "li_banghua": {
-      "name": "朱胜非",
-      "courtesyName": "藏一",
-      "birthYear": 1082,
-      "deathYear": 1144,
-      "hometown": "蔡州",
-      "positions": [
-        "neige_daxueshi"
-      ],
-      "faction": "neutral",
-      "factionLabel": "务实经世",
-      "loyalty": 57,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "宰辅",
-        "调和",
-        "善后"
-      ],
-      "summary": "朱胜非，字藏一，蔡州人，南渡后多次入相，长于调和矛盾、善后残局。其人并非锋芒毕露，但在危局中常能稳住局面。",
-      "attitude": "倾向于折冲调停，尽量为朝廷争取喘息与回旋空间。",
-      "openingLine": "官家，危局之中不妨先求可守，再图可进。许多事，缓一步反而能成。"
-    },
-    "shi_kefa": {
-      "name": "魏胜",
-      "courtesyName": "彦威",
-      "birthYear": 1120,
-      "deathYear": 1164,
-      "hometown": "宿迁",
-      "positions": [
-        "henan_xunfu"
-      ],
+    "hero_06": {
+      "name": "璧靛ぉ瀹?,
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "鍗庡鍙や唬",
+      "positions": ["缁熷尽鍏冨竻"],
       "faction": "military",
-      "factionLabel": "恢复主战",
-      "loyalty": 70,
+      "factionLabel": "鍏靛鍦ｆ墜",
+      "loyalty": 84,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": [
-        "忠勇",
-        "北地",
-        "收复"
-      ],
-      "summary": "魏胜，字彦威，宿迁人，南宋北地抗金将领。其人善于经营民兵与地方防守，在敌后恢复与固守方面极有经验。",
-      "attitude": "主张发动地方士民协守，靠坚忍与组织力守住恢复成果。",
-      "openingLine": "官家，北地之民未忘故国。只要朝廷肯用其心，他们便能自己撑起一道防线。"
+      "tags": ["鍏垫硶", "娌诲啗", "鎵╁紶"],
+      "summary": "璧靛ぉ瀹囷紝鍙や唬鐜嬫湞缁濅笘鍚嶅皢锛岀簿閫氬叺娉曘€佹不鍐涖€佹敾鍩庣暐鍦帮紝鎿呴暱鍔垮姏鎵╁紶涓庨鍦熺粺娌汇€?,
+      "attitude": "杈呬綈瀹夸富寤虹珛鏃犱笂甯濆浗锛屾í鎵洓鏂广€?,
+      "openingLine": "瀹夸富锛屼笁鍐涘凡鏁磋寰呭彂锛岄殢鏃跺彲浠ュ嚭寰侊紒"
     },
-    "huang_daozhou": {
-      "name": "吕祖谦",
-      "courtesyName": "伯恭",
-      "birthYear": 1137,
-      "deathYear": 1181,
-      "hometown": "婺州",
-      "positions": [
-        "tongzheng_si_shi"
-      ],
-      "faction": "donglin",
-      "factionLabel": "主战清议",
-      "loyalty": 62,
-      "isAlive": true,
-      "deathReason": null,
-      "deathDay": null,
-      "tags": [
-        "经学",
-        "士论",
-        "教化"
-      ],
-      "summary": "吕祖谦，字伯恭，婺州人，南宋著名学者与政论人物。其人重视士风与教化，强调国家要靠正学与公议凝聚共识。",
-      "attitude": "认为朝廷要想久安，必须让士人相信国家仍有可为之道。",
-      "openingLine": "官家，国势之强，不只在兵与财，也在士心与世论还愿不愿意共扶社稷。"
-    },
-    "li_tengfang": {
-      "name": "汪应辰",
-      "courtesyName": "圣锡",
-      "birthYear": 1118,
-      "deathYear": 1176,
-      "hometown": "信州玉山",
-      "positions": [
-        "libu_li_shangshu"
-      ],
+    "hero_07": {
+      "name": "鐧借嫢鏇?,
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "榄旀硶澶ч檰",
+      "positions": ["榄旀硶瀵煎笀"],
       "faction": "neutral",
-      "factionLabel": "务实经世",
-      "loyalty": 60,
+      "factionLabel": "榄旀硶鑷冲皧",
+      "loyalty": 83,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": [
-        "礼制",
-        "经学",
-        "馆阁"
-      ],
-      "summary": "汪应辰，字圣锡，玉山人，南宋学臣，擅长礼制、馆阁与经筵事务。其人重名分与国体，也留意科场风气。",
-      "attitude": "主张以礼制、学校与科场并用，重建南渡后朝廷的文化正统。",
-      "openingLine": "官家，礼制与学校看似迂缓，实则最能慢慢把人心重新系回朝廷。"
+      "tags": ["榄旀硶", "鍏冪礌", "鍜掓枃"],
+      "summary": "鐧借嫢鏇︼紝榄旀硶澶ч檰娉曠锛岀簿閫氬叏绯婚瓟娉曪紝鑳介噴鏀炬瘉澶╃伃鍦扮殑榄旀硶鏀诲嚮锛屾帉鎺у厓绱犱箣鍔涖€?,
+      "attitude": "杩芥眰榄旀硶鐪熻皼锛岀敤榄旀硶鍔涢噺瀹堟姢瀹夸富銆?,
+      "openingLine": "瀹夸富锛岄瓟娉曚箣鍔涘凡涓轰綘澶囧ソ锛岀⒕纰庝竴鍒囨晫浜恒€?
     },
-    "cao_guang": {
-      "name": "李椿年",
-      "courtesyName": "寿翁",
-      "birthYear": 1096,
-      "deathYear": 1164,
-      "hometown": "两浙路",
-      "positions": [
-        "gongbu_shangshu"
-      ],
+    "hero_08": {
+      "name": "閾佺墰",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "鏈笘搴熷湡",
+      "positions": ["鍏堥攱鎴樺皢"],
+      "faction": "military",
+      "factionLabel": "鐙傛毚鎴樺姏",
+      "loyalty": 95,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": ["铔姏", "闃插尽", "鐢熷瓨"],
+      "summary": "閾佺墰锛屾湯涓栧垢瀛樿€咃紝鑲夎韩寮烘倣鏃犳瘮锛岄槻寰″姏鎯婁汉锛屾搮闀挎闈㈠啿閿嬶紝鐢熷瓨鑳藉姏鏋佸己銆?,
+      "attitude": "鎲ㄧ洿蹇犺瘹锛屾尅鍦ㄥ涓昏韩鍓嶏紝鎵垮彈涓€鍒囦激瀹炽€?,
+      "openingLine": "瀹夸富锛岃皝瑕佹槸鏁㈡児浣狅紝淇轰竴鎷冲ご鐮告墎浠栵紒"
+    },
+    "hero_09": {
+      "name": "绉︽棤鍙?,
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "娲崚涓栫晫",
+      "positions": ["娲崚鎴樼"],
+      "faction": "military",
+      "factionLabel": "娲崚闇镐富",
+      "loyalty": 89,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": ["娲崚", "绁炲吔", "绁為€?],
+      "summary": "绉︽棤鍙岋紝娲崚涓婂彜鎴樼锛屾帉鎺х鍏戒箣鍔涳紝鎷ユ湁閫氬ぉ绁為€氾紝鍙垬娲崚涓囨棌锛屽偛瑙嗗彜浠娿€?,
+      "attitude": "濞侀渿娲崚锛岃緟浣愬涓绘垚涓烘椽鑽掍箣涓汇€?,
+      "openingLine": "瀹夸富锛屾椽鑽掍竾鏃忥紝鐨嗗彲鑷ｆ湇浜庝綘锛?
+    },
+    "hero_10": {
+      "name": "娲涚拑",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "鐜颁唬閮藉競",
+      "positions": ["鍟嗕笟濂崇帇"],
       "faction": "neutral",
-      "factionLabel": "务实经世",
-      "loyalty": 56,
+      "factionLabel": "鍟嗕笟濂囨墠",
+      "loyalty": 82,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": [
-        "经度",
-        "土木",
-        "务实"
-      ],
-      "summary": "李椿年，南宋经制名臣，熟悉财政、营造与工程调度。其人不尚虚名，善于把朝廷所需拆解成实际工役与钱粮方案。",
-      "attitude": "认为工事、漕路与军器必须一体筹画，不能只看单项支出。",
-      "openingLine": "官家，土木并非只为宫室。河渠、仓场、军器与舟舰，样样都要钱，也样样都省不得。"
+      "tags": ["鍟嗕笟", "鐞嗚储", "浜鸿剦"],
+      "summary": "娲涚拑锛岀幇浠ｉ兘甯傞《绾у晢涓氬ぇ浣紝绮鹃€氱悊璐€佹姇璧勩€佷汉鑴夎繍钀ワ紝鑳藉揩閫熺Н绱捣閲忚储瀵屻€?,
+      "attitude": "鐢ㄥ晢涓氭墜娈典负瀹夸富鎵撻€犻噾铻嶅笣鍥斤紝鎺屾帶缁忔祹鍛借剦銆?,
+      "openingLine": "瀹夸富锛岃祫閲戝凡鍒颁綅锛屼换浣曢」鐩兘鍙惎鍔ㄣ€?
     },
-    "cao_yubian": {
-      "name": "张守",
-      "courtesyName": "子固",
-      "birthYear": 1084,
-      "deathYear": 1145,
-      "hometown": "常州宜兴",
-      "positions": [
-        "dutcheng_duchayuan_zuoduyushi"
-      ],
-      "faction": "donglin",
-      "factionLabel": "主战清议",
-      "loyalty": 67,
+    "hero_11": {
+      "name": "鍒€閿?,
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "璧涘崥閮藉競",
+      "positions": ["涔変綋鎴樺＋"],
+      "faction": "military",
+      "factionLabel": "璧涘崥寮鸿€?,
+      "loyalty": 87,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": [
-        "台谏",
-        "守正",
-        "论列"
-      ],
-      "summary": "张守，字子固，宜兴人，南宋前期言官与重臣。其人作风端直，长于台谏封驳，能在纷乱朝局中维持舆论与法度的边界。",
-      "attitude": "主张台谏必须独立发声，不能沦为近臣或权相的附庸。",
-      "openingLine": "官家，台谏若不敢言，则百司更无人敢言。朝廷耳目，断不可自蔽。"
+      "tags": ["涔変綋", "榛戝", "杩戞垬"],
+      "summary": "鍒€閿嬶紝璧涘崥鏈嬪厠涓栫晫椤剁骇涔変綋鏀归€犱汉锛岀簿閫氳繎鎴樸€侀粦瀹㈡妧鏈€佹綔琛岀獊琚紝鎴樺姏涓庣鎶€鍏煎銆?,
+      "attitude": "娓歌蛋浜庤禌鍗氶兘甯傦紝涓哄涓绘竻闄や竴鍒囩數瀛愪笌鐗╃悊闅滅銆?,
+      "openingLine": "瀹夸富锛岀綉缁滃凡鏀荤牬锛岄槻绾垮凡鐡﹁В锛岃鍔ㄥ惂銆?
+    },
+    "hero_12": {
+      "name": "椋庤鑰?,
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "寮傜晫鑽夊師",
+      "positions": ["鏂ュ€欑粺棰?],
+      "faction": "imperial",
+      "factionLabel": "鏋侀€熶睛鏌?,
+      "loyalty": 86,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": ["閫熷害", "渚︽煡", "楠戝皠"],
+      "summary": "椋庤鑰咃紝寮傜晫鑽夊師绮剧伒锛岄€熷害鏋佽嚧锛屾搮闀块獞灏勩€佸ぇ鑼冨洿渚︽煡锛岃兘蹇€熸帉鎻′笘鐣屽湴褰笌鎯呮姤銆?,
+      "attitude": "椹伴獘澶╁湴锛屼负瀹夸富鎺㈣矾锛屼紶閫掑叧閿儏鎶ャ€?,
+      "openingLine": "瀹夸富锛屼笘鐣屽湴褰笌鏁屼汉鍒嗗竷宸插叏閮ㄦ懜娓呫€?
+    },
+    "hero_13": {
+      "name": "鑽皹",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "涓圭晫",
+      "positions": ["涓归亾鍦ｅ笀"],
+      "faction": "neutral",
+      "factionLabel": "涓归亾鏃犳晫",
+      "loyalty": 84,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": ["鐐间腹", "瑙ｆ瘨", "鍏荤敓"],
+      "summary": "鑽皹锛屼腹鐣屽湥甯堬紝绮鹃€氱偧涓广€佽В姣掋€佸吇鐢熶箣閬擄紝鑳界偧鍒跺悇绉嶇涓癸紝鎻愬崌瀹炲姏銆佸欢骞寸泭瀵裤€?,
+      "attitude": "娼滃績鐐间腹锛屼负瀹夸富鎻愪緵鏈€寮轰腹鑽敮鎸併€?,
+      "openingLine": "瀹夸富锛岀涓瑰凡鎴愶紝鏈嶇敤鍗冲彲绐佺牬澧冪晫銆?
+    },
+    "hero_14": {
+      "name": "榫欐垬",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "榫欐棌绉樺",
+      "positions": ["榫欐棌鏃忛暱"],
+      "faction": "military",
+      "factionLabel": "榫欐棌鑷冲皧",
+      "loyalty": 91,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": ["榫欐棌", "鑲夎韩", "绁為€?],
+      "summary": "榫欐垬锛屼笂鍙ら緳鏃忔棌闀匡紝鑲夎韩鎴愬湥锛屾帉鎺ч緳鏃忕閫氾紝鎴樺姏婊斿ぉ锛屾槸涓栭棿鏈€寮哄ぇ鐨勭鏃忛琚栥€?,
+      "attitude": "浠ラ緳鏃忎箣鍔涜緟浣愬涓伙紝闀囧帇涓€鍒囦笉鏈嶃€?,
+      "openingLine": "瀹夸富锛岄緳鏃忓ぇ鍐涘惉浣犺皟閬ｏ紝妯壂璇稿ぉ锛?
+    },
+    "hero_15": {
+      "name": "蹇靛啺",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "鍐扮伀绁炲煙",
+      "positions": ["鍏冪礌浣胯€?],
+      "faction": "neutral",
+      "factionLabel": "鍏冪礌鎺屾帶",
+      "loyalty": 85,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": ["鍐扮伀", "鍏冪礌", "鎺у埗"],
+      "summary": "蹇靛啺锛屽啺鐏弻绯诲厓绱犱娇鑰咃紝鎺屾帶鏋佽嚧鍐扮伀涔嬪姏锛屾搮闀挎帶鍒朵笌澶ц寖鍥存敾鍑伙紝鍏冪礌涔嬪姏鐧诲嘲閫犳瀬銆?,
+      "attitude": "鎺屾帶鍏冪礌骞宠　锛岀敤鍐扮伀涔嬪姏瀹堟姢瀹夸富銆?,
+      "openingLine": "瀹夸富锛屽啺鐏厓绱犲凡瑙夐啋锛屾晫浜哄皢琚喕缁撶剼鐑с€?
     }
   },
   "factions": {
     "donglin": {
-      "name": "主战清议",
+      "name": "鏅烘収鏃犲弻",
       "color": "#2e7d32",
-      "description": "以主张恢复、重名器与维持公论的士大夫为核心，强调朝廷不可先丢气节与人心。",
-      "stance": "反对仓促屈和，主张整饬吏治、振作士气，并逐步恢复失地。",
-      "members": [
-        "sun_chengzong",
-        "wang_yongguang",
-        "han_jisi",
-        "ni_yuanlu",
-        "cao_yubian",
-        "huang_daozhou"
-      ]
+      "description": "浠ユ櫤璋嬨€佹礊瀵熴€佽鍒掍负涓荤殑浼欎即锛屾搮闀垮竷灞€銆佺畻璁°€佽閬块闄┿€?,
+      "stance": "鐞嗘€у喅绛栵紝瑙勫垝鏈€浼樿矾绾匡紝淇濋殰瀹夸富瀹夊叏鍙戝睍銆?,
+      "members": ["hero_02", "hero_10"]
     },
     "eunuch": {
-      "name": "和议近习",
+      "name": "闅愮娼滆",
       "color": "#8d6e63",
-      "description": "围绕近习、权相与禁中消息系统形成的政治力量，偏好先稳行在、后议恢复。",
-      "stance": "强调保存国本、压低边衅、收束异论，以维护中枢控制力。",
-      "members": [
-        "wen_tiren"
-      ]
+      "description": "鎿呴暱闅愮銆佷睛鏌ャ€佹殫鏉€銆佹儏鎶ョ殑浼欎即锛屾槸瀹夸富鏈€闅愮鐨勫姏閲忋€?,
+      "stance": "鏆椾腑琛屽姩锛屾竻闄ら殰纰嶏紝鏀堕泦鎯呮姤锛屼繚鎶ゅ涓诲畨鍏ㄣ€?,
+      "members": ["hero_04", "hero_11"]
     },
     "neutral": {
-      "name": "务实经世",
+      "name": "鍏ㄨ兘杈呭姪",
       "color": "#1565c0",
-      "description": "不愿深陷主和主战标签，更关心漕运、政务、礼制与中枢运转的一批能臣。",
-      "stance": "主张先把财政、制度与人事做实，再决定更大规模的战略动作。",
-      "members": [
-        "bi_ziyan",
-        "lin_qian",
-        "zhang_fengxiang",
-        "zhou_yanru",
-        "yang_sichang",
-        "chen_xinjia",
-        "fan_jingwen",
-        "li_banghua",
-        "li_tengfang",
-        "cao_guang"
-      ]
+      "description": "鎿呴暱娌荤枟銆佺鎶€銆佺偧涓广€佸晢涓氥€侀瓟娉曠殑鍏ㄨ兘鍨嬩紮浼达紝鎻愪緵鍏ㄦ柟浣嶆敮鎸併€?,
+      "stance": "涓撴敞杈呭姪锛屾彁鍗囧洟闃熷疄鍔涳紝淇濋殰璧勬簮渚涚粰銆?,
+      "members": ["hero_03", "hero_05", "hero_07", "hero_12", "hero_13", "hero_15"]
     },
     "military": {
-      "name": "江防宿将",
+      "name": "鎴樺姏宸呭嘲",
       "color": "#e65100",
-      "description": "长期镇守江淮、川陕与西线的统兵将领，既是行在屏障，也常因兵权、粮饷与战区协调问题与中枢紧张。",
-      "stance": "优先关注军粮、战区统属、江防与边备，反感纸上空论。",
-      "members": [
-        "liang_tingdong",
-        "hong_chengchou",
-        "lu_xiangsheng",
-        "sun_chuanting",
-        "zuodashou",
-        "wu_sangui",
-        "zuo_liangyu",
-        "shi_kefa"
-      ]
+      "description": "鎷ユ湁瓒呭己鎴樺姏鐨勪紮浼达紝鎿呴暱鎴樻枟銆佸啿閿嬨€佹墿寮犮€侀晣鍘嬪己鏁屻€?,
+      "stance": "妯壂涓€鍒囨晫浜猴紝鏀诲煄鐣ュ湴锛屼繚闅滃涓诲娍鍔涙墿寮犮€?,
+      "members": ["hero_01", "hero_06", "hero_08", "hero_09", "hero_14"]
     },
     "imperial": {
-      "name": "行在近臣",
+      "name": "瀹夸富浜插崼",
       "color": "#6a1b9a",
-      "description": "依附禁中与宿卫体系的近臣群体，负责内廷机要、禁卫与快速执行。",
-      "stance": "以官家安危与中枢控制为先，强调机密、执行与反应速度。",
-      "members": [
-        "cao_huachun",
-        "cao_wenzhao"
-      ]
+      "description": "缁濆蹇犺瘹浜庡涓荤殑浜插崼浼欎即锛屽彧鎵ц瀹夸富鎸囦护锛屽畧鎶ゅ涓诲畨鍗便€?,
+      "stance": "缁濆蹇犺瘹锛屽姝ヤ笉绂伙紝鐢ㄧ敓鍛藉畧鎶ゅ涓汇€?,
+      "members": ["hero_04", "hero_08"]
     }
   },
   "courtChats": {
-    "bi_ziyan": [
+    "hero_01": [
       {
         "from": "minister",
-        "text": "官家，东南财赋虽未尽竭，但漕路与仓储处处要补，国用仍极紧。"
+        "text": "瀹夸富锛屽綋鍓嶄笘鐣屽己鏁屽凡鍑虹幇锛屾槸鍚︾敱鎴戝嚭鎵嬫竻鐞嗭紵"
       },
       {
         "from": "player",
-        "text": "叶卿，户部如今最缺什么？"
+        "text": "鍑岃景锛屾晫浜哄疄鍔涘浣曪紵"
       },
       {
         "from": "minister",
-        "text": "回官家，不单缺银，更缺有条理的转运。若漕纲一乱，再多钱粮也送不到前线。"
+        "text": "涓嶅牚涓€鍑伙紝鎴戜竴鍓戜究鍙柀鏉€锛岀粷涓嶄細璁╀粬浠▉鑳佸埌瀹夸富銆?
       }
     ],
-    "liang_tingdong": [
+    "hero_02": [
       {
         "from": "minister",
-        "text": "官家，诸军最怕号令不一。若中枢能定一策，臣愿替朝廷把战线撑起来。"
+        "text": "瀹夸富锛屾垜宸插垎鏋愬綋鍓嶄笘鐣岃鍒欙紝涓轰綘瑙勫垝涓夋潯鍙戝睍璺嚎銆?
       },
       {
         "from": "player",
-        "text": "张卿以为何处最要紧？"
+        "text": "娓呮湀锛屽摢鏉¤矾绾挎渶瀹夊叏锛?
       },
       {
         "from": "minister",
-        "text": "先稳江淮，再联川陕；先整兵饷，再议恢复。没有后劲，主战只能沦为空话。"
+        "text": "绋冲仴鍙戝睍璺嚎锛屽厛绉疮璧勬簮锛屽啀鎻愬崌瀹炲姏锛屾棤浠讳綍椋庨櫓銆?
       }
     ],
-    "wen_tiren": [
+    "hero_03": [
       {
         "from": "minister",
-        "text": "官家，社稷新定，凡事仍当以保全东南根本为先。"
+        "text": "瀹夸富锛屾渶鏂扮鎶€瑁呭宸茬爺鍙戝畬鎴愶紝鍙ぇ骞呮彁鍗囩敓瀛樿兘鍔涖€?
       },
       {
         "from": "player",
-        "text": "秦卿是说不可轻动？"
+        "text": "澧ㄥ皹锛岃兘鍚﹀埗閫犺法涓栫晫浼犻€佽缃紵"
       },
       {
         "from": "minister",
-        "text": "正是。若以一时意气驱天下于久战，恐行在与民力都承受不起。"
+        "text": "闇€瑕佹敹闆嗙壒娈婅祫婧愶紝闆嗛綈鍚庢垜鍙珛鍒诲埗閫狅紝瀹炵幇鑷敱绌胯秺銆?
       }
     ],
-    "sun_chengzong": [
+    "hero_04": [
       {
         "from": "minister",
-        "text": "官家，士气可鼓不可泄。南渡之后，更当示天下以有所作为。"
+        "text": "瀹夸富锛屽懆杈规儏鎶ュ凡鍏ㄩ儴鏀堕泦锛屾棤闅愯棌鍗遍櫓銆?
       },
       {
         "from": "player",
-        "text": "李相以为朕先做什么？"
+        "text": "澶滃奖锛屾槸鍚﹀彂鐜版晫瀵瑰娍鍔涜釜杩癸紵"
       },
       {
         "from": "minister",
-        "text": "先正朝纲，再定军心。朝廷若能自重，四方自然敢为国家出力。"
-      }
-    ],
-    "cao_huachun": [
-      {
-        "from": "minister",
-        "text": "官家，禁中与外朝都在看您的意思。臣这边会替您先把风声盯住。"
-      },
-      {
-        "from": "player",
-        "text": "蓝珪，近来朝堂有何风向？"
-      },
-      {
-        "from": "minister",
-        "text": "回官家，主战与和议两边都在借题发力。若您不早定基调，下面的人只会越争越乱。"
-      }
-    ],
-    "hong_chengchou": [
-      {
-        "from": "minister",
-        "text": "官家，江防可守，但要守得住，先得把舟师、粮道和军纪都抓牢。"
-      },
-      {
-        "from": "player",
-        "text": "刘将军最担心什么？"
-      },
-      {
-        "from": "minister",
-        "text": "臣最担心前线尚未溃，后方就先散。若饷道不继，军心再强也会被拖垮。"
-      }
-    ],
-    "wang_yongguang": [
-      {
-        "from": "minister",
-        "text": "官家，行在草创之时，更不能把官位当成安抚人心的赏物。"
-      },
-      {
-        "from": "player",
-        "text": "胡卿以为何者最该先整顿？"
-      },
-      {
-        "from": "minister",
-        "text": "先整铨选。用错一名守臣，坏的不止一府一州，而是一整条政令链。"
-      }
-    ],
-    "han_jisi": [
-      {
-        "from": "minister",
-        "text": "官家，天下扰攘之际，法度更不能乱。"
-      },
-      {
-        "from": "player",
-        "text": "若军国大事与法度相冲呢？"
-      },
-      {
-        "from": "minister",
-        "text": "那也要有章可循。法一旦只看人情和喜怒，朝廷便再难服众。"
+        "text": "鍙戠幇涓€鑲″皬鍨嬪娍鍔涳紝宸茶鎴戞殫涓竻闄わ紝涓嶄細鐣欎笅浠讳綍鐥曡抗銆?
       }
     ]
   },
   "modules": {
     "neige": {
-      "name": "中枢",
-      "description": "中书门下与执政大臣所在，负责统筹诏令与军国大政。"
+      "name": "瀹夸富涓灑",
+      "description": "缁熷尽浼欎即銆佸喅绛栦簨鍔°€佹帉鎺у叏灞€鐨勬牳蹇冩灑绾姐€?
     },
     "fasisi": {
-      "name": "台谏寺监",
-      "description": "御史、封驳与寺狱机构，负责监察、驳正与复核。"
+      "name": "鎯呮姤绯荤粺",
+      "description": "鏀堕泦涓栫晫鎯呮姤銆佷睛鏌ユ晫浜恒€佺洃鎺у眬鍔跨殑鏈烘瀯銆?
     },
     "neiting": {
-      "name": "内侍诸局",
-      "description": "禁中内侍与机要宿卫体系，是行在耳目与执行枢纽。"
+      "name": "浜插崼鍐涘洟",
+      "description": "瀹夸富涓撳睘浜插崼锛岃礋璐ｅ畨鍏ㄤ繚鍗€侀殣绉樿鍔ㄣ€?
     },
     "difang": {
-      "name": "路府监司",
-      "description": "安抚、宣抚与府治系统，负责地方政务与战区协调。"
+      "name": "鍔垮姏棰嗗湴",
+      "description": "瀹夸富鍦ㄥ悇涓栫晫鐨勯鍦般€佹嵁鐐广€佷骇涓氱鐞嗙郴缁熴€?
     },
     "junshi": {
-      "name": "诸军将帅",
-      "description": "江防、西线与宿卫诸军的重要统兵将领。"
+      "name": "鎴樺姏鍐涘洟",
+      "description": "鐢辨垬鍔涗紮浼寸粍鎴愮殑鎴樻枟鍐涘洟锛岃礋璐ｆ垬鏂椼€佹墿寮犮€?
     }
   },
   "departments": {
     "neige": {
-      "name": "中书门下",
-      "description": "统筹政令、军机与宰执议政的中枢机构。"
+      "name": "瀹夸富涓灑",
+      "description": "缁熺鍐崇瓥銆佷紮浼寸鐞嗐€佷笘鐣岀┛瓒婄殑鏍稿績鏈烘瀯銆?
     },
     "dutcheng": {
-      "name": "御史台",
-      "description": "掌论列纠察、风宪与台谏言责。"
+      "name": "鎯呮姤閮?,
+      "description": "鏀堕泦鎯呮姤銆佸垎鏋愬眬鍔裤€佺洃鎺ф晫浜恒€?
     },
     "tongzheng_si": {
-      "name": "给舍封驳",
-      "description": "掌封驳章奏、审核文书与驳正失当政令。"
+      "name": "鍐崇瓥閮?,
+      "description": "鍒嗘瀽璁銆佹彁渚涘缓璁€佹墽琛屾寚浠ゃ€?
     },
     "neiting": {
-      "name": "内侍省",
-      "description": "掌禁中机务、近侍传宣与宿卫调度。"
+      "name": "浜插崼閮?,
+      "description": "瀹夸富瀹夊叏淇濆崼銆侀殣绉樿鍔ㄦ墽琛屻€?
     },
     "local": {
-      "name": "路帅监司",
-      "description": "宣抚、安抚与地方帅臣，兼顾战区与地方治理。"
+      "name": "棰嗗湴绠＄悊",
+      "description": "绠＄悊鍚勪笘鐣岄鍦般€佽祫婧愩€佷骇涓氥€?
     },
     "shuntian_fu": {
-      "name": "临安府",
-      "description": "掌行在京畿与府城政务。"
+      "name": "鎬婚儴鎹偣",
+      "description": "瀹夸富鍦ㄥ綋鍓嶄笘鐣岀殑鏍稿績鎹偣銆?
     },
     "military": {
-      "name": "诸军",
-      "description": "掌各战区都统、统制与前线主力。"
+      "name": "鎴樻枟鍐涘洟",
+      "description": "涓诲姏鎴樻枟閮ㄩ槦锛岃礋璐ｅ緛鎴樸€侀槻寰°€?
     }
   },
   "positions": {
     "neige_shoufu": {
-      "name": "右相",
-      "description": "执掌中枢议政，统筹军国大事。"
+      "name": "澶х瀹?,
+      "description": "缁熺鎵€鏈変簨鍔★紝绠＄悊浼欎即鍥㈤槦銆?
     },
     "neige_cifu": {
-      "name": "左相",
-      "description": "协同右相议政，调和中枢与诸司。"
+      "name": "鍓瀹?,
+      "description": "鍗忓姪澶х瀹讹紝鍒嗙閮ㄥ垎浜嬪姟銆?
     },
     "neige_daxueshi": {
-      "name": "参知政事",
-      "description": "中枢执政成员，分领政务机务。"
+      "name": "鍐涘笀",
+      "description": "鎻愪緵鍐崇瓥寤鸿锛岃鍒掑彂灞曡矾绾裤€?
     },
     "dutcheng_duchayuan_zuoduyushi": {
-      "name": "御史中丞",
-      "description": "御史台长官，掌纠察百司与谏诤。"
+      "name": "鎯呮姤缁熼",
+      "description": "鎯呮姤绯荤粺鏈€楂樿礋璐ｄ汉銆?
     },
     "dutcheng_duchayuan_yuoduyushi": {
-      "name": "侍御史知杂事",
-      "description": "御史台副长官，协理台务与纠察。"
+      "name": "鎯呮姤鍓粺棰?,
+      "description": "鍗忓姪绠＄悊鎯呮姤绯荤粺銆?
     },
     "tongzheng_si_shi": {
-      "name": "给事中",
-      "description": "掌封驳章奏，审核中枢政令。"
+      "name": "鍐崇瓥瀹?,
+      "description": "鍒嗘瀽璁锛屾墽琛屽喅绛栥€?
     },
     "shuntian_fu_yin": {
-      "name": "临安府尹",
-      "description": "掌行在府治、民政与京畿事务。"
+      "name": "鎹偣缁熼",
+      "description": "绠＄悊鏍稿績鎹偣浜嬪姟銆?
     },
     "jiliao_dushi": {
-      "name": "江淮宣抚使",
-      "description": "统筹江淮战区军务与守备。"
+      "name": "鎴樺姏缁熷竻",
+      "description": "缁熼鎴樻枟鍐涘洟锛屾寚鎸ヤ綔鎴樸€?
     },
     "xuanda_zongdu": {
-      "name": "京西湖北宣抚使",
-      "description": "统筹北线战区军务与恢复部署。"
+      "name": "鎵╁紶缁熷竻",
+      "description": "璐熻矗鍔垮姏鎵╁紶锛屽崰棰嗛鍦熴€?
     },
     "sanbian_zongdu": {
-      "name": "川陕宣抚使",
-      "description": "统辖川陕防线与西线军务。"
+      "name": "闃插尽缁熷竻",
+      "description": "璐熻矗棰嗗湴闃插尽锛屾姷寰″鏁屻€?
     },
     "shanxi_xunfu": {
-      "name": "淮西安抚使",
-      "description": "安抚一路军民，兼顾守御与转运。"
+      "name": "璧勬簮鎬荤潱",
+      "description": "绠＄悊璧勬簮閲囬泦銆佺敓浜с€佸偍澶囥€?
     },
     "henan_xunfu": {
-      "name": "荆湖北路安抚使",
-      "description": "统筹一线地方政务与守备。"
+      "name": "绉戞妧鎬荤潱",
+      "description": "绠＄悊绉戞妧鐮斿彂銆佽澶囧埗閫犮€?
     },
     "shandong_xunfu": {
-      "name": "两浙东路安抚使",
-      "description": "统筹东南一路政务、仓储与守备。"
+      "name": "鍟嗕笟鎬荤潱",
+      "description": "绠＄悊鍟嗕笟杩愯惀锛岃储瀵岀Н绱€?
     },
     "liaodong_zongbing": {
-      "name": "江上诸军都统",
-      "description": "江上主力军统兵官，负责机动作战。"
+      "name": "鍏堥攱缁熼",
+      "description": "鎴樻枟鍏堥攱锛屽啿閿嬮櫡闃点€?
     },
     "ningyuan_zongbing": {
-      "name": "镇江都统制",
-      "description": "统辖镇江一线水陆防务。"
+      "name": "杩戝崼缁熼",
+      "description": "缁熼浜插崼锛屼繚鍗涓汇€?
     },
     "shanxi_zongbing": {
-      "name": "鄂州都统制",
-      "description": "统辖鄂州一线主力军。"
+      "name": "渚︽煡缁熼",
+      "description": "缁熼渚︽煡閮ㄩ槦锛屾帰鏌ユ儏鎶ャ€?
     },
     "siliji_bingbi_taijian": {
-      "name": "入内内侍省押班",
-      "description": "内侍机要近臣，负责传宣与禁中机务。"
+      "name": "闅愮缁熼",
+      "description": "缁熼闅愮閮ㄩ槦锛屾墽琛屾殫鏉€銆佺獊琚€?
     },
     "siliji_zhangyin_taijian": {
-      "name": "内侍省都知",
-      "description": "内侍省长官，掌禁中传宣与机要。"
+      "name": "浜插崼鎬婚暱",
+      "description": "浜插崼鍐涘洟鏈€楂樿礋璐ｄ汉銆?
     }
   },
   "policies": {
     "civil_light_tax": {
-      "title": "和籴减赋",
-      "description": "减轻和籴与杂敛，缓和州县民困。"
+      "title": "璧勬簮鍑忚礋",
+      "description": "闄嶄綆璧勬簮娑堣€楋紝鎻愰珮璧勬簮鍒╃敤鐜囥€?
     },
     "civil_tax_reform": {
-      "title": "经界核赋",
-      "description": "清丈田亩与户籍，稳住东南税基。"
+      "title": "璧勬簮浼樺寲",
+      "description": "浼樺寲璧勬簮閲囬泦銆佺敓浜с€佸垎閰嶄綋绯汇€?
     },
     "civil_canal": {
-      "title": "漕纲整饬",
-      "description": "整肃江淮漕路与转运仓场，确保行在粮运。"
+      "title": "璧勬簮閫氶亾",
+      "description": "寤虹珛绋冲畾鐨勮祫婧愯繍杈撻€氶亾锛屼繚闅滀緵缁欍€?
     },
     "civil_salt_iron": {
-      "title": "盐榷整顿",
-      "description": "平衡官榷与商运，稳住盐利收入。"
+      "title": "鏍稿績璧勬簮鍨勬柇",
+      "description": "鎺屾帶褰撳墠涓栫晫鏍稿績璧勬簮锛屽舰鎴愬瀯鏂紭鍔裤€?
     },
     "civil_port_office": {
-      "title": "市舶扩榷",
-      "description": "整顿泉州、明州等市舶体系，扩大海贸税课。"
+      "title": "璺ㄤ笘鐣岃锤鏄?,
+      "description": "寮€鍚法涓栫晫璧勬簮璐告槗锛屼簰閫氭湁鏃犮€?
     },
     "civil_remove_mining_tax": {
-      "title": "榷务苛敛裁减",
-      "description": "裁减扰民苛敛，缓和州县与商民矛盾。"
+      "title": "璧勬簮閲囬泦鍔犻€?,
+      "description": "鎻愬崌璧勬簮閲囬泦閫熷害锛屽揩閫熺Н绱储瀵屻€?
     },
     "civil_royal_allowance_cut": {
-      "title": "宗室岁赐节减",
-      "description": "节减宗室供赐，把财力优先投向军国急务。"
+      "title": "娑堣€楃鎺?,
+      "description": "涓ユ牸绠℃帶闈炲繀瑕佹秷鑰楋紝闆嗕腑璧勬簮鍙戝睍銆?
     },
     "civil_post_optimization": {
-      "title": "驿传裁并",
-      "description": "精简驿传冗费，同时保留军情急递。"
+      "title": "鏁堢巼鎻愬崌",
+      "description": "浼樺寲浜嬪姟娴佺▼锛屾彁鍗囨暣浣撹繍浣滄晥鐜囥€?
     },
     "civil_tea_horse": {
-      "title": "茶马互市",
-      "description": "整顿茶马交易，换取边马与西线补给。"
+      "title": "璧勬簮浜ゆ崲",
+      "description": "鐢ㄥ浣欒祫婧愪氦鎹㈢█缂鸿祫婧愩€?
     },
     "civil_salt_ticket": {
-      "title": "折帛转输法",
-      "description": "优化转输与折帛制度，引导商力补给边防。"
+      "title": "璧勬簮鍌ㄥ",
+      "description": "寤虹珛澶у瀷璧勬簮鍌ㄥ搴擄紝搴斿鍗辨満銆?
     },
     "civil_reserve_granary": {
-      "title": "常平义仓扩设",
-      "description": "扩充常平与义仓体系，以备荒年赈济。"
+      "title": "鐢熷瓨淇濋殰",
+      "description": "鍌ㄥ澶ч噺鐢熷瓨鐗╄祫锛屼繚闅滈暱鏈熺敓瀛樸€?
     },
     "civil_paper_money": {
-      "title": "会子整顿",
-      "description": "整顿会子发行与流通，稳住市场信用。"
+      "title": "缁忔祹浣撶郴",
+      "description": "寤虹珛涓撳睘缁忔祹浣撶郴锛屾帉鎺ч噾铻嶅懡鑴夈€?
     },
     "military_border_defense": {
-      "title": "江防固守",
-      "description": "强化沿江守备，提升边防与水陆协同收益。"
+      "title": "棰嗗湴闃插尽",
+      "description": "寮哄寲棰嗗湴闃插尽宸ヤ簨锛屾姷寰″鏁屽叆渚点€?
     },
     "military_firearms": {
-      "title": "神臂火器整饬",
-      "description": "改良弓弩与火器配备，增强军阵杀伤。"
+      "title": "瑁呭鍗囩骇",
+      "description": "鍗囩骇浼欎即瑁呭锛屾彁鍗囨暣浣撴垬鍔涖€?
     },
     "military_capital_drill": {
-      "title": "殿前诸军整训",
-      "description": "整顿宿卫与殿前诸军，恢复中枢战斗力。"
+      "title": "浼欎即璁粌",
+      "description": "寮哄寲浼欎即璁粌锛屾彁鍗囦釜浜哄疄鍔涖€?
     },
     "military_recruit": {
-      "title": "诸军募补法",
-      "description": "规范募补与训练，提高兵员素质。"
+      "title": "浼欎即鎵╁厖",
+      "description": "鎷涘嫙鏇村寮哄姏浼欎即锛屽．澶у洟闃熴€?
     },
     "military_wagon": {
-      "title": "车船协同战法",
-      "description": "整合车战、舟师与步骑协同，对抗强敌突击。"
+      "title": "鎴樻湳閰嶅悎",
+      "description": "璁粌浼欎即鎴樻湳閰嶅悎锛屽彂鎸ュ洟闃熸垬鍔涖€?
     },
     "military_navy": {
-      "title": "水师扩建",
-      "description": "扩充沿江沿海水师，巩固江面控制力。"
+      "title": "鎴樺姏鎵╁紶",
+      "description": "鎵╁ぇ鎴樻枟鍐涘洟瑙勬ā锛屾彁鍗囧緛鎴樿兘鍔涖€?
     },
     "military_fort": {
-      "title": "江防寨堡修筑",
-      "description": "在沿江险要增修寨堡与烽堠，稳固防线。"
+      "title": "宸ヤ簨寤洪€?,
+      "description": "寤洪€犻槻寰″伐浜嬨€佹垬鏂楄鏂斤紝宸╁浐闃靛湴銆?
     },
     "military_command": {
-      "title": "宣抚统军归一",
-      "description": "理顺宣抚、都统与地方兵权，统一战区号令。"
+      "title": "鎴樺姏缁熷悎",
+      "description": "鏁村悎鎵€鏈夋垬鍔涳紝缁熶竴鎸囨尌璋冨害銆?
     },
     "military_tuntian": {
-      "title": "军屯复置",
-      "description": "恢复屯田制度，减轻前线军粮压力。"
+      "title": "鎴樺姏鑷粰",
+      "description": "瀹炵幇鎴樻枟閮ㄩ槦璧勬簮鑷粰锛屽噺灏戞秷鑰椼€?
     },
     "military_workshop": {
-      "title": "军器监扩造",
-      "description": "集中扩建军器作坊，保障甲械与火器供给。"
+      "title": "瑁呭鍒堕€?,
+      "description": "寤虹珛瑁呭鍒堕€犲巶锛岃嚜涓荤敓浜у己鍔涜澶囥€?
     },
     "politics_balance": {
-      "title": "中枢持衡",
-      "description": "调和主战与主和诸论，稳住中枢行政效率。"
+      "title": "鍔垮姏骞宠　",
+      "description": "骞宠　涓栫晫鍚勬柟鍔垮姏锛屽潗鏀舵笖鍒┿€?
     },
     "politics_memorial": {
-      "title": "台谏封驳整肃",
-      "description": "整顿章奏与封驳程序，遏制朝政失序。"
+      "title": "鎯呮姤绠℃帶",
+      "description": "涓ユ牸绠℃帶鎯呮姤锛岄槻姝俊鎭硠闇层€?
     },
     "politics_limit_cabinet": {
-      "title": "三省制衡复振",
-      "description": "分明中书门下与枢密权责，避免政令壅滞。"
+      "title": "鍐崇瓥闆嗘潈",
+      "description": "瀹夸富鎺屾帶鏈€缁堝喅绛栨潈锛岄伩鍏嶅垎姝с€?
     },
     "politics_censorate": {
-      "title": "御史台整饬",
-      "description": "整饬台谏风气，减少以风闻相攻的内耗。"
+      "title": "鍐呴儴鏁撮】",
+      "description": "鏁撮】鍥㈤槦鍐呴儴锛屾彁鍗囧嚌鑱氬姏涓庢墽琛屽姏銆?
     },
     "politics_assessment": {
-      "title": "考课法严行",
-      "description": "严格考核守令与监司实绩，提高施政约束。"
+      "title": "浼欎即鑰冩牳",
+      "description": "瀹氭湡鑰冩牳浼欎即瀹炲姏涓庡繝璇氬害锛屼紭鑳滃姡姹般€?
     },
     "politics_limit_eunuch": {
-      "title": "内侍预政约束",
-      "description": "限制内侍越职干预外朝政务。"
+      "title": "鏉冮檺绠℃帶",
+      "description": "涓ユ牸绠℃帶浼欎即鏉冮檺锛岄槻姝㈡潈鍔涙互鐢ㄣ€?
     },
     "politics_royal_rule": {
-      "title": "宗室任使节制",
-      "description": "规范宗室授任与干政边界，减轻掣肘。"
+      "title": "濞佹湜鎻愬崌",
+      "description": "鎻愬崌瀹夸富濞佹湜锛岃浼欎即鏇村姞蹇犺瘹銆?
     },
     "politics_viceroy": {
-      "title": "宣抚安抚分统",
-      "description": "明确宣抚与安抚职责，稳住军政协同。"
+      "title": "鍒嗗煙绠＄悊",
+      "description": "鍒掑垎绠＄悊鍖哄煙锛屼笓浜鸿礋璐ｏ紝鎻愬崌鏁堢巼銆?
     },
     "politics_east_factory": {
-      "title": "察事耳目收束",
-      "description": "收束禁中耳目与察事权限，防止近习滥权。"
+      "title": "闅愮鐩戞帶",
+      "description": "寤虹珛闅愮鐩戞帶浣撶郴锛屾帉鎺т竴鍒囧姩鍚戙€?
     },
     "politics_south_study": {
-      "title": "经筵近臣班值",
-      "description": "建立经筵与近臣班值机制，强化机要议政。"
+      "title": "鏍稿績璁簨",
+      "description": "鍙泦鏍稿績浼欎即锛屽晢璁噸澶у喅绛栥€?
     },
     "tech_agri": {
-      "title": "占城稻推广",
-      "description": "推广良种与复种法，提升粮食储备。"
+      "title": "鐢熷瓨绉戞妧",
+      "description": "鐮斿彂鐢熷瓨鐩稿叧绉戞妧锛屾彁鍗囩敓瀛樿兘鍔涖€?
     },
     "tech_engineering": {
-      "title": "营造水工统筹",
-      "description": "统筹河渠、城防与营造工程，提高长期效率。"
+      "title": "宸ヤ笟绉戞妧",
+      "description": "鐮斿彂宸ヤ笟绉戞妧锛屾彁鍗囧埗閫犱笌寤鸿鑳藉姏銆?
     },
     "tech_calendar": {
-      "title": "历算修定",
-      "description": "整修历法与观测制度，提升国家授时能力。"
+      "title": "涓栫晫瑙勫垯",
+      "description": "鐮旂┒涓栫晫瑙勫垯锛屾帉鎻′笘鐣岃繍琛岃寰嬨€?
     },
     "tech_firearm_theory": {
-      "title": "军器图谱研究",
-      "description": "整理军器技术图谱，改良操练与铸造理论。"
+      "title": "鎴樻枟绉戞妧",
+      "description": "鐮斿彂鎴樻枟鐩稿叧绉戞妧锛屾彁鍗囨垬鍔涖€?
     },
     "tech_water": {
-      "title": "圩田水利推广",
-      "description": "兴修圩田、水闸与沟渠，兼顾治水与农产。"
+      "title": "鐜閫傚簲",
+      "description": "鐮斿彂鐜閫傚簲绉戞妧锛岄€傞厤浠讳綍涓栫晫鐜銆?
     },
     "tech_ship": {
-      "title": "海舟修造法",
-      "description": "改进海船与江船修造技术，提升航运能力。"
+      "title": "绌胯秺绉戞妧",
+      "description": "鐮斿彂绌胯秺鐩稿叧绉戞妧锛屾彁鍗囩┛瓒婅兘鍔涖€?
     },
     "tech_medicine": {
-      "title": "方书疫法整理",
-      "description": "整理医书与防疫经验，提升州县应疫能力。"
+      "title": "鍖荤枟绉戞妧",
+      "description": "鐮斿彂鍖荤枟绉戞妧锛屼繚闅滀紮浼寸敓鍛藉畨鍏ㄣ€?
     },
     "tech_math": {
-      "title": "算学书院设立",
-      "description": "设立算学教育与测算人才培养体系。"
+      "title": "鏅烘収绉戞妧",
+      "description": "鐮斿彂鏅烘収绉戞妧锛屾彁鍗囧垎鏋愪笌瑙勫垝鑳藉姏銆?
     },
     "diplomacy_mongol": {
-      "title": "联夏制金",
-      "description": "联络西北势力牵制金廷，争取边局回旋。"
+      "title": "鍔垮姏缁撶洘",
+      "description": "涓庝笘鐣屽弸濂藉娍鍔涚粨鐩燂紝鍏卞悓瀵规姉寮烘晫銆?
     },
     "diplomacy_korea": {
-      "title": "高丽通使",
-      "description": "稳住与高丽往来，避免其进一步倒向强敌。"
+      "title": "鍔垮姏浜ゅソ",
+      "description": "涓庡懆杈瑰娍鍔涗繚鎸佸弸濂斤紝鑾峰彇鏀寔銆?
     },
     "diplomacy_macao": {
-      "title": "海商互市",
-      "description": "借南海海商网络引入资财、军需与航海知识。"
+      "title": "鍔垮姏鍚堜綔",
+      "description": "涓庡叾浠栧娍鍔涘悎浣滐紝浜掑埄鍏辫耽銆?
     },
     "diplomacy_japan": {
-      "title": "日本互市重启",
-      "description": "恢复对日海上贸易，拓展铜材与商路来源。"
+      "title": "璺ㄤ笘鐣岀粨鐩?,
+      "description": "涓庡叾浠栦笘鐣屽弸濂藉娍鍔涘缓绔嬭仈鐩熴€?
     },
     "diplomacy_rome": {
-      "title": "远海诸蕃通问",
-      "description": "遣使联络南海与西洋诸蕃，争取更广外援与贸易。"
+      "title": "澶氬厓澶栦氦",
+      "description": "寮€灞曞鍏冨浜わ紝缁撲氦鍚勮矾鍔垮姏銆?
     },
     "diplomacy_southwest": {
-      "title": "西南溪峒安抚",
-      "description": "安抚西南溪峒与边郡，稳住后方秩序。"
+      "title": "鏈湡瀹夋姎",
+      "description": "瀹夋姎褰撳墠涓栫晫鏈湡鍔垮姏锛屽噺灏戝啿绐併€?
     },
     "people_epidemic": {
-      "title": "州县疫局",
-      "description": "设立州县防疫与施药体系，应对疫病流行。"
+      "title": "鍗辨満搴斿",
+      "description": "寤虹珛鍗辨満搴斿鏈哄埗锛屽鐞嗕笘鐣岀伨闅俱€?
     },
     "people_refugee": {
-      "title": "流民屯垦",
-      "description": "安置流民于屯垦区，恢复生产与编户。"
+      "title": "浜哄憳鏀跺",
+      "description": "鏀跺涓栫晫骞稿瓨鑰咃紝鎵╁厖鍔垮姏浜哄彛銆?
     },
     "people_charity_granary": {
-      "title": "义仓常平普及",
-      "description": "普设义仓与常平仓，强化基层赈济能力。"
+      "title": "姘戝績鏀舵嫝",
+      "description": "鏁戞祹姘戜紬锛屾敹鎷㈡皯蹇冿紝鎻愬崌澹版湜銆?
     },
     "alt_nanyang_colony": {
-      "title": "南海经略计划",
-      "description": "以海贸与航路经营破局，开辟海外财源与战略纵深。"
+      "title": "涓栫晫娈栨皯",
+      "description": "娈栨皯寮卞皬涓栫晫锛屾墿寮犲涓荤粺娌荤枂鍩熴€?
     }
   },
   "nationInit": {
     "externalThreats": [
       {
-        "id": "jurchen",
-        "name": "金廷",
-        "power": 84,
-        "description": "北方主敌，持续南压并试探江淮防线。"
+        "id": "enemy_01",
+        "name": "涓栫晫鍘熶綇姘?,
+        "power": 50,
+        "description": "褰撳墠涓栫晫鏈湡鍔垮姏锛屽绌胯秺鑰呮姳鏈夋晫鎰忋€?
       },
       {
-        "id": "chu_qi",
-        "name": "楚伪军",
-        "power": 58,
-        "description": "依附强敌的地方武装，擅长突袭转掠。"
+        "id": "enemy_02",
+        "name": "鏁屽绌胯秺鑰?,
+        "power": 60,
+        "description": "鍏朵粬绌胯秺鑰咃紝浜夊ず涓栫晫璧勬簮涓庢満閬囥€?
       }
     ],
     "provinces": [
-      {
-        "name": "两浙路",
-        "taxSilver": 8600,
-        "taxGrain": 13200,
-        "recruits": 3600,
-        "morale": 62,
-        "corruption": 41,
-        "disaster": 33
-      },
-      {
-        "name": "江东路",
-        "taxSilver": 6100,
-        "taxGrain": 9700,
-        "recruits": 2900,
-        "morale": 57,
-        "corruption": 46,
-        "disaster": 39
-      }
+    {
+        "name": "鍒濆棰嗗湴",
+        "taxSilver": 1000,
+        "taxGrain": 1000,
+        "recruits": 100,
+        "morale": 50,
+        "corruption": 0,
+        "disaster": 0
+    },
+    {
+        "name": "鍛ㄨ竟鍖哄煙",
+        "taxSilver": 500,
+        "taxGrain": 500,
+        "recruits": 50,
+        "morale": 40,
+        "corruption": 10,
+        "disaster": 20
+    },
+    {
+        "name": "闈掗湝骞冲師",
+        "taxSilver": 1200,
+        "taxGrain": 1400,
+        "recruits": 220,
+        "morale": 55,
+        "corruption": 15,
+        "disaster": 18
+    },
+    {
+        "name": "璧ゅ博灞辫剦",
+        "taxSilver": 1600,
+        "taxGrain": 600,
+        "recruits": 180,
+        "morale": 48,
+        "corruption": 22,
+        "disaster": 25
+    },
+    {
+        "name": "纰ф按婀栧煙",
+        "taxSilver": 900,
+        "taxGrain": 1100,
+        "recruits": 150,
+        "morale": 60,
+        "corruption": 12,
+        "disaster": 15
+    },
+    {
+        "name": "榛戝博瑕佸",
+        "taxSilver": 1400,
+        "taxGrain": 700,
+        "recruits": 260,
+        "morale": 45,
+        "corruption": 28,
+        "disaster": 30
+    },
+    {
+        "name": "浜戦《楂樺師",
+        "taxSilver": 1100,
+        "taxGrain": 900,
+        "recruits": 200,
+        "morale": 52,
+        "corruption": 18,
+        "disaster": 22
+    },
+    {
+        "name": "钀芥灚鏋楀湴",
+        "taxSilver": 800,
+        "taxGrain": 1200,
+        "recruits": 170,
+        "morale": 58,
+        "corruption": 14,
+        "disaster": 16
+    },
+    {
+        "name": "榛勬矙鎴堝",
+        "taxSilver": 1300,
+        "taxGrain": 400,
+        "recruits": 210,
+        "morale": 42,
+        "corruption": 25,
+        "disaster": 35
+    },
+    {
+        "name": "涓滄捣娌垮哺",
+        "taxSilver": 1800,
+        "taxGrain": 1000,
+        "recruits": 190,
+        "morale": 65,
+        "corruption": 20,
+        "disaster": 24
+    },
+    {
+        "name": "涓囧吔鑽掑師",
+        "taxSilver": 700,
+        "taxGrain": 800,
+        "recruits": 240,
+        "morale": 49,
+        "corruption": 16,
+        "disaster": 28
+    },
+    {
+        "name": "绁炶皶绂佸湴",
+        "taxSilver": 2000,
+        "taxGrain": 1500,
+        "recruits": 300,
+        "morale": 70,
+        "corruption": 10,
+        "disaster": 12
+    }
     ]
   }
 }

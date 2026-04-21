@@ -1,24 +1,157 @@
 {
-  "treasury": 500000,
-  "grain": 30000,
-  "militaryStrength": 60,
-  "civilMorale": 35,
-  "borderThreat": 75,
-  "disasterLevel": 70,
-  "corruptionLevel": 80,
+  "treasury": 200000,
+  "grain": 15000,
+  "militaryStrength": 55,
+  "civilMorale": 55,
+  "borderThreat": 45,
+  "disasterLevel": 30,
+  "corruptionLevel": 25,
   "provinces": [
-    { "name": "两浙", "status": "行在初定，粮价飞涨，流民不断南涌", "threat": "medium", "taxSilver": 8000, "taxGrain": 6000, "recruits": 8000, "morale": 40, "corruption": 70, "disaster": 60 },
-    { "name": "江淮", "status": "兵火未息，溃兵与叛军时聚时散", "threat": "high", "taxSilver": 3000, "taxGrain": 2000, "recruits": 5000, "morale": 30, "corruption": 75, "disaster": 80 },
-    { "name": "山东", "status": "金军南压后秩序未复，州县流民与溃兵并起", "threat": "high", "taxSilver": 4000, "taxGrain": 2500, "recruits": 6000, "morale": 35, "corruption": 80, "disaster": 65 },
-    { "name": "辽东", "status": "后金虎视眈眈，关宁防线承压", "threat": "critical", "taxSilver": 2000, "taxGrain": 1500, "recruits": 9000, "morale": 45, "corruption": 60, "disaster": 55 },
-    { "name": "河南", "status": "灾荒蔓延，流民四散", "threat": "high", "taxSilver": 2500, "taxGrain": 2200, "recruits": 4000, "morale": 32, "corruption": 78, "disaster": 75 },
-    { "name": "江南", "status": "赋税重镇，漕运受阻", "threat": "medium", "taxSilver": 12000, "taxGrain": 8000, "recruits": 7000, "morale": 55, "corruption": 65, "disaster": 50 },
-    { "name": "四川", "status": "相对安定，但土司不稳", "threat": "low", "taxSilver": 3500, "taxGrain": 3000, "recruits": 5000, "morale": 50, "corruption": 55, "disaster": 45 },
-    { "name": "湖广", "status": "粮仓要地，尚且平稳", "threat": "low", "taxSilver": 4500, "taxGrain": 7000, "recruits": 5500, "morale": 52, "corruption": 50, "disaster": 40 }
+    {
+      "name": "初始领地",
+      "status": "区域局势待侦察与治理",
+      "threat": "low",
+      "taxSilver": 1000,
+      "taxGrain": 1000,
+      "recruits": 100,
+      "morale": 50,
+      "corruption": 0,
+      "disaster": 0
+    },
+    {
+      "name": "周边区域",
+      "status": "区域局势待侦察与治理",
+      "threat": "medium",
+      "taxSilver": 500,
+      "taxGrain": 500,
+      "recruits": 50,
+      "morale": 40,
+      "corruption": 10,
+      "disaster": 20
+    },
+    {
+      "name": "青霜平原",
+      "status": "区域局势待侦察与治理",
+      "threat": "low",
+      "taxSilver": 1200,
+      "taxGrain": 1400,
+      "recruits": 220,
+      "morale": 55,
+      "corruption": 15,
+      "disaster": 18
+    },
+    {
+      "name": "赤岩山脉",
+      "status": "区域局势待侦察与治理",
+      "threat": "medium",
+      "taxSilver": 1600,
+      "taxGrain": 600,
+      "recruits": 180,
+      "morale": 48,
+      "corruption": 22,
+      "disaster": 25
+    },
+    {
+      "name": "碧水湖域",
+      "status": "区域局势待侦察与治理",
+      "threat": "low",
+      "taxSilver": 900,
+      "taxGrain": 1100,
+      "recruits": 150,
+      "morale": 60,
+      "corruption": 12,
+      "disaster": 15
+    },
+    {
+      "name": "黑岩要塞",
+      "status": "区域局势待侦察与治理",
+      "threat": "high",
+      "taxSilver": 1400,
+      "taxGrain": 700,
+      "recruits": 260,
+      "morale": 45,
+      "corruption": 28,
+      "disaster": 30
+    },
+    {
+      "name": "云顶高原",
+      "status": "区域局势待侦察与治理",
+      "threat": "medium",
+      "taxSilver": 1100,
+      "taxGrain": 900,
+      "recruits": 200,
+      "morale": 52,
+      "corruption": 18,
+      "disaster": 22
+    },
+    {
+      "name": "落枫林地",
+      "status": "区域局势待侦察与治理",
+      "threat": "low",
+      "taxSilver": 800,
+      "taxGrain": 1200,
+      "recruits": 170,
+      "morale": 58,
+      "corruption": 14,
+      "disaster": 16
+    },
+    {
+      "name": "黄沙戈壁",
+      "status": "区域局势待侦察与治理",
+      "threat": "high",
+      "taxSilver": 1300,
+      "taxGrain": 400,
+      "recruits": 210,
+      "morale": 42,
+      "corruption": 25,
+      "disaster": 35
+    },
+    {
+      "name": "东海沿岸",
+      "status": "区域局势待侦察与治理",
+      "threat": "medium",
+      "taxSilver": 1800,
+      "taxGrain": 1000,
+      "recruits": 190,
+      "morale": 65,
+      "corruption": 20,
+      "disaster": 24
+    },
+    {
+      "name": "万兽荒原",
+      "status": "区域局势待侦察与治理",
+      "threat": "medium",
+      "taxSilver": 700,
+      "taxGrain": 800,
+      "recruits": 240,
+      "morale": 49,
+      "corruption": 16,
+      "disaster": 28
+    },
+    {
+      "name": "神谕禁地",
+      "status": "区域局势待侦察与治理",
+      "threat": "low",
+      "taxSilver": 2000,
+      "taxGrain": 1500,
+      "recruits": 300,
+      "morale": 70,
+      "corruption": 10,
+      "disaster": 12
+    }
   ],
   "externalThreats": [
-    { "name": "金军", "leader": "完颜兀术", "status": "铁骑南压，随时可能再渡江而来", "level": "critical" },
-    { "name": "地方叛军", "leader": "张用等", "status": "乘朝局未稳聚众作乱，窥伺州县", "level": "high" },
-    { "name": "洞庭水寇", "leader": "杨么", "status": "啸聚湖湘水泽，劫掠漕运商旅，裹挟流民壮大", "level": "high" }
+    {
+      "name": "世界原住民",
+      "leader": "未知",
+      "status": "当前世界本土势力，对穿越者抱有敌意。",
+      "level": "high"
+    },
+    {
+      "name": "敌对穿越者",
+      "leader": "未知",
+      "status": "其他穿越者，争夺世界资源与机遇。",
+      "level": "critical"
+    }
   ]
 }
