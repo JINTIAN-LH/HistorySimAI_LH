@@ -1338,6 +1338,37 @@ function buildRigidStoryFallback(state) {
   );
 }
 
+function isCrossWorldView(state) {
+  const worldviewId = String(state?.config?.worldviewData?.id || state?.worldVersion || "").trim();
+  return worldviewId.startsWith("cross_world");
+}
+
+function containsLegacySouthernSongNarrative(data) {
+  if (!data || typeof data !== "object") return false;
+  const source = [
+    ...(Array.isArray(data.storyParagraphs) ? data.storyParagraphs : []),
+    ...(Array.isArray(data.choices) ? data.choices.map((item) => item?.text || "") : []),
+    data?.header?.location || "",
+    data?.header?.time || "",
+  ].join("\n");
+
+  if (!source.trim()) return false;
+
+  const legacyMarkers = [
+    "宋高宗",
+    "赵构",
+    "官家",
+    "行在",
+    "南渡",
+    "金军",
+    "朝廷",
+    "廷议",
+    "诏旨",
+  ];
+
+  return legacyMarkers.some((marker) => source.includes(marker));
+}
+
 export function buildStoryTemplatePaths(state, config = state?.config || {}) {
   const year = state?.currentYear || 1;
   const month = state?.currentMonth || 1;
@@ -1396,6 +1427,12 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
     }
 
     if (renderId != null && container._storyRenderId !== renderId) return null;
+
+    // Guard rail: when current worldview is cross-world, reject obviously legacy southern-song narratives.
+    if (data && isCrossWorldView(state) && containsLegacySouthernSongNarrative(data)) {
+      console.warn("[story] rejected legacy southern-song llm payload under cross-world worldview; fallback to local templates");
+      data = null;
+    }
   }
 
   if (useLLM && data == null && requireLlmSuccess) {

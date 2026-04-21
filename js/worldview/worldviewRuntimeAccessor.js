@@ -47,6 +47,11 @@ function fillPattern(pattern, values) {
   });
 }
 
+function formatChronicleYearValue(year) {
+  const normalized = Math.max(1, Number(year) || 1);
+  return normalized === 1 ? "元" : normalized;
+}
+
 function normalizeChronicleFormat(state) {
   const section = getWorldviewSection(state, "chronicleFormat");
   const eraLabel = toNonEmptyString(section.eraLabel) || "建炎";
@@ -94,31 +99,33 @@ export function formatEraTimeByAbsoluteYear(state, absoluteYear, month) {
   const normalizedYear = Number(absoluteYear) || absoluteStartYear;
   const normalizedMonth = Number(month) || 1;
   const eraYear = Math.max(1, normalizedYear - absoluteStartYear + 1);
+  const eraYearDisplay = formatChronicleYearValue(eraYear);
   const rendered = fillPattern(chronicle.displayPattern, {
     era: eraLabel,
-    year: eraYear,
+    year: eraYearDisplay,
     month: normalizedMonth,
     yearUnit: chronicle.yearUnit,
     monthUnit: chronicle.monthUnit,
   });
   return toNonEmptyString(rendered)
-    || `${eraLabel}${eraYear}${chronicle.yearUnit}${normalizedMonth}${chronicle.monthUnit}`;
+    || `${eraLabel}${eraYearDisplay}${chronicle.yearUnit}${normalizedMonth}${chronicle.monthUnit}`;
 }
 
 export function formatEraTimeByRelativeYear(state, relativeYear, month) {
   const { eraLabel } = resolveWorldviewEraInfo(state);
   const chronicle = normalizeChronicleFormat(state);
   const normalizedYear = Math.max(1, Number(relativeYear) || 1);
+  const normalizedYearDisplay = formatChronicleYearValue(normalizedYear);
   const normalizedMonth = Number(month) || 1;
   const rendered = fillPattern(chronicle.displayPattern, {
     era: eraLabel,
-    year: normalizedYear,
+    year: normalizedYearDisplay,
     month: normalizedMonth,
     yearUnit: chronicle.yearUnit,
     monthUnit: chronicle.monthUnit,
   });
   return toNonEmptyString(rendered)
-    || `${eraLabel}${normalizedYear}${chronicle.yearUnit}${normalizedMonth}${chronicle.monthUnit}`;
+    || `${eraLabel}${normalizedYearDisplay}${chronicle.yearUnit}${normalizedMonth}${chronicle.monthUnit}`;
 }
 
 export function resolveWorldviewBattleLabels(state) {

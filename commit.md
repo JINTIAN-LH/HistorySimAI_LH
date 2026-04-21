@@ -1,5 +1,34 @@
 # Commit 日志
 
+## 2026-04-21: fix: align era timeline and block legacy story fallback
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+修复编年时间错位问题：将顶栏时间的兜底值从历史遗留的“3年4月”改为严格的“1年1月”并增加数值校验，避免“穿越元年”与“3年4月”同屏冲突。同步增强剧情加载护栏，在穿越世界观下拦截南宋语义 LLM 结果并回退本地跨世界模板。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/layout.js` | ✏️ 调整 | 顶栏时间回退改为 `1年1月`，并增加 `currentYear/currentMonth` 数值校验 |
+| `js/worldview/worldviewRuntimeAccessor.js` | ✏️ 调整 | 编年年份首年统一显示为“元”，解决显示语义不一致 |
+| `js/systems/storySystem.js` | ✏️ 调整 | 穿越世界观下新增南宋语义拦截，命中后回退本地模板 |
+| `public/data/story/day1_afternoon.json` | ➕ 新增 | 补齐跨世界午后剧情模板，避免二回合回退旧叙事 |
+| `public/data/story/day1_evening.json` | ➕ 新增 | 补齐跨世界夜间剧情模板，保证首日三阶段连续性 |
+
+### 价值
+
+- 消除“穿越元年 vs 3年4月”时间错位，编年显示统一
+- 二回合剧情在异常 LLM 返回下可自动纠偏，稳定保持当前世界观
+- 完整覆盖首日 morning/afternoon/evening 本地模板，降低剧情回退风险
+
+### 验证
+
+- `npm run build` ✅ 通过
+- `npx vitest run js/worldVersion.test.js js/systems/storySystem.template.test.js` ✅ 通过
+
 ## 2026-04-21: fix: add startup save self-check and one-click cleanup
 
 **Commit Hash**: `6687f747654ac7fcc9c742aec7f723add8119210`

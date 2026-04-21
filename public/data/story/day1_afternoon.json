@@ -1,0 +1,57 @@
+{
+  "header": {
+    "time": "穿越历元年·一月初一·午后",
+    "season": "未知",
+    "weather": "阴",
+    "location": "中枢调度区"
+  },
+  "storyParagraphs": [
+    "午后的调度屏幕持续闪烁，外环侦察线出现多处红点，你的团队开始争论是否立刻收缩防线。",
+    "后勤组汇报：当前可用补给仅够维持一轮高强度作战，若同时兼顾安置与巡防，库存会在夜间跌破安全阈值。",
+    "情报组递交新线索：疑似敌对穿越者正在接触周边小势力，试图在你立足未稳时制造二次冲击。",
+    "你意识到，午后决策将决定据点是否能撑到夜间整备窗口。"
+  ],
+  "choices": [
+    {
+      "id": "A",
+      "text": "集中主力封堵外环威胁，压缩非必要行动",
+      "hint": "短期稳住防线，但内区资源会更紧张",
+      "effects": {
+        "militaryStrength": 4,
+        "borderThreat": -7,
+        "treasury": -80000,
+        "civilMorale": -1
+      }
+    },
+    {
+      "id": "B",
+      "text": "优先恢复后勤与安置节奏，延迟对外扩张",
+      "hint": "提升持续作战能力，但会放大外环试探压力",
+      "effects": {
+        "grain": 3500,
+        "civilMorale": 5,
+        "borderThreat": 4,
+        "corruptionLevel": -2
+      }
+    },
+    {
+      "id": "C",
+      "text": "派出机动小队反制敌对穿越者联络链",
+      "hint": "有机会打断对方布局，但存在执行风险",
+      "effects": {
+        "treasury": -60000,
+        "militaryStrength": 2,
+        "borderThreat": -3,
+        "civilMorale": 2
+      }
+    }
+  ],
+  "news": [
+    { "tag": "急", "title": "外环多点警报", "summary": "侦察线连续报告异常活动，防务等级提升。", "icon": "⚠️" },
+    { "tag": "重", "title": "补给逼近阈值", "summary": "后勤提示夜间前需完成关键调配。", "icon": "📦" }
+  ],
+  "publicOpinion": [
+    { "user": "后勤队员", "text": "再拖下去，夜里就得拆东墙补西墙。", "type": "angry" },
+    { "user": "据点工匠", "text": "只要给我们稳定排班，今晚还能修好两处防线。", "type": "loyal" }
+  ]
+}

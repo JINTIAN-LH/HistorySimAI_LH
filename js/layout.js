@@ -121,8 +121,12 @@ export function updateTopbarByState(state) {
   };
   const phaseKey = state.currentPhase || "morning";
   const phaseLabel = phaseLabels[phaseKey] || "";
-  const year = state.currentYear || 3;
-  const month = state.currentMonth || 4;
+  const year = Number.isFinite(Number(state.currentYear)) && Number(state.currentYear) > 0
+    ? Number(state.currentYear)
+    : 1;
+  const month = Number.isFinite(Number(state.currentMonth)) && Number(state.currentMonth) > 0
+    ? Number(state.currentMonth)
+    : 1;
 
   el.textContent = `${formatEraTimeByRelativeYear(state, year, month)}·${phaseLabel}`;
 

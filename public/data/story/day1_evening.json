@@ -1,0 +1,57 @@
+{
+  "header": {
+    "time": "穿越历元年·一月初一·夜间",
+    "season": "未知",
+    "weather": "寒风",
+    "location": "据点核心舱"
+  },
+  "storyParagraphs": [
+    "夜幕压下后，警戒灯带沿着外墙缓慢扫过，白天的紧急调度终于进入结算阶段。",
+    "值守官回报：外环冲突暂时受控，但敌对势力仍在边界试探，你无法确定对方是否在酝酿下一轮突袭。",
+    "资源官把当日账目推到你面前：据点勉强稳住，却也暴露出治理链条和执行节奏的多个薄弱点。",
+    "你必须决定，今晚是继续高压警戒，还是腾出窗口修复系统性短板。"
+  ],
+  "choices": [
+    {
+      "id": "A",
+      "text": "维持高压夜间警戒，确保据点不被突袭",
+      "hint": "防线更稳，但团队疲劳将累积",
+      "effects": {
+        "borderThreat": -6,
+        "militaryStrength": -1,
+        "civilMorale": -2,
+        "treasury": -50000
+      }
+    },
+    {
+      "id": "B",
+      "text": "安排轮休与修复，优先恢复治理与执行链",
+      "hint": "长期收益更高，但短时风险上升",
+      "effects": {
+        "civilMorale": 6,
+        "corruptionLevel": -3,
+        "borderThreat": 3,
+        "grain": -1500
+      }
+    },
+    {
+      "id": "C",
+      "text": "召开夜间复盘会，统一明日攻防优先级",
+      "hint": "提升协同效率，代价是当夜推进放缓",
+      "effects": {
+        "civilMorale": 3,
+        "corruptionLevel": -2,
+        "militaryStrength": 1,
+        "treasury": -30000
+      }
+    }
+  ],
+  "news": [
+    { "tag": "常", "title": "夜间警戒升级", "summary": "据点进入高警戒状态，巡逻频率提升。", "icon": "🌙" },
+    { "tag": "重", "title": "当日复盘启动", "summary": "中枢开始整理当日损耗与执行偏差。", "icon": "📋" }
+  ],
+  "publicOpinion": [
+    { "user": "前哨哨兵", "text": "今晚能稳住，明天就还有得打。", "type": "loyal" },
+    { "user": "新加入居民", "text": "我们愿意配合，只求别再经历白天那种混乱。", "type": "neutral" }
+  ]
+}
