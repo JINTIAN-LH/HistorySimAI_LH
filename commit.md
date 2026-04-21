@@ -2,7 +2,7 @@
 
 ## 2026-04-21: feat: prioritize cross-world default with southern-song fallback
 
-**Commit Hash**: (pending)
+**Commit Hash**: `ca0bad809e2113995a8c70214aa9691921d19ae3`
 
 ### 改动摘要
 
