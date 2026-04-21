@@ -141,6 +141,8 @@ export function buildStoryRequestBody(state, lastChoice) {
   const storyPrompt = state.config?.worldviewData?.storyPrompt;
   if (typeof storyPrompt === "string" && storyPrompt.trim()) {
     body.worldviewStoryPrompt = storyPrompt.trim();
+  } else if (storyPrompt && typeof storyPrompt === "object") {
+    body.worldviewStoryPrompt = storyPrompt;
   }
 
   return body;

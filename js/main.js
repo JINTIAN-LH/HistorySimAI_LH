@@ -4,7 +4,7 @@ import { setStartPhase } from "@client/ui/registerViews.js";
 import "@client/ui/registerViews.js";
 import { loadJSON, setActiveWorldviewOverrides, clearDataCache } from "./dataLoader.js";
 import { getState, setState } from "./state.js";
-import { loadGame, applyLoadedGame, getSavedGameplayMode, resolveInitialLoadSlotId } from "./storage.js";
+import { loadGame, applyLoadedGame, getSavedGameplayMode, resolveInitialLoadSlotId, getSaveList, clearGame } from "./storage.js";
 import { initializeCoreGameplayState } from "./systems/coreGameplaySystem.js";
 import { buildStoryFactsFromState } from "./utils/storyFacts.js";
 import { createDefaultRigidState, DEFAULT_RIGID_INITIAL, DEFAULT_RIGID_TRIGGERS } from "./rigid/config.js";
@@ -52,16 +52,47 @@ async function loadWorldviewDataWithFallback() {
   return {};
 }
 
+async function loadWorldviewOverridesWithFallback() {
+  const overrideCandidates = [
+    "data/worldviewOverrides.json",
+    "data/fallbacks/southernSong.worldviewOverrides.json",
+  ];
+  for (const path of overrideCandidates) {
+    try {
+      const res = await fetch(path, { cache: "no-cache" });
+      if (res.ok) {
+        const parsed = await res.json();
+        if (parsed && typeof parsed === "object") {
+          return parsed;
+        }
+      }
+    } catch {
+      // Try next candidate.
+    }
+  }
+  return null;
+}
+
 async function preloadBasicData(preferredMode = null) {
   // ── 自定义世界观注入 ──
   const customWorldview = loadCustomWorldview();
   let resolvedWorldviewData = null;
+  let resolvedWorldviewOverrides = null;
   if (customWorldview && customWorldview.overrides) {
-    setActiveWorldviewOverrides(customWorldview.overrides);
-    clearDataCache();
     resolvedWorldviewData = customWorldview.worldview || {};
+    resolvedWorldviewOverrides = customWorldview.overrides;
     console.info("[bootstrap] 使用自定义世界观:", customWorldview.meta?.title || customWorldview.worldview?.id || "unknown");
+  } else {
+    const [worldviewData, worldviewOverrides] = await Promise.all([
+      loadWorldviewDataWithFallback(),
+      loadWorldviewOverridesWithFallback(),
+    ]);
+    resolvedWorldviewData = worldviewData || {};
+    resolvedWorldviewOverrides = worldviewOverrides;
   }
+
+  setActiveWorldviewOverrides(resolvedWorldviewOverrides);
+  clearDataCache();
 
   const [config, balanceConfig, characters, factionsData, goals, nationInit, positionsData, rigidInitialData, rigidTriggerData, rigidHistoryEvents] = await Promise.all([
     loadJSON("data/config.json"),
@@ -75,11 +106,6 @@ async function preloadBasicData(preferredMode = null) {
     loadJSON("data/rigidTriggers.json").catch(() => DEFAULT_RIGID_TRIGGERS),
     loadJSON("data/rigidHistoryEvents.json").catch(() => []),
   ]);
-
-  // 若无自定义世界观，从默认 worldview.json 加载
-  if (!resolvedWorldviewData) {
-    resolvedWorldviewData = await loadWorldviewDataWithFallback();
-  }
 
   const worldviewConfigPatch = {
     ...(resolvedWorldviewData?.gameTitle ? { gameTitle: resolvedWorldviewData.gameTitle } : {}),
@@ -246,7 +272,7 @@ async function preloadBasicData(preferredMode = null) {
       ...mergePlayerRuntimeConfig(resolvedConfig || {}),
       worldVersion,
       worldviewData: resolvedWorldviewData,
-      worldviewOverrides: customWorldview?.overrides || undefined,
+      worldviewOverrides: resolvedWorldviewOverrides || undefined,
       balance: balanceConfig || {},
       gameplayMode: selectedMode,
       rigid: {
@@ -290,11 +316,64 @@ function shouldShowStartView() {
   return !state.gameStarted;
 }
 
+function findIncompatibleSaves(saves, config) {
+  return (Array.isArray(saves) ? saves : []).filter((saveObj) => !isSaveCompatibleWithWorld(saveObj, config));
+}
+
+function promptAndCleanupIncompatibleSaves(incompatibleSaves, mode, expectedWorldVersion) {
+  if (!Array.isArray(incompatibleSaves) || !incompatibleSaves.length) return;
+  if (typeof window === "undefined" || typeof window.confirm !== "function") return;
+
+  const preview = incompatibleSaves
+    .slice(0, 5)
+    .map((save) => {
+      const slot = save?.slotId || "unknown";
+      const saveWorld = save?.game_data?.worldVersion || "legacy";
+      return `- ${slot}: ${saveWorld}`;
+    })
+    .join("\n");
+
+  const more = incompatibleSaves.length > 5 ? `\n...以及另外 ${incompatibleSaves.length - 5} 个存档` : "";
+  const message = [
+    `检测到 ${incompatibleSaves.length} 个旧世界观存档，与当前版本不兼容。`,
+    `当前世界观: ${expectedWorldVersion}`,
+    "",
+    "不兼容存档预览:",
+    preview,
+    more,
+    "",
+    "点击“确定”将一键清理这些旧存档（仅清理不兼容项）。",
+    "点击“取消”将保留它们，但后续可能继续出现加载异常提示。",
+  ].join("\n");
+
+  const confirmed = window.confirm(message);
+  if (!confirmed) return;
+
+  incompatibleSaves.forEach((saveObj) => {
+    if (!saveObj?.slotId) return;
+    clearGame({ slotId: saveObj.slotId, mode });
+  });
+
+  console.info(
+    `[bootstrap] cleaned ${incompatibleSaves.length} incompatible saves for worldview ${expectedWorldVersion}`
+  );
+}
+
 export async function bootstrap() {
   const bootstrapConfig = await loadJSON("data/config.json").catch(() => ({}));
   await hydratePersistentLocalStorage();
   initLayout();
   const preferredMode = getSavedGameplayMode();
+
+  const allSaves = getSaveList(preferredMode);
+  const incompatibleSaves = findIncompatibleSaves(allSaves, bootstrapConfig);
+  if (incompatibleSaves.length) {
+    promptAndCleanupIncompatibleSaves(
+      incompatibleSaves,
+      preferredMode,
+      getConfiguredWorldVersion(bootstrapConfig)
+    );
+  }
 
   const initialSlotId = resolveInitialLoadSlotId(preferredMode);
   const loaded = loadGame(initialSlotId, preferredMode);

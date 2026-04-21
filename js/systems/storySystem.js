@@ -1259,7 +1259,8 @@ function applyOpeningTurnWorldviewOverride(data, state, isFirstTurn) {
     if (hasBriefingLines) {
       lines.push(...openingTurn.briefingLines);
     }
-    next.storyParagraphs = lines;
+    const baseParagraphs = Array.isArray(data.storyParagraphs) ? data.storyParagraphs : [];
+    next.storyParagraphs = [...lines, ...baseParagraphs];
   }
 
   if (hasOpeningChoices) {

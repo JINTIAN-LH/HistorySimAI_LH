@@ -1,5 +1,33 @@
 # Commit 日志
 
+## 2026-04-21: fix: add startup save self-check and one-click cleanup
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+新增“启动自检提示”能力：启动前扫描并识别旧世界观残留存档，弹窗提醒并支持一键清理不兼容项，避免自动加载链被旧存档污染导致世界观回退。同步合并本地确认的 `public/assets` 删除变更。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/main.js` | ✏️ 调整 | 启动前新增不兼容存档扫描、弹窗确认与批量清理流程 |
+| `js/api/requestContext.js` | ✏️ 调整 | 补充 `worldviewStoryPrompt` 对象透传，保证剧情请求携带完整世界观提示 |
+| `js/systems/storySystem.js` | ✏️ 调整 | 首回合开场改为“世界观简报 + 基础剧情”拼接，提升叙事厚度 |
+| `public/assets/*` | 🗑️ 删除 | 按确认范围纳入本地 26 张历史头像资源删除 |
+
+### 价值
+
+- 启动时可主动发现并清理旧世界观残留，降低“二回合回退旧数据”复发概率
+- 一键清理减少人工排障成本，避免用户反复手动删档
+- 首回合剧情信息密度更高，且世界观提示词传递更完整
+
+### 验证
+
+- `npm run build` ✅ 通过
+- `npx vitest run js/worldVersion.test.js js/storage.test.js js/worldview/worldviewPriority.test.js` ✅ 通过
+
 ## 2026-04-21: feat: prioritize cross-world default with southern-song fallback
 
 **Commit Hash**: `ca0bad809e2113995a8c70214aa9691921d19ae3`
