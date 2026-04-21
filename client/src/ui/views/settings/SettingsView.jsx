@@ -38,7 +38,7 @@ function buildProgressText(state) {
 
 const DEFAULT_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/v1";
 const DEFAULT_MODEL = "qwen-plus";
-const WORLDVIEW_SAMPLE_BUNDLE_PATH = "data/import-samples/worldview.import.bundle.txt";
+const WORLDVIEW_SAMPLE_BUNDLE_PATH = "/data/import-samples/worldview.import.bundle.txt";
 const WORLDVIEW_SAMPLE_BUNDLE_NAME = "worldview.import.bundle.txt";
 
 function buildRuntimeFormState(status) {
@@ -226,6 +226,27 @@ export function SettingsView() {
     setWvError("");
 
     try {
+      const bundleUrl = new URL(WORLDVIEW_SAMPLE_BUNDLE_PATH, window.location.origin).toString();
+      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
+
+      // Mobile browsers are more reliable with direct URL open/share than blob download.
+      if (isMobile) {
+        if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+          try {
+            await navigator.share({
+              title: WORLDVIEW_SAMPLE_BUNDLE_NAME,
+              url: bundleUrl,
+            });
+            return;
+          } catch (shareError) {
+            // User canceled share or platform refused; continue with direct open fallback.
+          }
+        }
+
+        window.location.assign(bundleUrl);
+        return;
+      }
+
       const response = await fetch(WORLDVIEW_SAMPLE_BUNDLE_PATH, { cache: "no-cache" });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);

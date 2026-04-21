@@ -1,5 +1,29 @@
 # Commit 日志
 
+## 2026-04-22: fix(settings): improve mobile sample bundle download
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+本次修复了移动端点击下载世界观示例文件无响应的问题。通过将示例文件路径改为绝对路径并新增移动端优先回退链路，确保在分享不可用时仍能直接打开文件地址完成下载。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ | 示例文件路径改为绝对路径，移动端优先 share URL，失败后直接跳转文件 URL，桌面端继续使用 Blob 下载 |
+
+### 价值
+
+- 修复移动端下载入口“点击无反应”问题，提升可用性
+- 降低移动端路由下相对路径失效导致的下载失败概率
+- 保持桌面端下载体验不变，兼容原有流程
+
+### 验证
+
+- `npm run build` ✅ 通过
+
 ## 2026-04-22: fix: harden mobile sample download and quarterly rewards
 
 **Commit Hash**: (pending)
