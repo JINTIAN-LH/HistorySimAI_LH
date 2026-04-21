@@ -2,7 +2,7 @@
 
 ## 2026-04-21: fix: align era timeline and block legacy story fallback
 
-**Commit Hash**: (pending)
+**Commit Hash**: `15dd86e8d0dad45aec98153be24ae6c1521ea5e2`
 
 ### 改动摘要
 
