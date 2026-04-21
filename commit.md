@@ -2,7 +2,7 @@
 
 ## 2026-04-21: fix: add startup save self-check and one-click cleanup
 
-**Commit Hash**: (pending)
+**Commit Hash**: `6687f747654ac7fcc9c742aec7f723add8119210`
 
 ### 改动摘要
 
