@@ -3,12 +3,11 @@ import { getState, resetState, setState } from "../state.js";
 import { saveGame, clearGame, setSavedGameplayMode, getSaveList, loadGame, applyLoadedGame, formatSaveTimestamp, MAX_MANUAL_SLOTS } from "../storage.js";
 import { updateTopbarByState, updateGoalBar } from "../layout.js";
 import { createActionButton, createButtonRow, createElement, createFoldPanel, createInfoLine, createSectionCard, createTag, createViewShell } from "./viewPrimitives.js";
-import { formatEraTimeByRelativeYear, isRigidModeAllowed } from "../worldview/worldviewRuntimeAccessor.js";
+import { formatEraTimeByRelativeYear } from "../worldview/worldviewRuntimeAccessor.js";
 
 function renderSettingsView(container) {
   const state = getState();
-  const rigidModeAllowed = isRigidModeAllowed(state);
-  const currentModeLabel = state.mode === "rigid_v1" ? "困难模式" : "经典模式";
+  const currentModeLabel = "经典模式";
   const { root, content } = createViewShell({
     className: "settings-view-root",
     title: "设置",
@@ -114,9 +113,7 @@ function renderSettingsView(container) {
 
   const modeSection = createSectionCard({
     title: "玩法模式",
-    hint: rigidModeAllowed
-      ? `当前：${state.mode === "rigid_v1" ? "困难模式" : "经典模式"}`
-      : "检测到自定义世界观，困难模式已隐藏，仅保留经典模式",
+    hint: "当前版本仅保留经典模式",
   });
   const modeBtns = createButtonRow();
 
@@ -126,21 +123,9 @@ function renderSettingsView(container) {
     selected: state.mode === "classic",
   });
 
-  const rigidBtn = rigidModeAllowed
-    ? createActionButton({
-      label: "困难",
-      description: "更严苛的节奏与约束链，适合验证长期玩法张力。",
-      selected: state.mode === "rigid_v1",
-    })
-    : null;
-
   const switchMode = (targetMode) => {
     if (state.mode === targetMode) return;
-    if (targetMode === "rigid_v1" && !rigidModeAllowed) {
-      alert("自定义世界观已启用，困难模式不可用。请先清除自定义世界观。");
-      return;
-    }
-    const targetLabel = targetMode === "rigid_v1" ? "困难模式" : "经典模式";
+    const targetLabel = "经典模式";
     if (!confirm(`切换到${targetLabel}？\n将加载该模式的独立存档。`)) return;
 
     setSavedGameplayMode(targetMode);
@@ -155,14 +140,8 @@ function renderSettingsView(container) {
   };
 
   classicBtn.addEventListener("click", () => switchMode("classic"));
-  if (rigidBtn) {
-    rigidBtn.addEventListener("click", () => switchMode("rigid_v1"));
-  }
 
   modeBtns.appendChild(classicBtn);
-  if (rigidBtn) {
-    modeBtns.appendChild(rigidBtn);
-  }
   modeSection.body.appendChild(modeBtns);
   list.appendChild(modeSection.section);
 

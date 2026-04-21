@@ -338,6 +338,40 @@ function createApp(options = {}) {
     return output;
   }
 
+  function resolveStoryPromptFromPayload(payload) {
+    if (typeof payload === "string" && payload.trim()) {
+      return payload.trim();
+    }
+
+    if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+      return buildStorySystemPrompt({ storyPrompt: payload });
+    }
+
+    return "";
+  }
+
+  function resolveStorySystemPrompt(body) {
+    const directPrompt = resolveStoryPromptFromPayload(body?.worldviewStoryPrompt);
+    if (directPrompt) {
+      return directPrompt;
+    }
+
+    const readonlyWorldviewPrompt = resolveStoryPromptFromPayload(body?.worldview?.storyPrompt);
+    if (readonlyWorldviewPrompt) {
+      return readonlyWorldviewPrompt;
+    }
+
+    // If request worldview id does not match server default worldview id,
+    // avoid leaking server default (Southern Song) worldview constraints.
+    const requestWorldId = String(body?.worldview?.id || "").trim();
+    const defaultWorldId = String(worldviewData?.id || "").trim();
+    if (requestWorldId && defaultWorldId && requestWorldId !== defaultWorldId) {
+      return buildStorySystemPrompt({});
+    }
+
+    return buildStorySystemPrompt(worldviewData);
+  }
+
   function sanitizeStoryPayloadLanguage(payload, policyLabelMap) {
     if (!payload || typeof payload !== "object") return payload;
     const next = { ...payload };
@@ -473,6 +507,10 @@ function createApp(options = {}) {
       closedStorylines = [],
       storyFacts = null,
     } = body || {};
+    const worldview = body?.worldview && typeof body.worldview === "object" ? body.worldview : {};
+    const worldviewTitle = String(worldview?.gameTitle || worldview?.title || "当前世界").trim() || "当前世界";
+    const playerRole = worldview?.playerRole && typeof worldview.playerRole === "object" ? worldview.playerRole : {};
+    const rulerTitle = String(playerRole?.title || playerRole?.name || "统治者").trim() || "统治者";
 
     const day = state.currentDay ?? 1;
     const year = state.currentYear ?? 1;
@@ -494,7 +532,7 @@ function createApp(options = {}) {
     const treasuryStatus = treasury >= 5000000 ? "极度充裕" : treasury >= 1000000 ? "充裕" : treasury >= 300000 ? "一般" : treasury >= 100000 ? "紧张" : "极度空虚";
 
     const nationStr = `国库=${treasury.toLocaleString()}两（${treasuryStatus}）, 粮储=${grain.toLocaleString()}石, 军力=${militaryStrength}, 民心=${civilMorale}, 边患=${borderThreat}, 天灾=${disasterLevel}, 贪腐=${corruptionLevel}`;
-    const timeContext = `当前是建炎${year}年${month}月（第${day}回合）${phaseLabel}，季节=${season}，天气=${weather}。国势：${nationStr}。`;
+    const timeContext = `当前世界：${worldviewTitle}。当前时间：第${year}年${month}月（第${day}回合）${phaseLabel}，季节=${season}，天气=${weather}。国势：${nationStr}。`;
 
     let base = "";
     if (lastChoiceId == null || lastChoiceText == null) {
@@ -504,7 +542,7 @@ function createApp(options = {}) {
       const hint = isCustomEdict
         ? "上一回合是自拟诏书，请在 lastChoiceEffects 中体现执行效果。"
         : "上一回合是预设选项，请推演执行效果。";
-      base = `${timeContext}上一回合陛下选择了：id=${lastChoiceId}，文案="${lastChoiceText}"。${hint} 请在 header 中提供 time、season、weather。`;
+      base = `${timeContext}上一回合${rulerTitle}选择了：id=${lastChoiceId}，文案="${lastChoiceText}"。${hint} 请在 header 中提供 time、season、weather。`;
     }
 
     const ministers = getCharacters();
@@ -612,7 +650,7 @@ function createApp(options = {}) {
     }
 
     if (courtChatSummary && typeof courtChatSummary === "string" && courtChatSummary.trim()) {
-      base += `\n\n（以下为陛下与大臣的私下议事记录）\n${courtChatSummary.trim()}`;
+      base += `\n\n（以下为${rulerTitle}与大臣的私下议事记录）\n${courtChatSummary.trim()}`;
     }
 
     return base;
@@ -667,10 +705,7 @@ function createApp(options = {}) {
     }
 
     const body = req.body || {};
-    const systemPrompt =
-      typeof body.worldviewStoryPrompt === "string" && body.worldviewStoryPrompt.trim()
-        ? body.worldviewStoryPrompt.trim()
-        : buildStorySystemPrompt(worldviewData);
+    const systemPrompt = resolveStorySystemPrompt(body);
     const messages = [
       { role: "system", content: systemPrompt },
       { role: "user", content: buildUserMessage(body) },

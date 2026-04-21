@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPolicyCatalog, initializeHostileForces, processCoreGameplayTurn, refreshQuarterAgendaByState, resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
+import { getPolicyCatalog, initializeHostileForces, processCoreGameplayTurn, resolveHostileForcesAfterChoice, scaleEffectsByExecution } from "./coreGameplaySystem.js";
 
 function createBaseState() {
   return {
@@ -144,43 +144,42 @@ describe("initializeHostileForces", () => {
   });
 });
 
-describe("refreshQuarterAgendaByState worldview mapping", () => {
-  it("maps Chongzhen-era quarterly agenda copy into Southern Song worldview", () => {
-    const out = refreshQuarterAgendaByState({
-      currentYear: 1,
-      currentMonth: 3,
-      worldVersion: "southern_song_v1",
-      config: { worldVersion: "southern_song_v1" },
-      currentQuarterFocus: null,
-      factions: [],
-      nation: {
-        treasury: 300000,
-        grain: 20000,
-        civilMorale: 45,
-        militaryStrength: 55,
-        borderThreat: 72,
-      },
-      hostileForces: [],
-      pendingConsequences: [],
-      storyHistory: [],
-      lastChoiceText: "",
-      unrest: 30,
-      partyStrife: 78,
-    });
-
-    const titles = out.currentQuarterAgenda.map((item) => item.title);
-    expect(titles).toContain("州郡赈灾与安民");
-    expect(titles).toContain("江防补饷与边备");
-    expect(titles).toContain("平抑朝争");
-    expect(titles.join(" ")).not.toMatch(/陕西|关宁|党争/);
-  });
-
+describe("worldview policy mapping", () => {
   it("maps policy tree display copy into Southern Song worldview", () => {
     const policies = getPolicyCatalog({ worldVersion: "southern_song_v1", config: { worldVersion: "southern_song_v1" } });
 
     expect(policies.find((item) => item.id === "politics_east_factory")?.title).toBe("察事耳目收束");
     expect(policies.find((item) => item.id === "diplomacy_macao")?.title).toBe("海商互市");
     expect(policies.find((item) => item.id === "diplomacy_rome")?.description).toContain("诸蕃");
+  });
+
+  it("uses default cross-world policy copy when worldVersion is not southern", () => {
+    const policies = getPolicyCatalog({
+      worldVersion: "cross_world_default_v1",
+      config: { worldVersion: "cross_world_default_v1" },
+    });
+
+    expect(policies.find((item) => item.id === "civil_light_tax")?.title).toBe("资源减负");
+  });
+
+  it("applies custom worldview policy overrides in non-southern world", () => {
+    const policies = getPolicyCatalog({
+      worldVersion: "custom_world_v1",
+      config: {
+        worldVersion: "custom_world_v1",
+        worldviewOverrides: {
+          policies: {
+            civil_light_tax: {
+              title: "自定义轻税",
+              description: "按自定义世界观覆盖国策文案。",
+            },
+          },
+        },
+      },
+    });
+
+    expect(policies.find((item) => item.id === "civil_light_tax")?.title).toBe("自定义轻税");
+    expect(policies.find((item) => item.id === "civil_light_tax")?.description).toBe("按自定义世界观覆盖国策文案。");
   });
 
   it("uses semanticLabels for diplomacy hostile-force wording", () => {
@@ -269,8 +268,6 @@ describe("processCoreGameplayTurn balance corrections", () => {
         unrest: 18,
         taxPressure: 52,
         pendingConsequences: [],
-        currentQuarterAgenda: [],
-        currentQuarterFocus: null,
         appointments: {},
         characterStatus: {},
         nation: {
@@ -297,7 +294,7 @@ describe("processCoreGameplayTurn balance corrections", () => {
     expect(out.statePatch.pendingConsequences.some((item) => item.id === "court_consultation_delay")).toBe(true);
   });
 
-  it("should grow unsuppressed hostile forces on quarter turns", () => {
+  it("should grow unsuppressed hostile forces on periodic escalation turns", () => {
     const out = processCoreGameplayTurn(
       {
         currentYear: 3,
@@ -308,8 +305,6 @@ describe("processCoreGameplayTurn balance corrections", () => {
         unrest: 26,
         taxPressure: 52,
         pendingConsequences: [],
-        currentQuarterAgenda: [],
-        currentQuarterFocus: null,
         appointments: {},
         characterStatus: {},
         nation: {
@@ -342,7 +337,7 @@ describe("processCoreGameplayTurn balance corrections", () => {
     expect(out.statePatch.systemNewsToday.some((item) => String(item.title || "").includes("趁隙坐大"))).toBe(true);
   });
 
-  it("should not grow the hostile target that is actively being suppressed this quarter", () => {
+  it("should not grow the hostile target that is actively being suppressed", () => {
     const out = processCoreGameplayTurn(
       {
         currentYear: 3,
@@ -353,8 +348,6 @@ describe("processCoreGameplayTurn balance corrections", () => {
         unrest: 26,
         taxPressure: 52,
         pendingConsequences: [],
-        currentQuarterAgenda: [],
-        currentQuarterFocus: null,
         appointments: {},
         characterStatus: {},
         nation: {

@@ -1723,14 +1723,7 @@ function createMinisterListElement(state, tagsConfig, onSelectMinister) {
   list.className = "minister-list";
 
   const ministerUnread = state.ministerUnread || {};
-  const preferredFaction = state.currentQuarterFocus?.factionId || null;
-  const orderedMinisters = [...(ministers || [])].sort((a, b) => {
-    if (!preferredFaction) return 0;
-    const aScore = a.faction === preferredFaction ? 1 : 0;
-    const bScore = b.faction === preferredFaction ? 1 : 0;
-    return bScore - aScore;
-  });
-  orderedMinisters.forEach((m, index) => {
+  ministers.forEach((m, index) => {
     const item = document.createElement("div");
     item.className = "minister-item" + (ministerUnread[m.id] ? " minister-item--unread" : "");
     const alive = isAliveCharacter(state, m.id);
@@ -1995,7 +1988,7 @@ function createCourtPositionItem({ pos, holder, state }) {
 
 async function renderCourtPageShell(container, state, { mainTitle, mainHint, renderMain }) {
   const courtCopy = resolveWorldviewCourtViewCopy(state);
-  const currentModeLabel = state.mode === "rigid_v1" ? "困难模式" : "经典模式";
+  const currentModeLabel = "经典模式";
   const { root, actionsBody, dataBody, mainBody } = createGameplayPageTemplate({
     pageClass: "court-page",
     title: courtCopy.headerTitle,

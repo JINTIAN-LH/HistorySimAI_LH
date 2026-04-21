@@ -1,5 +1,9 @@
 import { getConfiguredWorldVersion } from "../worldVersion.js";
 import { adaptPolicyCatalogData } from "../worldview/southernSongAdapter.js";
+import {
+  defaultWorldviewOverrides,
+  southernSongFallbackWorldviewOverrides,
+} from "../worldview/worldviewAdapter.js";
 import { resolveWorldviewSemanticLabels } from "../worldview/worldviewRuntimeAccessor.js";
 
 function clamp(value, min, max) {
@@ -261,15 +265,36 @@ function resolvePolicyCatalogWorldVersion(source) {
   return getConfiguredWorldVersion();
 }
 
-function applySemanticDescriptionsToPolicyCatalog(catalog, source) {
+function resolvePolicyCatalogOverrides(source, worldVersion) {
+  const explicitOverrides = source?.config?.worldviewOverrides || source?.worldviewOverrides;
+  if (explicitOverrides && typeof explicitOverrides === "object") {
+    return {
+      overrides: explicitOverrides,
+      explicitPolicyOverrides: explicitOverrides?.policies && typeof explicitOverrides.policies === "object"
+        ? explicitOverrides.policies
+        : {},
+    };
+  }
+  if (worldVersion === "southern_song_v1") {
+    return {
+      overrides: southernSongFallbackWorldviewOverrides,
+      explicitPolicyOverrides: {},
+    };
+  }
+  return {
+    overrides: defaultWorldviewOverrides,
+    explicitPolicyOverrides: {},
+  };
+}
+
+function applySemanticDescriptionsToPolicyCatalog(catalog, source, explicitPolicyOverrides) {
   const semanticLabels = resolveWorldviewSemanticLabels(
     source && typeof source === "object"
       ? source
       : null
   );
-  const worldviewOverrides = source?.config?.worldviewOverrides || source?.worldviewOverrides;
-  const policyOverrides = worldviewOverrides?.policies && typeof worldviewOverrides.policies === "object"
-    ? worldviewOverrides.policies
+  const policyOverrides = explicitPolicyOverrides && typeof explicitPolicyOverrides === "object"
+    ? explicitPolicyOverrides
     : {};
   const diplomacyDescriptions = {
     diplomacy_mongol: {
@@ -293,10 +318,9 @@ function applySemanticDescriptionsToPolicyCatalog(catalog, source) {
 
 export function getPolicyCatalog(source) {
   const worldVersion = resolvePolicyCatalogWorldVersion(source);
-  if (worldVersion === "southern_song_v1") {
-    return applySemanticDescriptionsToPolicyCatalog(adaptPolicyCatalogData(POLICY_CATALOG), source);
-  }
-  return applySemanticDescriptionsToPolicyCatalog(POLICY_CATALOG, source);
+  const resolvedCatalogContext = resolvePolicyCatalogOverrides(source, worldVersion);
+  const adaptedCatalog = adaptPolicyCatalogData(POLICY_CATALOG, resolvedCatalogContext.overrides);
+  return applySemanticDescriptionsToPolicyCatalog(adaptedCatalog, source, resolvedCatalogContext.explicitPolicyOverrides);
 }
 
 export function getPolicyBonusSummary(unlockedPolicies, balanceConfig) {
@@ -1202,27 +1226,6 @@ function deriveAgendaImpactAdjustment(focus, agenda, context = {}) {
   };
 }
 
-export function refreshQuarterAgendaByState(state) {
-  const month = state.currentMonth || 1;
-  if (month % 3 !== 0) {
-    return {
-      currentQuarterAgenda: [],
-      currentQuarterFocus: null,
-    };
-  }
-
-  const nextAgenda = buildQuarterAgenda(state);
-  const focus = state.currentQuarterFocus || null;
-  const validStance = focus && ["support", "compromise", "oppose", "suppress"].includes(focus.stance);
-  const validAgenda = focus && nextAgenda.some((item) => item.id === focus.agendaId);
-  const validFaction = focus && (state.factions || []).some((item) => item.id === focus.factionId);
-
-  return {
-    currentQuarterAgenda: nextAgenda,
-    currentQuarterFocus: validStance && validAgenda && validFaction ? focus : null,
-  };
-}
-
 export function initializeCoreGameplayState(currentState, factions, config, nationInit) {
   const balance = resolveBalanceConfig(config?.balance);
   const existingSupport = currentState.factionSupport || {};
@@ -1251,8 +1254,6 @@ export function initializeCoreGameplayState(currentState, factions, config, nati
     taxPressure: typeof currentState.taxPressure === "number" ? currentState.taxPressure : 52,
     factionSupport,
     pendingConsequences: Array.isArray(currentState.pendingConsequences) ? currentState.pendingConsequences : [],
-    currentQuarterAgenda: Array.isArray(currentState.currentQuarterAgenda) ? currentState.currentQuarterAgenda : [],
-    currentQuarterFocus: currentState.currentQuarterFocus || null,
     systemNewsToday: Array.isArray(currentState.systemNewsToday) ? currentState.systemNewsToday : [],
     systemPublicOpinion: Array.isArray(currentState.systemPublicOpinion) ? currentState.systemPublicOpinion : [],
     abilityPoints: typeof currentState.abilityPoints === "number" ? currentState.abilityPoints : 0,
@@ -1268,14 +1269,6 @@ export function initializeCoreGameplayState(currentState, factions, config, nati
     hostileForces: compatResult.hostileForces,
     closedStorylines: compatResult.closedStorylines,
   };
-
-  const isQuarterMonth = ((currentState.currentMonth || config.startMonth || 1) % 3) === 0;
-  if (!isQuarterMonth) {
-    nextState.currentQuarterAgenda = [];
-    nextState.currentQuarterFocus = null;
-  } else if (!nextState.currentQuarterAgenda.length) {
-    nextState.currentQuarterAgenda = buildQuarterAgenda({ ...currentState, ...nextState });
-  }
   return nextState;
 }
 
@@ -1673,16 +1666,8 @@ function buildSystemPublicOpinion(state) {
   return opinions;
 }
 
-function buildSystemNews(state, quarterAgenda, resolvedConsequences, hostileGrowthNews = []) {
+function buildSystemNews(state, resolvedConsequences, hostileGrowthNews = []) {
   const news = [];
-  if (quarterAgenda.length) {
-    news.push({
-      title: "季度奏折入直",
-      summary: `本季议题共 ${quarterAgenda.length} 项，重点围绕${quarterAgenda.slice(0, 3).map((item) => item.title).join("、")}展开。`,
-      tag: "重",
-      icon: "📜",
-    });
-  }
   if ((state.executionRate || 0) <= 50) {
     news.push({
       title: "政令执行受阻",
@@ -1703,35 +1688,17 @@ function buildSystemNews(state, quarterAgenda, resolvedConsequences, hostileGrow
 export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nextYear, nextMonth) {
   const balance = getBalanceFromState(state);
   const policyBonus = getPolicyBonusSummary(state.unlockedPolicies || [], balance);
-  const focus = state.currentQuarterFocus || null;
-  const selectedAgenda = focus ? (state.currentQuarterAgenda || []).find((item) => item.id === focus.agendaId) : null;
-  const appointedMinisterIds = Array.from(
-    new Set(
-      Object.values(state.appointments || {})
-        .filter((id) => typeof id === "string" && id)
-        .filter((id) => state.characterStatus?.[id]?.isAlive !== false)
-    )
-  );
-  const agendaAdjust = deriveAgendaImpactAdjustment(focus, selectedAgenda, { appointedMinisterIds });
+  const agendaAdjust = {
+    taxPressureDelta: 0,
+    unrestDelta: 0,
+    strifeDelta: 0,
+    prestigeDelta: 0,
+    directEffects: null,
+  };
   const prestigeBase = derivePrestigeDelta(choiceText, effectiveEffects);
   let focusPrestige = 0;
   let focusStrifeDelta = 0;
   const focusFactionDelta = {};
-  if (focus) {
-    if (focus.stance === "support") focusPrestige += 2;
-    if (focus.stance === "compromise") focusPrestige += 1;
-    if (focus.stance === "oppose") focusPrestige -= 1;
-    if (focus.stance === "suppress") {
-      focusPrestige -= 2;
-      focusStrifeDelta += 5;
-    }
-    if (focus.factionId) {
-      focusFactionDelta[focus.factionId] = 4;
-    }
-  } else if ((state.currentQuarterAgenda || []).length && (state.currentMonth || 1) % 3 === 0) {
-    focusPrestige -= 4;
-    focusStrifeDelta += 6;
-  }
 
   const prestige = clamp((state.prestige || 58) + prestigeBase + focusPrestige + agendaAdjust.prestigeDelta, 0, 100);
   const politicsLevel = state.playerAbilities?.politics || 0;
@@ -1819,23 +1786,7 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
   }
 
   const hostileGrowth = computeHostileNaturalGrowth(state, nextYear, nextMonth, choiceText);
-
-  const quarterAgenda = nextMonth % 3 === 0
-    ? buildQuarterAgenda({
-      ...state,
-      currentYear: nextYear,
-      currentMonth: nextMonth,
-      hostileForces: hostileGrowth?.hostileForces || state.hostileForces,
-      prestige,
-      executionRate,
-      factionSupport,
-      partyStrife,
-      unrest,
-      taxPressure,
-    })
-    : [];
-
-  const quarterReward = nextMonth % 3 === 0 ? 1 : 0;
+  const quarterReward = 0;
 
   const nextState = {
     prestige,
@@ -1846,8 +1797,6 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
     taxPressure,
     pendingConsequences,
     ...(hostileGrowth?.hostileForces ? { hostileForces: hostileGrowth.hostileForces } : {}),
-    currentQuarterAgenda: quarterAgenda,
-    currentQuarterFocus: null,
     abilityPoints: (state.abilityPoints || 0) + quarterReward,
     policyPoints: (state.policyPoints || 0) + quarterReward,
     systemPublicOpinion: [...buildSystemPublicOpinion({ ...state, prestige, partyStrife, unrest }), ...consequenceOpinions],
@@ -1856,7 +1805,7 @@ export function processCoreGameplayTurn(state, choiceText, effectiveEffects, nex
   if (nextProvinceStats) {
     nextState.provinceStats = nextProvinceStats;
   }
-  nextState.systemNewsToday = buildSystemNews(nextState, quarterAgenda, resolvedConsequences, hostileGrowth?.news || []);
+  nextState.systemNewsToday = buildSystemNews(nextState, resolvedConsequences, hostileGrowth?.news || []);
 
   if (quarterReward > 0) {
     nextState.systemNewsToday.unshift({

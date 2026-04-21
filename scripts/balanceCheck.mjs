@@ -8,7 +8,6 @@ import {
   initializeCoreGameplayState,
   normalizeUnlockedPolicies,
 } from "../js/systems/coreGameplaySystem.js";
-import { computeQuarterlyEffects } from "../js/systems/storySystem.js";
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -50,12 +49,8 @@ function resolveTurn(state, turnChoice, nextYear, nextMonth) {
     }
   }
 
-  const quarter = computeQuarterlyEffects(next, nextMonth);
-  next = applyNationEffects(next, quarter);
-
   return {
     state: next,
-    quarter,
   };
 }
 

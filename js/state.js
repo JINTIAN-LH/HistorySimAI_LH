@@ -1,4 +1,3 @@
-import { createDefaultRigidState, DEFAULT_RIGID_INITIAL } from "./rigid/config.js";
 import { DEFAULT_WORLD_VERSION } from "./worldVersion.js";
 import { getCandidateCharactersFromState, getKnownCharactersFromState } from "./utils/characterRegistry.js";
 
@@ -6,8 +5,8 @@ const initialState = {
   schemaVersion: 2,
   currentDay: 1,
   currentPhase: "morning",
-  currentMonth: 4,
-  currentYear: 3,
+  currentMonth: 1,
+  currentYear: 1,
   weather: "阴寒",
   worldVersion: DEFAULT_WORLD_VERSION,
 
@@ -74,15 +73,12 @@ const initialState = {
   newsToday: [],
   newsHistory: {},
   publicOpinion: [],
-  lastQuarterSettlement: null,
   prestige: 58,
   executionRate: 72,
   partyStrife: 62,
   unrest: 18,
   taxPressure: 52,
   factionSupport: {},
-  currentQuarterAgenda: [],
-  currentQuarterFocus: null,
   pendingConsequences: [],
   systemNewsToday: [],
   systemPublicOpinion: [],
@@ -118,7 +114,6 @@ const initialState = {
 
   gameStarted: false,
   mode: "classic",
-  rigid: createDefaultRigidState(DEFAULT_RIGID_INITIAL),
 };
 
 let state = JSON.parse(JSON.stringify(initialState));

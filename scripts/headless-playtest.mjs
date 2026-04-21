@@ -158,12 +158,10 @@ function summarizeConsistency(turnLogs) {
   const logs = Array.isArray(turnLogs) ? turnLogs : [];
   const badDisplay = logs.filter((item) => !item.displayConsistency).length;
   const badPanel = logs.filter((item) => !item.nationPanelConsistency).length;
-  const badQuarter = logs.filter((item) => !item.quarterSettlementConsistency).length;
   return {
     badDisplay,
     badPanel,
-    badQuarter,
-    allConsistent: badDisplay === 0 && badPanel === 0 && badQuarter === 0,
+    allConsistent: badDisplay === 0 && badPanel === 0,
   };
 }
 
@@ -174,7 +172,6 @@ export class HeadlessPlaytestDriver {
     this.dom = setupDom();
     this.modules = null;
     this.strategyUsage = new Map();
-    this.quarterSelections = [];
     this.saveChecks = [];
     this.turnLogs = [];
     this.phaseSummaries = [];
@@ -311,118 +308,10 @@ export class HeadlessPlaytestDriver {
     return this.getStoryActionButtons().find((button) => normalizeText(button.textContent).includes(text));
   }
 
-  getQuarterControlChips(index) {
-    const controls = Array.from(document.querySelectorAll(".quarter-agenda-control"));
-    const control = controls[index] || null;
-    return control ? Array.from(control.querySelectorAll(".quarter-agenda-chip")) : [];
-  }
-
   async renderCurrentTurn() {
     this.mainView.innerHTML = "";
     await this.modules.runCurrentTurn(this.mainView);
     await this.delay(30);
-  }
-
-  async chooseQuarterAgenda(turnNumber) {
-    const agenda = Array.isArray(this.state.currentQuarterAgenda) ? this.state.currentQuarterAgenda : [];
-    if (!agenda.length) {
-      return null;
-    }
-
-    const initialFocus = this.state.currentQuarterFocus || {};
-    if (initialFocus.agendaId && initialFocus.stance && initialFocus.factionId) {
-      return initialFocus;
-    }
-
-    const card = await this.waitFor(
-      () => {
-        const cards = Array.from(document.querySelectorAll(".quarter-agenda-card"));
-        if (!cards.length) return null;
-        const byAgendaId = new Map(
-          agenda.map((item, index) => [item.id, cards[index]]).filter(([, node]) => !!node)
-        );
-        for (const agendaId of this.strategy.agendaPriority) {
-          if (byAgendaId.has(agendaId)) {
-            return byAgendaId.get(agendaId);
-          }
-        }
-        return cards[0];
-      },
-      2000,
-      "quarter agenda card"
-    );
-    await this.click(card, "quarter agenda card");
-    await this.waitFor(
-      () => this.state.currentQuarterFocus?.agendaId,
-      2000,
-      "quarter agenda selection"
-    );
-
-    const stanceChip = await this.waitFor(
-      () => {
-        const chips = this.getQuarterControlChips(0);
-        if (!chips.length) return null;
-        for (const stance of this.strategy.stancePriority) {
-          const matched = chips.find((chip) => chip.dataset.stance === stance || normalizeText(chip.textContent) === this.getStanceLabel(stance));
-          if (matched) return matched;
-        }
-        return chips[0];
-      },
-      2000,
-      "quarter stance chip"
-    );
-    await this.click(stanceChip, "quarter stance chip");
-    await this.waitFor(
-      () => this.state.currentQuarterFocus?.stance,
-      2000,
-      "quarter stance selection"
-    );
-
-    const factionChip = await this.waitFor(
-      () => {
-        const chips = this.getQuarterControlChips(1);
-        if (!chips.length) return null;
-        for (const factionId of this.strategy.factionPriority) {
-          const matched = chips.find((chip) => chip.dataset.factionId === factionId || normalizeText(chip.textContent).includes(this.getFactionLabel(factionId)));
-          if (matched) return matched;
-        }
-        return chips[0];
-      },
-      2000,
-      "quarter faction chip"
-    );
-    await this.click(factionChip, "quarter faction chip");
-    const focus = await this.waitFor(
-      () => {
-        const next = this.state.currentQuarterFocus;
-        return next?.agendaId && next?.stance && next?.factionId ? next : null;
-      },
-      2000,
-      "quarter focus completion"
-    );
-
-    this.quarterSelections.push({
-      turn: turnNumber,
-      agendaId: focus.agendaId,
-      stance: focus.stance,
-      factionId: focus.factionId,
-    });
-    return focus;
-  }
-
-  getStanceLabel(stance) {
-    const labels = {
-      support: "支持",
-      compromise: "折中",
-      oppose: "反对",
-      suppress: "压下党争",
-    };
-    return labels[stance] || stance;
-  }
-
-  getFactionLabel(factionId) {
-    const factions = Array.isArray(this.state.factions) ? this.state.factions : [];
-    return factions.find((item) => item.id === factionId)?.name || factionId;
   }
 
   chooseStoryAction(turnNumber) {
@@ -546,7 +435,6 @@ export class HeadlessPlaytestDriver {
     const beforeMonthKey = `${before.currentYear}-${before.currentMonth}`;
     const beforeDisplaySnapshot = this.modules.captureDisplayStateSnapshot(before);
     await this.renderCurrentTurn();
-    await this.chooseQuarterAgenda(turnNumber);
 
     const button = this.chooseStoryAction(turnNumber);
     const choiceLabel = normalizeText(button?.textContent);
@@ -587,18 +475,6 @@ export class HeadlessPlaytestDriver {
     };
     const nationPanelConsistency = JSON.stringify(nationPanelValues) === JSON.stringify(stateNationValues);
 
-    const quarterExpected = current.currentMonth % 3 === 0;
-    const quarterSettlement = current.lastQuarterSettlement;
-    const quarterSettlementRecorded = Boolean(
-      quarterSettlement &&
-      quarterSettlement.year === current.currentYear &&
-      quarterSettlement.month === current.currentMonth &&
-      quarterSettlement.effects
-    );
-    const quarterSettlementConsistency = quarterExpected
-      ? quarterSettlementRecorded
-      : quarterSettlement == null;
-
     this.turnLogs.push({
       turn: turnNumber,
       choice: choiceLabel,
@@ -610,12 +486,8 @@ export class HeadlessPlaytestDriver {
       civilMorale: current.nation?.civilMorale,
       borderThreat: current.nation?.borderThreat,
       activeHostiles: summarizeHostiles(current.hostileForces),
-      quarterFocus: current.currentQuarterFocus || null,
       displayConsistency,
       nationPanelConsistency,
-      quarterSettlementConsistency,
-      quarterSettlementRecorded,
-      quarterExpected,
       expectedDisplayEffects: displayConsistency ? undefined : expectedDisplayEffects,
       actualDisplayEffects: displayConsistency ? undefined : actualDisplayEffects,
       nationPanelValues: nationPanelConsistency ? undefined : nationPanelValues,
@@ -636,7 +508,6 @@ export class HeadlessPlaytestDriver {
       turnsRequested: this.turns,
       strategy: this.strategy.id,
       finalState: snapshotState(this.state),
-      quarterSelections: this.quarterSelections,
       phaseSummaries: this.phaseSummaries,
       saveChecks: this.saveChecks,
       turnLogs: this.turnLogs,
@@ -670,7 +541,6 @@ export async function runMultiStrategyHeadlessRegression({ turns = 24, strategie
       strategy: report.strategy,
       finalState: report.finalState,
       phaseSummaries: report.phaseSummaries,
-      quarterSelections: report.quarterSelections,
       consistency: summarizeConsistency(report.turnLogs),
     })),
   };
@@ -694,7 +564,6 @@ if (isMainModule()) {
                 turnsRequested: report.turnsRequested,
                 strategy: report.strategy,
                 finalState: report.finalState,
-                quarterSelections: report.quarterSelections,
                 phaseSummaries: report.phaseSummaries,
                 saveChecks: report.saveChecks.map(({ turn, slotId, consistent }) => ({ turn, slotId, consistent })),
               }),

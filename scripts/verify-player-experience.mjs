@@ -52,8 +52,8 @@ async function main() {
     assert(baselineReport.finalState.storyHistoryLength === turns, `Cycle ${cycle}: baseline story history length drifted.`);
     assert(baselineReport.saveChecks.every((item) => item.consistent), `Cycle ${cycle}: baseline save/load verification failed.`);
     assert(
-      baselineReport.turnLogs.every((item) => item.displayConsistency && item.nationPanelConsistency && item.quarterSettlementConsistency),
-      `Cycle ${cycle}: baseline panel or quarterly consistency failed.`
+      baselineReport.turnLogs.every((item) => item.displayConsistency && item.nationPanelConsistency),
+      `Cycle ${cycle}: baseline panel consistency failed.`
     );
 
     multiStrategyReport.strategies.forEach((item) => {

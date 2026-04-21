@@ -26,7 +26,7 @@ function buildStorySystemPrompt(worldviewData = defaultWorldviewData) {
     : {};
   const role = typeof storyPrompt.role === "string" && storyPrompt.role.trim()
     ? storyPrompt.role.trim()
-    : "你是历史模拟器游戏的剧情写手。";
+    : "你是模拟器游戏的剧情写手。";
 
   return [
     role,

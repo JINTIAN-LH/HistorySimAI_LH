@@ -6,7 +6,6 @@ import { saveGame, setSavedGameplayMode } from "@legacy/storage.js";
 import { showGoalPanel } from "@ui/goalPanel.js";
 import { useLegacySelector } from "@client/ui/hooks/useLegacySelector.js";
 import {
-  isRigidModeAllowed,
   resolveWorldviewStartIntroLines,
   resolveWorldviewStartPageCopy,
 } from "@legacy/worldview/worldviewRuntimeAccessor.js";
@@ -17,31 +16,21 @@ export function setStartPhase(phase) {
   startPhase = phase === "create" ? "create" : "intro";
 }
 
-function applyModeSelection(mode) {
+function applyModeSelection() {
   const state = getState();
-  const nextMode = (mode === "rigid_v1" && isRigidModeAllowed(state)) ? "rigid_v1" : "classic";
-  const rigidCalendar = state?.rigid?.calendar || { year: 1627, month: 8 };
+  const nextMode = "classic";
   setState({
     mode: nextMode,
     config: {
       ...(state.config || {}),
       gameplayMode: nextMode,
     },
-    ...(nextMode === "rigid_v1"
-      ? {
-        currentYear: Math.max(1, (Number(rigidCalendar.year) || 1627) - 1626),
-        currentMonth: Number(rigidCalendar.month) || 8,
-        currentPhase: "morning",
-      }
-      : {}),
   });
   setSavedGameplayMode(nextMode);
 }
 
 export function StartView() {
-  const mode = useLegacySelector((state) => state.mode);
   const runtimeState = useLegacySelector((state) => state);
-  const rigidModeAllowed = isRigidModeAllowed(runtimeState);
   const runtimeTitle = runtimeState?.config?.gameTitle
     || runtimeState?.config?.worldviewData?.gameTitle
     || runtimeState?.config?.worldviewData?.title
@@ -49,16 +38,9 @@ export function StartView() {
   const startCopy = resolveWorldviewStartPageCopy(runtimeState);
   const heroTitle = startCopy.heroTitle || runtimeTitle;
   const heroSubtitle = startCopy.heroSubtitle || "";
-  const [selectedMode, setSelectedMode] = useState(
-    rigidModeAllowed && mode === "rigid_v1" ? "rigid_v1" : "classic"
-  );
   const [introLines, setIntroLines] = useState([]);
   const [revealedLines, setRevealedLines] = useState([]);
   const [canStart, setCanStart] = useState(false);
-
-  useEffect(() => {
-    setSelectedMode(rigidModeAllowed && mode === "rigid_v1" ? "rigid_v1" : "classic");
-  }, [mode, rigidModeAllowed]);
 
   useEffect(() => {
     let disposed = false;
@@ -124,7 +106,7 @@ export function StartView() {
   }, [introLines]);
 
   const handleStart = () => {
-    applyModeSelection(selectedMode);
+    applyModeSelection();
     setState({ gameStarted: true });
     saveGame();
     router.setView(router.VIEW_IDS.EDICT);
@@ -157,25 +139,12 @@ export function StartView() {
             <div className="start-intro-actions start-intro-mode-actions">
               <button
                 type="button"
-                className={`ui-btn ui-btn--block start-view-btn${selectedMode === "classic" ? " ui-btn--selected" : ""}`}
-                aria-pressed={selectedMode === "classic" ? "true" : "false"}
-                onClick={() => setSelectedMode("classic")}
+                className="ui-btn ui-btn--block start-view-btn ui-btn--selected"
+                aria-pressed="true"
               >
                 <div className="ui-btn__title">经典模式</div>
                 <div className="ui-btn__desc">初玩者推荐，第一代节奏与叙事系统</div>
               </button>
-
-              {rigidModeAllowed ? (
-                <button
-                  type="button"
-                  className={`ui-btn ui-btn--block start-view-btn${selectedMode === "rigid_v1" ? " ui-btn--selected" : ""}`}
-                  aria-pressed={selectedMode === "rigid_v1" ? "true" : "false"}
-                  onClick={() => setSelectedMode("rigid_v1")}
-                >
-                  <div className="ui-btn__title">困难模式</div>
-                  <div className="ui-btn__desc">更严苛的节奏与叙事系统，适合追求挑战的玩家</div>
-                </button>
-              ) : null}
             </div>
           </div>
         </section>

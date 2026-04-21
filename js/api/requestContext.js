@@ -1,6 +1,5 @@
 import { getPolicyCatalog } from "../systems/coreGameplaySystem.js";
 import { buildStoryFactsFromState } from "../utils/storyFacts.js";
-import { isRigidMode } from "../rigid/config.js";
 import { getKnownCharactersFromState } from "../utils/characterRegistry.js";
 
 function setOptionalArray(target, key, value, { requireNonEmpty = false } = {}) {
@@ -70,10 +69,6 @@ export function buildSharedContextFromState(state, { compact = false } = {}) {
   const ctx = {};
   const policyTitleById = buildPolicyTitleById(state);
 
-  if (state.currentQuarterFocus) {
-    ctx.currentQuarterFocus = state.currentQuarterFocus;
-  }
-  setOptionalArray(ctx, "currentQuarterAgenda", state.currentQuarterAgenda, { requireNonEmpty: compact });
   setOptionalArray(ctx, "customPolicies", state.customPolicies, { requireNonEmpty: compact });
   setOptionalArray(ctx, "hostileForces", state.hostileForces, { requireNonEmpty: compact });
   setOptionalArray(ctx, "closedStorylines", state.closedStorylines, { requireNonEmpty: compact });
@@ -90,7 +85,6 @@ export function buildSharedContextFromState(state, { compact = false } = {}) {
 }
 
 export function buildStoryRequestBody(state, lastChoice) {
-  const rigidMode = isRigidMode(state);
   const body = {
     state: {
       currentDay: state.currentDay,
@@ -105,31 +99,6 @@ export function buildStoryRequestBody(state, lastChoice) {
     },
     ...buildSharedContextFromState(state, { compact: true }),
   };
-
-  if (rigidMode && state.rigid) {
-    const memoryAnchors = Array.isArray(state.rigid.memoryAnchors) ? state.rigid.memoryAnchors : [];
-    const executionConstraints = Array.isArray(state.rigid.executionConstraints) ? state.rigid.executionConstraints : [];
-    body.rigid = {
-      calendar: state.rigid.calendar || null,
-      finance: state.rigid.finance || null,
-      military: state.rigid.military || null,
-      court: state.rigid.court || null,
-      chongZhen: state.rigid.chongZhen || null,
-      pendingAssassinate: !!state.rigid.pendingAssassinate,
-      pendingBranchEvent: state.rigid.pendingBranchEvent || null,
-      lastDecision: state.rigid.lastDecision || null,
-      lastTriggerEvents: Array.isArray(state.rigid.lastTriggerEvents) ? state.rigid.lastTriggerEvents : [],
-      latestMemoryAnchor: memoryAnchors.length ? memoryAnchors[memoryAnchors.length - 1] : null,
-      latestExecutionConstraint: executionConstraints.length ? executionConstraints[executionConstraints.length - 1] : null,
-      lastOutputModules: Array.isArray(state.rigid.lastOutput?.modules)
-        ? state.rigid.lastOutput.modules.map((module) => ({
-          id: module.id,
-          title: module.title,
-          lines: Array.isArray(module.lines) ? module.lines : [],
-        }))
-        : [],
-    };
-  }
 
   if (lastChoice) {
     body.lastChoiceId = lastChoice.id;

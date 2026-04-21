@@ -4,7 +4,6 @@ import { loadJSON } from "../dataLoader.js";
 import { getStatBarClass } from "../systems/nationSystem.js";
 import { PLAYER_ABILITY_KEYS, getPolicyCatalog, spendAbilityPoint, unlockPolicy } from "../systems/coreGameplaySystem.js";
 import { formatDisplayMetricValue, getDisplayMetricBarValue, getDisplayMetricsBySection } from "../utils/displayStateMetrics.js";
-import { isRigidMode } from "../rigid/config.js";
 import {
   formatEraTimeByRelativeYear,
   resolveWorldviewPolicyTreeCopy,
@@ -116,7 +115,6 @@ function appendClassicSections(root, state, container) {
   const policyTreeCopy = resolveWorldviewPolicyTreeCopy(state);
   const rulerAbilityCopy = resolveWorldviewRulerAbilityCopy(state);
   const factionSupport = state.factionSupport || {};
-  const quarterAgenda = state.currentQuarterAgenda || [];
   const provinceStats = state.provinceStats || {};
 
   root.appendChild(createFoldSection("派系支持度", (body) => {
@@ -125,20 +123,6 @@ function appendClassicSections(root, state, container) {
         icon: "🏛️",
         title: `${faction.name} · ${factionSupport[faction.id] || 0}/100`,
         summary: faction.stance || faction.description || "",
-      }).card);
-    });
-  }));
-
-  root.appendChild(createFoldSection("季度奏折", (body) => {
-    if (!quarterAgenda.length) {
-      body.appendChild(createNode("div", "nation-feed-empty", "当前无季度核心议题，推进至季度月后将生成 3-5 条时政议题。"));
-      return;
-    }
-    quarterAgenda.forEach((item) => {
-      body.appendChild(createCard({
-        icon: "📜",
-        title: item.title,
-        summary: `${item.summary} 关联：${(item.impacts || []).join("、")}`,
       }).card);
     });
   }));
@@ -336,13 +320,9 @@ export function renderNationView(container) {
   const nationTitle = `${worldviewTitle}国势`;
   const governanceTitle = `${worldviewTitle}朝局总览`;
 
-  if (isRigidMode(state)) {
-    appendMetricGrid(root, state, "rigid", nationTitle);
-  } else {
-    appendMetricGrid(root, state, "nation", nationTitle);
-    appendMetricGrid(root, state, "governance", governanceTitle);
-    appendClassicSections(root, state, container);
-  }
+  appendMetricGrid(root, state, "nation", nationTitle);
+  appendMetricGrid(root, state, "governance", governanceTitle);
+  appendClassicSections(root, state, container);
 
   appendSharedSections(root, state);
   container.appendChild(root);

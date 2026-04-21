@@ -10,9 +10,6 @@ import { AVAILABLE_AVATAR_NAMES, buildNameById } from "../utils/sharedConstants.
 import { applyEffects as applyEffectsModule } from "../utils/effectsProcessor.js";
 import { DISPLAY_STATE_METRICS, buildOutcomeDisplayDelta, captureDisplayStateSnapshot, hasOutcomeDisplayDelta, mergeOutcomeDisplayDelta, renderOutcomeDisplayCard } from "../utils/displayStateMetrics.js";
 import { mergeDerivedAppointmentStateEffects, normalizeAppointmentEffects } from "../utils/appointmentEffects.js";
-import { buildRigidStoryData } from "../rigid/moduleComposer.js";
-import { ensureRigidState, getRigidPresets } from "../rigid/engine.js";
-import { isRigidMode } from "../rigid/config.js";
 import { isMilitaryCombatChoice, runMilitarySystem } from "./militarySystem.js";
 import { createElement, createFeedCard, createSectionCard, createStatCard, createTag } from "../ui/viewPrimitives.js";
 import {
@@ -792,40 +789,6 @@ function applyEffects(effects) {
   }
 }
 
-function computeQuarterlyEffects(state, currentMonth) {
-  if (typeof currentMonth !== "number") return null;
-  if (currentMonth % 3 !== 0) return null;
-
-  const nation = state.nation || {};
-  const policy = (state.config && state.config.economicPolicy) || {};
-  const abilities = state.playerAbilities || {};
-  const unlocked = state.unlockedPolicies || [];
-  const policyBonus = getPolicyBonusSummary(unlocked, state.config?.balance);
-  const customBonus = computeCustomPolicyQuarterBonus(state);
-
-  const baseTreasury = policy.baseTreasury || 100000;
-  const baseGrain = policy.baseGrain || 20000;
-
-  const efficiency = Math.max(0.2, Math.min(1.5, 1 - (nation.corruptionLevel || 0) / 200));
-  const moraleBonus = 1 + ((nation.civilMorale || 50) - 50) / 200;
-
-  const managementBonus = 1 + (abilities.management || 0) * 0.08;
-  const scholarshipBonus = 1 + (abilities.scholarship || 0) * 0.05;
-  const treasuryPolicyBonus = policyBonus.quarterlyTreasuryRatio;
-  const grainPolicyBonus = policyBonus.quarterlyGrainRatio;
-
-  const treasuryGain = Math.round(baseTreasury * efficiency * moraleBonus * managementBonus * treasuryPolicyBonus * customBonus.treasuryRatio);
-  const grainGain = Math.round(baseGrain * efficiency * moraleBonus * scholarshipBonus * grainPolicyBonus * customBonus.grainRatio);
-
-  return {
-    treasury: treasuryGain,
-    grain: grainGain,
-    militaryStrength: customBonus.militaryDelta + (policyBonus.quarterlyMilitaryDelta || 0),
-    corruptionLevel: customBonus.corruptionDelta + (policyBonus.quarterlyCorruptionDelta || 0),
-    _customPolicyBonus: customBonus,
-  };
-}
-
 function mergeEffects(a = {}, b = {}) {
   const merged = { ...a };
   for (const [key, value] of Object.entries(b)) {
@@ -1186,17 +1149,8 @@ function renderChosenChoice(container, chosenChoice) {
   container.appendChild(choiceWrap);
 }
 
-function isQuarterSettlementMonth(state) {
-  return !!(
-    state?.lastQuarterSettlement &&
-    state.lastQuarterSettlement.year === state.currentYear &&
-    state.lastQuarterSettlement.month === state.currentMonth
-  );
-}
-
 function renderStoryHistory(container, history, phaseLabels, state, renderId) {
   const { mainTarget } = getStoryRenderTargets(container);
-  const quarterSettlementMonth = isQuarterSettlementMonth(state);
 
   for (let index = 0; index < history.length; index += 1) {
     const entry = history[index];
@@ -1228,11 +1182,7 @@ function renderStoryHistory(container, history, phaseLabels, state, renderId) {
     
     if (entry.chosenChoice && entry.chosenChoice.text) {
       renderChosenChoice(mainTarget, entry.chosenChoice);
-      const isLatestHistoryEntry = index === history.length - 1;
-      const shouldSkipLatestDeltaInQuarter = quarterSettlementMonth && isLatestHistoryEntry;
-      if (!shouldSkipLatestDeltaInQuarter) {
-        renderDeltaCard(mainTarget, entry.displayEffects || entry.effects, state, "本轮推演数值变动");
-      }
+      renderDeltaCard(mainTarget, entry.displayEffects || entry.effects, state, "本轮推演数值变动");
     }
   }
   return true;
@@ -1250,8 +1200,17 @@ function applyOpeningTurnWorldviewOverride(data, state, isFirstTurn) {
     return data;
   }
 
+  const hasTemplateParagraphs = Array.isArray(data.storyParagraphs) && data.storyParagraphs.length > 0;
+  const hasTemplateChoices = Array.isArray(data.choices) && data.choices.length > 0;
+
+  // Keep story template as the default first-turn source.
+  // Worldview opening copy is only used when template content is missing.
+  if (hasTemplateParagraphs && hasTemplateChoices) {
+    return data;
+  }
+
   const next = { ...data };
-  if (hasBriefingLines || hasBriefingTitle) {
+  if (!hasTemplateParagraphs && (hasBriefingLines || hasBriefingTitle)) {
     const lines = [];
     if (hasBriefingTitle) {
       lines.push(`【${openingTurn.briefingTitle}】`);
@@ -1259,11 +1218,10 @@ function applyOpeningTurnWorldviewOverride(data, state, isFirstTurn) {
     if (hasBriefingLines) {
       lines.push(...openingTurn.briefingLines);
     }
-    const baseParagraphs = Array.isArray(data.storyParagraphs) ? data.storyParagraphs : [];
-    next.storyParagraphs = [...lines, ...baseParagraphs];
+    next.storyParagraphs = lines;
   }
 
-  if (hasOpeningChoices) {
+  if (!hasTemplateChoices && hasOpeningChoices) {
     const templateChoices = Array.isArray(data.choices) ? data.choices : [];
     next.choices = openingTurn.openingChoices.map((item, index) => {
       const fallback = templateChoices[index] || templateChoices[0] || {};
@@ -1279,20 +1237,6 @@ function applyOpeningTurnWorldviewOverride(data, state, isFirstTurn) {
   return next;
 }
 
-function mergeQuarterDisplayEffectsDedup(baseEffects, quarterEffects) {
-  const merged = { ...(baseEffects && typeof baseEffects === "object" ? baseEffects : {}) };
-
-  DISPLAY_STATE_METRICS.forEach(({ key }) => {
-    const quarterValue = quarterEffects?.[key];
-    if (typeof quarterValue !== "number" || quarterValue === 0) return;
-    if (typeof merged[key] !== "number") {
-      merged[key] = quarterValue;
-    }
-  });
-
-  return merged;
-}
-
 function renderStoryError(container, errorMessage, retryCallback) {
   const { mainTarget } = getStoryRenderTargets(container);
   const block = document.createElement("div");
@@ -1306,36 +1250,6 @@ function renderStoryError(container, errorMessage, retryCallback) {
   
   block.appendChild(retryBtn);
   mainTarget.appendChild(block);
-}
-
-function mergeRigidAndLLMStoryParagraphs(rigidParagraphs, llmParagraphs) {
-  const rigid = Array.isArray(rigidParagraphs) ? rigidParagraphs.filter(Boolean) : [];
-  const llm = Array.isArray(llmParagraphs) ? llmParagraphs.filter(Boolean) : [];
-  if (!llm.length) return rigid;
-
-  const normalized = new Set();
-  const out = [];
-  const pushUnique = (text) => {
-    const key = String(text).replace(/\s+/g, "").slice(0, 80);
-    if (!key || normalized.has(key)) return;
-    normalized.add(key);
-    out.push(text);
-  };
-
-  llm.forEach(pushUnique);
-  rigid.slice(0, 3).forEach(pushUnique);
-  return out;
-}
-
-function buildRigidStoryFallback(state) {
-  const ensured = ensureRigidState(state);
-  return buildRigidStoryData(
-    {
-      ...state,
-      rigid: ensured.rigid,
-    },
-    getRigidPresets(state)
-  );
 }
 
 function isCrossWorldView(state) {
@@ -1373,13 +1287,10 @@ export function buildStoryTemplatePaths(state, config = state?.config || {}) {
   const year = state?.currentYear || 1;
   const month = state?.currentMonth || 1;
   const phaseKey = state?.currentPhase || "morning";
-  const rigidMode = isRigidMode(state);
   const isFirstTurn = (state?.lastChoiceId == null)
     && (!Array.isArray(state?.storyHistory) || state.storyHistory.length === 0);
   const turnSnapshotPath = `data/story/year${year}_month${month}_${phaseKey}.json`;
-  const baselineTemplatePath = (rigidMode && isFirstTurn)
-    ? `data/story/hard_mode_day1_${phaseKey}.json`
-    : `data/story/day1_${phaseKey}.json`;
+  const baselineTemplatePath = `data/story/day1_${phaseKey}.json`;
 
   if (config.storyMode === "llm" && !isFirstTurn) {
     return [turnSnapshotPath, baselineTemplatePath];
@@ -1394,7 +1305,6 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
   const phaseKey = state.currentPhase || "morning";
   const cacheKey = `${year}_${month}_${phaseKey}`;
   const config = state.config || {};
-  const rigidMode = isRigidMode(state);
   const isFirstTurn = (state.lastChoiceId == null) && (!Array.isArray(state.storyHistory) || state.storyHistory.length === 0);
   const templatePaths = buildStoryTemplatePaths(state, config);
   const requireLlmSuccess = !!options?.requireLlmSuccess;
@@ -1465,29 +1375,6 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
       }
       return null;
     }
-  }
-
-  if (rigidMode) {
-    const rigidFallback = buildRigidStoryFallback(state);
-    const rigidGateActive = !!(state?.rigid?.pendingAssassinate || state?.rigid?.pendingBranchEvent || state?.rigid?.court?.strikeState);
-    const incomingChoices = Array.isArray(data?.choices) ? data.choices : [];
-    const mergedChoices = (!rigidGateActive && incomingChoices.length >= 3)
-      ? incomingChoices
-      : rigidFallback.choices;
-    data = {
-      ...rigidFallback,
-      ...(data || {}),
-      header: {
-        ...(rigidFallback.header || {}),
-        ...((data && data.header) || {}),
-      },
-      storyParagraphs: mergeRigidAndLLMStoryParagraphs(rigidFallback.storyParagraphs, data?.storyParagraphs),
-      choices: mergedChoices,
-      rigidMeta: {
-        ...(rigidFallback.rigidMeta || {}),
-        ...((data && data.rigidMeta) || {}),
-      },
-    };
   }
 
   data = applyOpeningTurnWorldviewOverride(data, state, isFirstTurn);
@@ -1563,114 +1450,6 @@ function createChoiceButton(choice, onChoice, disabled = false) {
   return btn;
 }
 
-function renderQuarterAgendaPanel(container, state, onChoice, options = {}) {
-  const agenda = Array.isArray(state.currentQuarterAgenda) ? state.currentQuarterAgenda : [];
-  if (!agenda.length) return;
-
-  const resolveSeverity = (value) => {
-    if (value === "急") return { label: "急", cls: "urgent" };
-    if (value === "缓") return { label: "缓", cls: "normal" };
-    return { label: "重", cls: "important" };
-  };
-
-  const focus = state.currentQuarterFocus || {};
-  const rerender = () => {
-    resetStoryRenderTargets(container);
-    renderStoryTurn(getState(), container, onChoice, options);
-  };
-
-  const panel = document.createElement("div");
-  panel.className = "quarter-agenda-panel";
-
-  const title = document.createElement("div");
-  title.className = "quarter-agenda-panel__title";
-  title.textContent = `季度奏折 · 本季需先选定议题与立场`; 
-  panel.appendChild(title);
-
-  const subtitle = document.createElement("div");
-  subtitle.className = "quarter-agenda-panel__subtitle";
-  subtitle.textContent = `本季度必须先浏览 3-5 条时政议题，选定商议派系与观点后再颁布诏书；若存在敌对势力，将出现“军事开拓”议题。`;
-  panel.appendChild(subtitle);
-
-  const cards = document.createElement("div");
-  cards.className = "quarter-agenda-grid";
-  agenda.forEach((item) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "quarter-agenda-card" + (focus.agendaId === item.id ? " quarter-agenda-card--active" : "");
-    const severity = resolveSeverity(item.severity);
-    card.innerHTML = `<div class="quarter-agenda-card__title-row"><div class="quarter-agenda-card__title">${item.title}</div><span class="quarter-agenda-card__badge quarter-agenda-card__badge--${severity.cls}">${severity.label}</span></div><div class="quarter-agenda-card__summary">${item.summary}</div><div class="quarter-agenda-card__meta">关联：${(item.impacts || []).join("、")}</div>`;
-    card.addEventListener("click", () => {
-      setState({
-        currentQuarterFocus: {
-          agendaId: item.id,
-          stance: focus.agendaId === item.id ? focus.stance || null : null,
-          factionId: focus.agendaId === item.id ? focus.factionId || null : null,
-        },
-      });
-      rerender();
-    });
-    cards.appendChild(card);
-  });
-  panel.appendChild(cards);
-
-  const selectedAgenda = agenda.find((item) => item.id === focus.agendaId) || null;
-  if (selectedAgenda) {
-    const stanceWrap = document.createElement("div");
-    stanceWrap.className = "quarter-agenda-control";
-    stanceWrap.innerHTML = `<div class="quarter-agenda-control__label">选择观点</div>`;
-    const stances = [
-      ["support", "支持"],
-      ["compromise", "折中"],
-      ["oppose", "反对"],
-      ["suppress", "压下党争"],
-    ];
-    const stanceButtons = document.createElement("div");
-    stanceButtons.className = "quarter-agenda-chip-row";
-    stances.forEach(([value, label]) => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "quarter-agenda-chip" + (focus.stance === value ? " quarter-agenda-chip--active" : "");
-      chip.textContent = label;
-      chip.addEventListener("click", () => {
-        setState({ currentQuarterFocus: { ...focus, agendaId: selectedAgenda.id, stance: value } });
-        rerender();
-      });
-      stanceButtons.appendChild(chip);
-    });
-    stanceWrap.appendChild(stanceButtons);
-    panel.appendChild(stanceWrap);
-
-    const factionWrap = document.createElement("div");
-    factionWrap.className = "quarter-agenda-control";
-    factionWrap.innerHTML = `<div class="quarter-agenda-control__label">选择商议派系</div>`;
-    const factionButtons = document.createElement("div");
-    factionButtons.className = "quarter-agenda-chip-row";
-    (state.factions || []).forEach((faction) => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "quarter-agenda-chip" + (focus.factionId === faction.id ? " quarter-agenda-chip--active" : "");
-      chip.textContent = faction.name;
-      chip.addEventListener("click", () => {
-        setState({ currentQuarterFocus: { ...focus, agendaId: selectedAgenda.id, factionId: faction.id } });
-        rerender();
-      });
-      factionButtons.appendChild(chip);
-    });
-    factionWrap.appendChild(factionButtons);
-    panel.appendChild(factionWrap);
-  }
-
-  const ready = !!(focus.agendaId && focus.stance && focus.factionId);
-  const footer = document.createElement("div");
-  footer.className = "quarter-agenda-panel__footer";
-  footer.textContent = ready
-    ? "季度议题已锁定，现可继续选择系统选项或撰写诏书。"
-    : "需先选定议题、立场和商议派系，季度诏书流程才会解锁。";
-  panel.appendChild(footer);
-  return panel;
-}
-
 function renderCurrentTurn(container, data, state, phaseLabels, onChoice, options = {}) {
   const { mainTarget, actionsTarget } = getStoryRenderTargets(container);
   const phaseKey = state.currentPhase || "morning";
@@ -1684,45 +1463,6 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
   const currentWrap = document.createElement("div");
   currentWrap.className = "edict-current-wrap";
   mainTarget.appendChild(currentWrap);
-
-  const settlement = state.lastQuarterSettlement;
-  if (
-    settlement &&
-    settlement.year === state.currentYear &&
-    settlement.month === state.currentMonth
-  ) {
-    const quarterNote = document.createElement("div");
-    quarterNote.className = "story-history-label";
-    const settlementTime = formatEraTimeByRelativeYear(state, settlement.year, settlement.month);
-    quarterNote.textContent = `季末结算 · ${settlementTime}：国库 +${(settlement.effects?.treasury || 0).toLocaleString()} 两，粮储 +${(settlement.effects?.grain || 0).toLocaleString()} 石`;
-    currentWrap.appendChild(quarterNote);
-
-    const settlementDisplayEffects = {
-      treasury: settlement.effects?.treasury || 0,
-      grain: settlement.effects?.grain || 0,
-      militaryStrength: settlement.effects?.militaryStrength || 0,
-      corruptionLevel: settlement.effects?.corruptionLevel || 0,
-    };
-
-    const history = Array.isArray(state.storyHistory) ? state.storyHistory : [];
-    const latestHistoryEntry = history.length ? history[history.length - 1] : null;
-    const latestDisplayEffects = latestHistoryEntry?.displayEffects || latestHistoryEntry?.effects || null;
-    const mergedQuarterDisplayEffects = mergeQuarterDisplayEffectsDedup(latestDisplayEffects, settlementDisplayEffects);
-
-    renderDeltaCard(currentWrap, mergedQuarterDisplayEffects, state, "季度结算数值变动");
-  }
-
-  const quarterPanel = renderQuarterAgendaPanel(container, state, onChoice, options);
-
-  if (isRigidMode(state)) {
-    const rigidHistory = Array.isArray(state.storyHistory) ? state.storyHistory : [];
-    const latestRigidHistory = rigidHistory.length ? rigidHistory[rigidHistory.length - 1] : null;
-    const latestRigidHistoryDelta = latestRigidHistory?.displayEffects || latestRigidHistory?.effects || null;
-    const rigidDelta = state?.rigid?.lastSettlementDelta;
-    if (hasOutcomeDisplayDelta(rigidDelta) && !hasOutcomeDisplayDelta(latestRigidHistoryDelta)) {
-      renderDeltaCard(currentWrap, rigidDelta, state, "本轮数值变化");
-    }
-  }
 
   const textBlock = document.createElement("div");
   textBlock.className = "edict-block";
@@ -1763,23 +1503,7 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
   
   const actionsWrap = document.createElement("div");
   actionsWrap.className = "story-actions";
-  const requiresQuarterFocus = Array.isArray(state.currentQuarterAgenda) && state.currentQuarterAgenda.length > 0;
-  const quarterReady = !!(state.currentQuarterFocus && state.currentQuarterFocus.agendaId && state.currentQuarterFocus.stance && state.currentQuarterFocus.factionId);
-  
-  // Check if we are in the first turn (opening scenario) - if so, don't apply strike block
-  const isFirstTurn = (state.lastChoiceId == null) && (!Array.isArray(state.storyHistory) || state.storyHistory.length === 0);
-  
-  const rigidStrikeBlocked = !isFirstTurn && isRigidMode(state) && !!state?.rigid?.court?.strikeState;
-  const hasStrikeRecoveryChoice = isRigidMode(state)
-    && Array.isArray(data.choices)
-    && data.choices.some((choice) => String(choice?.id || "").startsWith("rigid_strike_"));
-  const disableActions = (requiresQuarterFocus && !quarterReady) || (rigidStrikeBlocked && !hasStrikeRecoveryChoice);
-  if (rigidStrikeBlocked) {
-    const strikeTip = document.createElement("div");
-    strikeTip.className = "story-history-label";
-    strikeTip.textContent = "朝政停摆，无法施政。";
-    currentWrap.appendChild(strikeTip);
-  }
+  const disableActions = false;
   
   (data.choices || []).forEach((choice) => {
     const btn = createChoiceButton(choice, onChoice, disableActions);
@@ -1806,13 +1530,9 @@ function renderCurrentTurn(container, data, state, phaseLabels, onChoice, option
     const actionMeta = createElement("div", { className: "gameplay-page__meta-row" });
     actionMeta.appendChild(createTag(`系统旨意 ${(data.choices || []).length} 条`));
     actionMeta.appendChild(createTag("自拟诏书已启用"));
-    if (Array.isArray(state.currentQuarterAgenda) && state.currentQuarterAgenda.length) {
-      actionMeta.appendChild(createTag(disableActions ? "先锁定季度议题" : "季度议题已解锁"));
-    }
     actionHost.appendChild(actionMeta);
   }
 
-  if (quarterPanel) actionHost.appendChild(quarterPanel);
   actionHost.appendChild(actionsWrap);
 }
 
@@ -1864,9 +1584,7 @@ export async function renderStoryTurn(state, container, onChoice, options = {}) 
       const lastDeltaCard = deltaCards[deltaCards.length - 1];
       if (lastDeltaCard) lastDeltaCard.remove();
       const latestState = getState();
-      if (!isQuarterSettlementMonth(latestState)) {
-        renderDeltaCard(historyContainer, mergedDisplayEffects, latestState, "本轮推演数值变动");
-      }
+      renderDeltaCard(historyContainer, mergedDisplayEffects, latestState, "本轮推演数值变动");
     }
   }
 
@@ -1910,16 +1628,6 @@ function showCustomEdictPanel(onChoice, state) {
   header.appendChild(closeBtn);
   panel.appendChild(header);
 
-  const focus = state && state.currentQuarterFocus;
-  const agenda = (state?.currentQuarterAgenda || []).find((item) => item.id === focus?.agendaId);
-  const faction = (state?.factions || []).find((item) => item.id === focus?.factionId);
-  if (agenda && focus && faction) {
-    const info = document.createElement("div");
-    info.className = "custom-edict-panel__context";
-    const stanceMap = { support: "支持", compromise: "折中", oppose: "反对", suppress: "压下党争" };
-    info.textContent = `本季度议题：${agenda.title} · 观点：${stanceMap[focus.stance] || focus.stance} · 商议派系：${faction.name}`;
-    panel.appendChild(info);
-  }
 
   const fields = [
     { id: "ce-neizhi", label: "内政", placeholder: "如：减免赋税、整顿吏治..." },
@@ -1965,11 +1673,7 @@ function showCustomEdictPanel(onChoice, state) {
       if (val) parts.push(`【${t.key}】${val}`);
     });
     if (parts.length === 0) return;
-    let combinedText = parts.join(" ");
-    if (agenda && focus && faction) {
-      const stanceMap = { support: "支持", compromise: "折中", oppose: "反对", suppress: "压下党争" };
-      combinedText = `【季度议题】${agenda.title}【商议派系】${faction.name}【立场】${stanceMap[focus.stance] || focus.stance} ${combinedText}`;
-    }
+    const combinedText = parts.join(" ");
     overlay.remove();
     onChoice("custom_edict", combinedText, "自拟诏书", null);
   });
@@ -1988,4 +1692,4 @@ function showCustomEdictPanel(onChoice, state) {
   (app || document.body).appendChild(overlay);
 }
 
-export { applyEffects, renderDeltaCard, estimateEffectsFromEdict, computeEffectDelta, computeQuarterlyEffects, mergeEffects };
+export { applyEffects, renderDeltaCard, estimateEffectsFromEdict, computeEffectDelta, mergeEffects };

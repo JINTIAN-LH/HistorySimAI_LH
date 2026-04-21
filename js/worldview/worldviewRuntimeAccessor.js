@@ -72,10 +72,6 @@ export function isCustomWorldviewActive(state) {
   return Boolean(state?.config?.worldviewOverrides);
 }
 
-export function isRigidModeAllowed(state) {
-  return !isCustomWorldviewActive(state);
-}
-
 export function resolveWorldviewEraInfo(state) {
   const worldviewData = state?.config?.worldviewData || {};
   const worldviewOverrides = state?.config?.worldviewOverrides || {};

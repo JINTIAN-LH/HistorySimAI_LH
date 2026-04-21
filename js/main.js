@@ -7,13 +7,11 @@ import { getState, setState } from "./state.js";
 import { loadGame, applyLoadedGame, getSavedGameplayMode, resolveInitialLoadSlotId, getSaveList, clearGame } from "./storage.js";
 import { initializeCoreGameplayState } from "./systems/coreGameplaySystem.js";
 import { buildStoryFactsFromState } from "./utils/storyFacts.js";
-import { createDefaultRigidState, DEFAULT_RIGID_INITIAL, DEFAULT_RIGID_TRIGGERS } from "./rigid/config.js";
 import { getConfiguredWorldVersion, isSaveCompatibleWithWorld } from "./worldVersion.js";
 import { mergePlayerRuntimeConfig } from "./playerRuntimeConfig.js";
 import { hydratePersistentLocalStorage } from "./persistentBrowserStorage.js";
 import { repairImpossibleNaturalDeaths } from "./utils/characterStatusRepair.js";
 import { loadCustomWorldview } from "./worldview/worldviewStorage.js";
-import { isRigidModeAllowed } from "./worldview/worldviewRuntimeAccessor.js";
 
 function normalizeCharacterId(rawId, aliasToCanonical) {
   if (typeof rawId !== "string") return "";
@@ -94,7 +92,7 @@ async function preloadBasicData(preferredMode = null) {
   setActiveWorldviewOverrides(resolvedWorldviewOverrides);
   clearDataCache();
 
-  const [config, balanceConfig, characters, factionsData, goals, nationInit, positionsData, rigidInitialData, rigidTriggerData, rigidHistoryEvents] = await Promise.all([
+  const [config, balanceConfig, characters, factionsData, goals, nationInit, positionsData] = await Promise.all([
     loadJSON("data/config.json"),
     loadJSON("data/balanceConfig.json").catch(() => ({})),
     loadJSON("data/characters.json"),
@@ -102,9 +100,6 @@ async function preloadBasicData(preferredMode = null) {
     loadJSON("data/goals.json").catch(() => []),
     loadJSON("data/nationInit.json").catch(() => ({})),
     loadJSON("data/positions.json").catch(() => ({ positions: [] })),
-    loadJSON("data/rigidInitialState.json").catch(() => DEFAULT_RIGID_INITIAL),
-    loadJSON("data/rigidTriggers.json").catch(() => DEFAULT_RIGID_TRIGGERS),
-    loadJSON("data/rigidHistoryEvents.json").catch(() => []),
   ]);
 
   const worldviewConfigPatch = {
@@ -245,15 +240,8 @@ async function preloadBasicData(preferredMode = null) {
   const normalizedExistingAppointments = normalizeAppointmentsMap(current.appointments, aliasToCanonical);
   const normalizedDefaultAppointments = normalizeAppointmentsMap(defaultAppointments, aliasToCanonical);
 
-  const requestedMode = current.mode || preferredMode || resolvedConfig?.gameplayMode || "classic";
-  const selectedMode = requestedMode === "rigid_v1" && !isRigidModeAllowed({ config: { worldviewOverrides: customWorldview?.overrides } })
-    ? "classic"
-    : requestedMode;
+  const selectedMode = "classic";
   const worldVersion = customWorldview?.worldview?.id || getConfiguredWorldVersion(resolvedConfig);
-  const resolvedRigidState = current.rigid && typeof current.rigid === "object"
-    ? current.rigid
-    : createDefaultRigidState(rigidInitialData || DEFAULT_RIGID_INITIAL);
-  const rigidCalendar = resolvedRigidState?.calendar || { year: 1627, month: 8 };
   const repairedCharacterStatus = repairImpossibleNaturalDeaths({
     characters: allCharacters,
     characterStatus: current.characterStatus,
@@ -275,11 +263,6 @@ async function preloadBasicData(preferredMode = null) {
       worldviewOverrides: resolvedWorldviewOverrides || undefined,
       balance: balanceConfig || {},
       gameplayMode: selectedMode,
-      rigid: {
-        initialState: rigidInitialData || DEFAULT_RIGID_INITIAL,
-        triggers: rigidTriggerData || DEFAULT_RIGID_TRIGGERS,
-        historyEvents: Array.isArray(rigidHistoryEvents) ? rigidHistoryEvents : [],
-      },
     },
     allCharacters,
     factions: mergedFactions,
@@ -296,16 +279,6 @@ async function preloadBasicData(preferredMode = null) {
     mode: selectedMode,
     worldVersion,
     player: resolvedPlayer,
-    currentQuarterAgenda: [],
-    currentQuarterFocus: null,
-    rigid: resolvedRigidState,
-    ...(selectedMode === "rigid_v1"
-      ? {
-        currentYear: Math.max(1, (Number(rigidCalendar.year) || 1627) - 1626),
-        currentMonth: Number(rigidCalendar.month) || 8,
-        currentPhase: "morning",
-      }
-      : {}),
   });
 
   setState({ storyFacts: buildStoryFactsFromState(getState()) });

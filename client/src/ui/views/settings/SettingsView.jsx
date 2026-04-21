@@ -23,10 +23,10 @@ import {
   hasCustomWorldview,
   buildWorldviewPreview,
 } from "@legacy/worldview/worldviewStorage.js";
-import { formatEraTimeByRelativeYear, isRigidModeAllowed } from "@legacy/worldview/worldviewRuntimeAccessor.js";
+import { formatEraTimeByRelativeYear } from "@legacy/worldview/worldviewRuntimeAccessor.js";
 
 function getModeLabel(mode) {
-  return mode === "rigid_v1" ? "困难模式" : "经典模式";
+  return mode === "classic" ? "经典模式" : "经典模式";
 }
 
 function buildProgressText(state) {
@@ -189,12 +189,7 @@ export function SettingsView() {
   const savesBySlot = new Map(saves.map((save) => [save.slotId, save]));
 
   const switchMode = (targetMode) => {
-    const rigidModeAllowed = isRigidModeAllowed(getState()) && !wvActive;
     if (mode === targetMode) return;
-    if (targetMode === "rigid_v1" && !rigidModeAllowed) {
-      window.alert("自定义世界观已启用，困难模式不可用。请先清除自定义世界观。");
-      return;
-    }
     const targetLabel = getModeLabel(targetMode);
     if (!window.confirm(`切换到${targetLabel}？\n将加载该模式的独立存档。`)) return;
 
@@ -341,8 +336,6 @@ export function SettingsView() {
     nation: state.nation,
   }), shallowEqual);
 
-  const rigidModeAllowed = isRigidModeAllowed(getState()) && !wvActive;
-
   return (
     <div>
       <div
@@ -384,23 +377,6 @@ export function SettingsView() {
             <button type="button" onClick={handleSave}>
               {saveButtonText}
             </button>
-          </div>
-        </div>
-
-        <div
-          className="settings-item"
-          style={{ flexDirection: "column", alignItems: "stretch", gap: "6px" }}
-        >
-          <div style={{ fontSize: "13px", fontWeight: "600" }}>玩法模式</div>
-          <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>当前：{currentModeLabel}</div>
-          {!rigidModeAllowed ? (
-            <div style={{ fontSize: "12px", color: "var(--color-text-sub)" }}>
-              检测到自定义世界观，困难模式已隐藏。
-            </div>
-          ) : null}
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button type="button" onClick={() => switchMode("classic")}>经典</button>
-            {rigidModeAllowed ? <button type="button" onClick={() => switchMode("rigid_v1")}>困难</button> : null}
           </div>
         </div>
 

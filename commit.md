@@ -1,5 +1,37 @@
 # Commit 日志
 
+## 2026-04-22: refactor: remove rigid mode and quarterly memorial pipelines
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+本次重构全面移除“困难模式（rigid）”与“季度奏折”功能链，清理了运行时入口、状态字段、回合结算、脚本验证与相关测试依赖，统一回到经典模式主干。同步修正了首回合模板优先级与跨世界观 prompt 回退路径，避免叙事串线和回合回滚。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/systems/turnSystem.js` | ✏️ 调整 | 删除季度结算与 rigid 分支回合流水，回归经典单链路推进 |
+| `js/systems/storySystem.js` | ✏️ 调整 | 移除季度面板/门禁/季度效果与 rigid 兜底拼装；首回合改为“模板优先，缺失才用 world opening” |
+| `js/systems/coreGameplaySystem.js` | ✏️ 调整 | 删除季度议题刷新导出与季度状态输出，统一政策目录映射上下文 |
+| `js/state.js` | ✏️ 调整 | 清理 rigid 与季度相关默认状态字段，初始化回归经典模式 |
+| `scripts/headless-playtest.mjs` | ✏️ 调整 | 删除季度选择与季度一致性统计，保留显示一致性与国情面板一致性验证 |
+| `server/index.js` | ✏️ 调整 | 新增请求级 story prompt 解析，跨世界观时避免回退到服务端默认南宋 prompt |
+
+### 价值
+
+- 清除已下线功能链的历史分叉，降低回合主流程复杂度与维护成本
+- 避免跨世界观叙事污染导致的 LLM 严格模式回滚
+- 验证脚本与测试口径与当前玩法一致，减少无效失败与误报
+
+### 验证
+
+- `npm run build` ✅ 通过
+- `npm run test -- js/testing/headlessPlaytest.integration.test.js` ✅ 通过
+- `npm run test -- js/systems/turnSystem.pipeline.test.js` ✅ 通过
+- `npm run test -- js/systems/coreGameplaySystem.test.js` ✅ 通过
+
 ## 2026-04-21: fix: align era timeline and block legacy story fallback
 
 **Commit Hash**: `15dd86e8d0dad45aec98153be24ae6c1521ea5e2`
