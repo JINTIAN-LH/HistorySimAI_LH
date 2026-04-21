@@ -62,6 +62,7 @@ jobs:
           name: fleet-reports
           path: .fleet/reports
           if-no-files-found: ignore
+          overwrite: true
 
       - name: Fail workflow on Fleet errors
         if: steps.fleet_run.outcome != 'success'

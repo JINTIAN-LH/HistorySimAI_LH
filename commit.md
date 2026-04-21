@@ -1,5 +1,31 @@
 # Commit 日志
 
+## 2026-04-21: fix: avoid duplicate upload version collisions
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+修复“Auto-selected version already exists; try again with overwrite=1”导致的重复上传失败问题：在前端构建阶段自动注入唯一 build version，并让 CI 产物上传支持覆盖，避免同版本产物命名冲突阻断发布。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `.github/workflows/ci.yml` | ✏️ 调整 | `upload-artifact` 增加 `overwrite: true`，避免同名 artifact 复跑时报冲突 |
+| `.github/workflows/deploy.yml` | ✏️ 调整 | GitHub Pages 构建/部署使用 `run_id + run_attempt` 作为动态产物名，避免固定版本名重复 |
+| `vite.config.js` | ✏️ 调整 | 新增构建版本注入（`x-build-version` meta + `__BUILD_VERSION__` define），确保每次构建产物具备唯一指纹 |
+
+### 价值
+
+- **上传更稳定**：重复版本冲突场景下不再频繁手工重试
+- **发布可追踪**：每个构建都带有唯一版本标识，便于回溯
+- **流水线更鲁棒**：CI/Pages 对同名产物冲突更不敏感
+
+### 验证
+
+- `npm run build` ✅ 通过
+
 ## 2026-04-21: feat: migrate worldview UI copy and import validation
 
 **Commit Hash**: (pending)
