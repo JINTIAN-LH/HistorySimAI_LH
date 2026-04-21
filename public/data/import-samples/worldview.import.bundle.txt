@@ -1,218 +1,246 @@
-﻿杩欐槸涓€涓寘鍚?worldview.json 鍜?worldviewOverrides.json 绀轰緥鍐呭鐨勫鍏ュ寘銆傝鏍规嵁闇€瑕佸弬鑰冧互涓嬪悇鑺傚唴瀹广€?
+这是一个用于导入的历史模拟世界视图和覆盖配置文件的示例数据束。
 
 === worldview.json ===
 {
-  "id": "cross_world_simulator_v1",
-  "title": "绌胯秺涓栫晫妯℃嫙鍣?,
-  "gameTitle": "绌胯秺涓栫晫妯℃嫙鍣?,
+  "id": "cross_world_default_v1",
+  "title": "穿越世界模拟器",
+  "gameTitle": "穿越世界模拟器",
   "playerRole": {
-    "name": "绌胯秺鑰?,
-    "title": "瀹夸富"
+    "name": "穿越者",
+    "title": "宿主"
   },
   "storyPrompt": {
-    "role": "浣犳槸銆婄┛瓒婁笘鐣屾ā鎷熷櫒銆嬫父鎴忕殑鍓ф儏鍐欐墜銆?,
+    "role": "你是《穿越世界模拟器》游戏的剧情写手。",
     "worldview": [
-      "涓栫晫瑙備负澶氬厓瀹囧畽绌胯秺浣撶郴锛岀帺瀹朵綔涓烘剰澶栬閱掔┛瓒婅兘鍔涚殑瀹夸富锛屽彲闅忔満鎴栧畾鍚戣繘鍏ヤ笉鍚屼笘鐣屻€?,
-      "鐜╁鍥哄畾鎵紨绌胯秺鑰咃紝鍒濆鏃犺韩浠姐€佹棤璧勬簮銆佹棤鍔垮姏锛屼粠闆跺紑濮嬪湪闄岀敓涓栫晫鐢熷瓨銆佸彂灞曘€佺櫥椤躲€?,
-      "涓栫晫绫诲瀷鍖呭惈锛氬彜浠ｇ帇鏈濄€佷慨浠欑巹骞汇€佹湯涓栧簾鍦熴€佹槦闄呯骞汇€侀瓟娉曞骞汇€佺幇浠ｉ兘甯傘€佹湯鏃ヤ抚灏搞€佹椽鑽掔璇濄€佸紓鐣岄涓汇€佽禌鍗氭湅鍏嬨€?
+      "世界观为多元宇宙穿越体系，玩家作为意外觉醒穿越能力的宿主，可随机或定向进入不同世界。",
+      "玩家固定扮演穿越者，初始无身份、无资源、无势力，从零开始在陌生世界生存、发展、登顶。",
+      "世界类型包含：古代王朝、修仙玄幻、末世废土、星际科幻、魔法奇幻、现代都市、末日丧尸、洪荒神话、异界领主、赛博朋克。"
     ],
     "gameplayConstraints": [
-      "淇濈暀鐜版湁璧勬簮缁撴瀯銆佸洖鍚堣妭濂忎笌鐜╂硶寰幆锛屽彧鏀瑰彉鍙欎簨鑳屾櫙涓庡悕璇嶏紝涓嶆柊澧炴満鍒躲€?,
-      "鎵€鏈変笘鐣岄伒寰粺涓€瑙勫垯锛氬睘鎬ф垚闀裤€佷汉鎵嶆嫑鍕熴€佹斂绛栧喅绛栥€佷簨浠跺簲瀵广€佸娍鍔涙墿寮犮€佷笘鐣岃穬杩併€?
+      "保留现有资源结构、回合节奏与玩法循环，只改变叙事背景与名词，不新增机制。",
+      "所有世界遵循统一规则：属性成长、人才招募、政策决策、事件应对、势力扩张、世界跃迁。"
     ]
   },
   "semanticLabels": {
-    "primaryHostileName": "鏁屽鍔垮姏",
-    "northernHostileAliases": ["寮烘晫", "寮傛棌", "濡栧吔", "铏棌", "鏈烘鍐涘洟", "榛戞殫鍔垮姏", "鍙涘啗", "鏁屽鐜╁"],
-    "rebelForceAliases": ["涔辨皯", "鍙涘厷", "閭慨", "鍙樺紓浣?, "鍙嶆姉鍐?, "寮傜"],
-    "dengzhouRebelAliases": ["鍦版柟涔卞啗", "鍓叉嵁鍔垮姏", "閲庢€洟浼?, "鎺犲ず鑰?]
+    "primaryHostileName": "敌对势力",
+    "northernHostileAliases": [
+      "强敌",
+      "异族",
+      "妖兽",
+      "虫族",
+      "机械军团",
+      "黑暗势力",
+      "叛军",
+      "敌对玩家"
+    ],
+    "rebelForceAliases": [
+      "乱民",
+      "叛党",
+      "邪修",
+      "变异体",
+      "反抗军",
+      "异端"
+    ],
+    "dengzhouRebelAliases": [
+      "地方乱军",
+      "割据势力",
+      "野怪团伙",
+      "掠夺者"
+    ]
   },
   "talentConfig": {
-    "tabLabel": "浼欎即",
-    "tabIcon": "馃",
-    "viewTitle": "浼欎即鍐涘洟",
-    "viewSubtitle": "闆嗙粨鍚勮矾寮鸿€咃紝缁勫缓涓撳睘鍥㈤槦锛屽緛鏈嶄竾鍗冧笘鐣?,
-    "recruitLabel": "鎷涘嫙",
+    "tabLabel": "伙伴",
+    "tabIcon": "🤝",
+    "viewTitle": "伙伴军团",
+    "viewSubtitle": "集结各路强者，组建专属团队，征服万千世界",
+    "recruitLabel": "招募",
     "recruitTypes": {
-      "imperial_exam": "鏈虹紭閭傞€?,
-      "recommend": "鍔垮姏寮曡崘",
-      "search": "瀹氬悜瀵昏"
+      "imperial_exam": "机缘邂逅",
+      "recommend": "势力引荐",
+      "search": "定向寻访"
     },
     "qualityLabels": {
-      "ordinary": "鏅€氫紮浼?,
-      "excellent": "绮捐嫳寮鸿€?,
-      "epic": "浼犺澶╅獎"
+      "ordinary": "普通伙伴",
+      "excellent": "精英强者",
+      "epic": "传说天骄"
     },
     "abilityFields": {
-      "military": "鎴樺姏",
-      "politics": "缁熷尽",
-      "economy": "璧勬簮",
-      "culture": "鏅烘収"
+      "military": "战力",
+      "politics": "统御",
+      "economy": "资源",
+      "culture": "智慧"
     },
-    "rulerTitle": "瀹夸富",
-    "talentNoun": "浼欎即",
-    "poolLabel": "鍊欓€変紮浼?,
-    "interactVerb": "浜よ皥",
-    "appointVerb": "濮斾换",
-    "trainVerb": "鍩瑰吇",
+    "rulerTitle": "宿主",
+    "talentNoun": "伙伴",
+    "poolLabel": "候选伙伴",
+    "interactVerb": "交谈",
+    "appointVerb": "委任",
+    "trainVerb": "培养",
     "recruitCostResource": "prestige",
-    "recruitCostLabel": "澹版湜"
+    "recruitCostLabel": "声望"
   },
   "policyConfig": {
-    "tabLabel": "鍐崇瓥",
-    "tabIcon": "鈿栵笍",
-    "viewTitle": "涓栫晫鍐崇瓥",
-    "viewSubtitle": "鏉冭　鍒╁紛锛屽喅鏂湭鏉ワ紝鎺屾帶涓栫晫璧板悜",
-    "sessionLabel": "璁簨",
-    "edictLabel": "鎸囦护",
-    "issueLabel": "璁",
-    "ministerLabel": "浼欎即",
-    "adviceLabel": "寤鸿",
-    "rulerTitle": "瀹夸富",
-    "askVerb": "璇㈤棶",
-    "issueVerb": "涓嬭揪",
-    "supportLabel": "璧炲悓",
-    "opposeLabel": "鍙嶅",
-    "neutralLabel": "涓珛",
-    "historyLabel": "鍐崇瓥璁板綍"
+    "tabLabel": "决策",
+    "tabIcon": "⚖️",
+    "viewTitle": "世界决策",
+    "viewSubtitle": "权衡利弊，决断未来，掌控世界走向",
+    "sessionLabel": "议事",
+    "edictLabel": "指令",
+    "issueLabel": "议题",
+    "ministerLabel": "伙伴",
+    "adviceLabel": "建议",
+    "rulerTitle": "宿主",
+    "askVerb": "询问",
+    "issueVerb": "下达",
+    "supportLabel": "赞同",
+    "opposeLabel": "反对",
+    "neutralLabel": "中立",
+    "historyLabel": "决策记录"
   },
   "startPageCopy": {
-    "heroTitle": "绌胯秺涓栫晫妯℃嫙鍣?,
-    "heroSubtitle": "鏃犻檺涓栫晫锛屾棤闄愬彲鑳斤紝浠庝粖澶╁紑濮嬶紝浣犲皢涓诲鑷繁鐨勭┛瓒婁汉鐢?,
-    "startButtonLabel": "寮€濮嬬┛瓒?,
-    "continueButtonLabel": "缁х画鏃呯▼",
+    "heroTitle": "穿越世界模拟器",
+    "heroSubtitle": "无限世界，无限可能，从今天开始，你将主宰自己的穿越人生",
+    "startButtonLabel": "开始穿越",
+    "continueButtonLabel": "继续旅程",
     "introLines": [
-      "涓€閬撶绉樺厜鑺掗棯杩囷紝浣犵獊鐒舵嫢鏈変簡绌挎涓囧崈涓栫晫鐨勮兘鍔涖€?,
-      "娌℃湁绯荤粺銆佹病鏈夋柊鎵嬬ぜ鍖咃紝鍙湁涓€韬嚒韬拰涓€棰椾笉鐢樺钩鍑＄殑蹇冦€?,
-      "鑰屼綘锛屽皢鍦ㄤ竴涓釜鍏夋€檰绂荤殑涓栫晫涓紝鎸ｆ墡姹傜敓锛岄€嗚鐧婚《锛屾垚涓哄鍏冨畤瀹欑殑浼犺銆?
+      "一道神秘光芒闪过，你突然拥有了穿梭万千世界的能力。",
+      "没有系统、没有新手礼包，只有一身凡躯和一颗不甘平凡的心。",
+      "而你，将在一个个光怪陆离的世界中，挣扎求生，逆袭登顶，成为多元宇宙的传说。"
     ]
   },
   "openingTurn": {
-    "briefingTitle": "棣栨绌胯秺",
+    "briefingTitle": "首次穿越",
     "briefingLines": [
-      "浣犻檷涓村湪闄岀敓涓栫晫锛屼竴鏃犳墍鏈夛紝鍗辨満鍥涗紡銆?,
-      "鐢熷瓨鏄涓€瑕佸姟锛屽彂灞曟槸闀挎湡鐩爣锛屼綘蹇呴』鍋氬嚭鍏抽敭閫夋嫨銆?
+      "你降临在陌生世界的临时中枢据点，外环侦察点刚刚传回敌情。",
+      "后勤清点显示银币与粮草都在警戒线附近，任何决策都会牵动全局。",
+      "作战组主张先固防线，治理组主张先稳民心，技术组建议先统一路线。",
+      "这是你真正意义上的第一道指令：先保生存、先稳内区，还是先集体议决。"
     ],
     "openingChoices": [
       {
         "id": "stabilize_survive",
-        "label": "鍏堟眰鐢熷瓨",
-        "summary": "浼樺厛瑙ｅ喅娓╅ケ銆佸畨鍏紝绋冲畾褰撳墠澶勫"
+        "label": "先固防线",
+        "summary": "优先加固外环防线，压低敌对势力突破风险"
       },
       {
         "id": "secure_develop",
-        "label": "鍏堣皨鍙戝睍",
-        "summary": "浼樺厛鑾峰彇璧勬簮銆佷俊鎭紝涓烘湭鏉ユ墿寮犻摵璺?
+        "label": "先稳内区",
+        "summary": "优先安置流散者与补给分发，稳住据点秩序"
+      },
+      {
+        "id": "align_strategy",
+        "label": "先统一路线",
+        "summary": "召集核心伙伴议事，先统一短期生存与扩张节奏"
       }
     ]
   },
   "chronicleFormat": {
-    "eraLabel": "绌胯秺鍘?,
-    "yearUnit": "骞?,
-    "monthUnit": "鏈?,
+    "eraLabel": "穿越历",
+    "yearUnit": "年",
+    "monthUnit": "月",
     "displayPattern": "{era}{year}{yearUnit}{month}{monthUnit}",
-    "fallbackPattern": "绗瑊year}骞磠month}鏈?
+    "fallbackPattern": "第{year}年{month}月"
   },
   "courtViewCopy": {
-    "headerTitle": "瀹夸富涓灑",
-    "headerSubtitle": "缁熷尽浼欎即锛屽喅绛栦簨鍔★紝鎺屾帶鍏ㄥ眬",
-    "quickActionLabel": "閫熷喅",
-    "emptyStateText": "鏆傛棤寰呭喅绛栦簨鍔★紝璇风◢鍚庡啀璇?
+    "headerTitle": "宿主中枢",
+    "headerSubtitle": "统御伙伴，决策事务，掌控全局",
+    "quickActionLabel": "速决",
+    "emptyStateText": "暂无待决策事务，请稍后再试"
   },
   "policyTreeCopy": {
-    "treeTitle": "绌胯秺涔嬭矾",
-    "treeSubtitle": "瑙勫垝璺嚎锛岀ǔ姝ュ彉寮猴紝寰佹湇涓栫晫",
+    "treeTitle": "穿越之路",
+    "treeSubtitle": "规划路线，稳步变强，征服世界",
     "branchLabels": {
-      "military": "鎴樺姏鎻愬崌",
-      "internal": "鍔垮姏寤鸿",
-      "economy": "璧勬簮绉疮"
+      "military": "战力提升",
+      "internal": "势力建设",
+      "economy": "资源积累"
     }
   },
   "rulerAbilityCopy": {
-    "panelTitle": "瀹夸富鑳藉姏",
+    "panelTitle": "宿主能力",
     "abilityLabels": {
-      "authority": "绌胯秺鏉冮檺",
-      "command": "缁熷尽涔嬪姏",
-      "insight": "涓栫晫娲炲療"
+      "authority": "穿越权限",
+      "command": "统御之力",
+      "insight": "世界洞察"
     },
-    "abilityHint": "瀹夸富鑳藉姏鍐冲畾绌胯秺涓婇檺涓庡彂灞曢€熷害"
+    "abilityHint": "宿主能力决定穿越上限与发展速度"
   },
   "worldEventCopy": {
-    "sectionTitle": "涓栫晫浜嬩欢",
-    "emptyStateText": "褰撳墠涓栫晫鏆傛棤閲嶅ぇ鍙樻晠",
+    "sectionTitle": "世界事件",
+    "emptyStateText": "当前世界暂无重大变故",
     "severityLabels": {
-      "high": "涓栫晫鍗辨満",
-      "medium": "鍖哄煙鍔ㄨ崱",
-      "low": "灞€閮ㄥ紓鍔?
+      "high": "世界危机",
+      "medium": "区域动荡",
+      "low": "局部异动"
     }
   },
   "publicOpinionCopy": {
-    "sectionTitle": "涓栫晫澹版湜",
-    "positiveLabel": "涓囨皯鏁话",
-    "neutralLabel": "榛橀粯鏃犻椈",
-    "negativeLabel": "澹板悕鐙艰棄",
-    "emptyStateText": "鏆傛湭褰㈡垚鏄捐憲澹版湜"
+    "sectionTitle": "世界声望",
+    "positiveLabel": "万民敬仰",
+    "neutralLabel": "默默无闻",
+    "negativeLabel": "声名狼藉",
+    "emptyStateText": "暂未形成显著声望"
   },
   "uiSurfaceCopy": {
     "policy": {
-      "inputPlaceholder": "杈撳叆瑕佽闂紮浼寸殑闂锛屾垨鐐逛笂鏂硅棰樺揩閫熷～鍏モ€?,
-      "followupPlaceholder": "鍩轰簬褰撳墠璁缁х画杩介棶鈥?,
-      "emptyQuestionError": "璇峰厛杈撳叆鎴栭€夋嫨璁銆?,
-      "emptyEdictError": "鎸囦护鍐呭涓嶅緱涓虹┖銆?,
-      "askFailedError": "璁簨澶辫触锛岃绋嶅悗閲嶈瘯銆?,
-      "followupFailedError": "杩介棶澶辫触锛岃绋嶅悗閲嶈瘯銆?,
-      "issueFailedError": "涓嬭揪澶辫触锛岃绋嶅悗閲嶈瘯銆?,
-      "issueSuccess": "鎸囦护宸叉嫙瀹氾紝寰呬綘鏈疆閫夋嫨鏃朵竴骞剁敓鏁堛€?,
-      "closeSessionLabel": "缁撴潫璁簨",
-      "summaryPrefix": "缁艰锛?,
-      "adoptAdviceLabel": "閲囩撼姝よ",
-      "followupLabel": "缁х画杩介棶浼欎即锛?,
-      "followupButtonLabel": "杩介棶",
-      "followupBusyLabel": "璁€?,
-      "historyTitle": "鍘嗘璁簨"
+      "inputPlaceholder": "输入要询问伙伴的问题，或点上方议题快速填入…",
+      "followupPlaceholder": "基于当前议题继续追问…",
+      "emptyQuestionError": "请先输入或选择议题。",
+      "emptyEdictError": "指令内容不得为空。",
+      "askFailedError": "议事失败，请稍后重试。",
+      "followupFailedError": "追问失败，请稍后重试。",
+      "issueFailedError": "下达失败，请稍后重试。",
+      "issueSuccess": "指令已拟定，待你本轮选择时一并生效。",
+      "closeSessionLabel": "结束议事",
+      "summaryPrefix": "综议：",
+      "adoptAdviceLabel": "采纳此议",
+      "followupLabel": "继续追问伙伴：",
+      "followupButtonLabel": "追问",
+      "followupBusyLabel": "议…",
+      "historyTitle": "历次议事"
     },
     "edict": {
-      "pageTitle": "鎸囦护涓灑",
-      "pageSubtitle": "灏嗗墽鎯呮鏂囥€佹寚浠ら€夋嫨銆佸弽棣堜笌鑷嫙鎸囦护鍏ュ彛鍥哄畾鍦ㄧ粺涓€鐜╂硶楠ㄦ灦鍐?,
-      "actionsTitle": "鎸囦护閫夋嫨",
-      "actionsHint": "鍥哄畾淇濈暀閫夋嫨鍖轰笌鑷嫙鎸囦护鍏ュ彛锛岄攣瀹氬悗涔熷湪杩欓噷缁х画鎿嶄綔",
-      "dataTitle": "涓栫晫鍙嶉",
-      "dataHint": "鎶婁簨浠舵祦鍜屽０鏈涘弽棣堝浐瀹氬湪鏁版嵁鍖猴紝鍑忓皯淇℃伅婕傜Щ",
-      "mainTitle": "鎸囦护姝ｆ枃",
-      "mainHint": "姝ｆ枃鍖烘壙杞藉巻鍙茶褰曘€佸綋鍥炲悎鏂囨湰銆佹壒娉ㄥ拰鏁板€煎弽棣?
+      "pageTitle": "指令中枢",
+      "pageSubtitle": "将剧情正文、指令选择、反馈与自拟指令入口固定在统一玩法骨架内",
+      "actionsTitle": "指令选择",
+      "actionsHint": "固定保留选择区与自拟指令入口，锁定后也在这里继续操作",
+      "dataTitle": "世界反馈",
+      "dataHint": "把事件流和声望反馈固定在数据区，减少信息漂移",
+      "mainTitle": "指令正文",
+      "mainHint": "正文区承载历史记录、当回合文本、批注和数值反馈"
     },
     "court": {
-      "kejuPanelTitle": "鏈虹紭鎷涘嫙",
-      "kejuPanelSubtitle": "缁熶竴寮圭獥楠ㄦ灦锛岄倐閫呮嫑鍕熴€佸紩鑽愭嫑鍕熷叡鐢ㄩ潰鏉?,
-      "wujuPanelTitle": "寮鸿€呮嫑鍕?,
-      "wujuPanelSubtitle": "缁熶竴寮圭獥楠ㄦ灦锛屽己鑰呫€佸ぉ楠勬嫑鍕熷叡鐢ㄥ竷灞€",
-      "talentPanelTitle": "浼欎即鍐涘洟",
-      "talentPanelSubtitle": "鎷涘嫙銆佸浠汇€佸煿鍏诲叡鐢ㄥ脊绐楃粨鏋?,
-      "policyPanelTitle": "鍐崇瓥璁簨",
-      "policyPanelSubtitle": "璁簨銆侀噰绾炽€佷笅杈炬寚浠ょ粺涓€寮圭獥楠ㄦ灦",
-      "appointByPositionSubtitle": "缁熶竴濮斾换寮圭獥楠ㄦ灦锛屽悗缁墿灞曠瓫閫夈€佹帓搴?,
-      "appointByMinisterSubtitle": "缁熶竴濮斾换寮圭獥锛屼紮浼翠笌鑱屼綅鍏辩敤妯℃澘",
-      "appointLegacySubtitle": "缁熶竴鑰佸浠昏矾寰勫脊绐楋紝淇濈暀绛涢€変笌纭",
-      "positionSelectSubtitle": "缁熶竴鑱屼綅閫夋嫨寮圭獥锛屼繚鎸佸浠绘祦绋嬩竴鑷?,
-      "ministerDetailSubtitle": "缁熶竴璇︽儏寮圭獥锛屽寘鍚ご鍍忋€佸繝璇氥€佹€佸害",
-      "factionPanelSubtitle": "缁熶竴鍔垮姏寮圭獥锛屽悗缁帴鍏ユ垚鍛樸€佸繝璇氫俊鎭?,
-      "ministerPanelSubtitle": "缁熶竴浼欎即鍒楄〃寮圭獥锛岀偣鍑昏繘鍏ヨ鎯?,
-      "unknownError": "鏈煡閿欒",
-      "appointFailedPrefix": "濮斾换澶辫触: ",
-      "adjustFailedPrefix": "璋冩暣澶辫触: ",
-      "kejuStartSuccess": "鏈虹紭宸插紑鍚紝鍊欓€夊悕鍗曞凡鐢熸垚銆?,
-      "kejuHuishiSuccess": "閭傞€呭€欓€夊悕鍗曞凡鐢熸垚銆?,
-      "kejuDianshiSuccess": "寮鸿€呭€欓€夊悕鍗曞凡鐢熸垚銆?,
-      "kejuPublishSuccess": "鎷涘嫙瀹屾垚銆?,
-      "kejuReserveSavedSuccess": "宸插啓鍏ュ€欓€夊悕鍗曘€?,
-      "kejuEntryAppliedSuccess": "浼欎即鍔犲叆宸茬敓鏁堛€?,
-      "officeAppointmentAppliedSuccess": "浼欎即濮斾换宸茬敓鏁?,
-      "positionOccupiedRegenerateError": "璇ヨ亴浣嶅凡鏈変汉锛岄噸鏂扮敓鎴愭帹鑽愩€?,
-      "positionOccupiedRegenerateSimpleError": "璇ヨ亴浣嶅凡鏈変汉锛岄噸鏂扮敓鎴愬悕鍗曘€?,
-      "candidateDeadCannotAppointError": "璇ヤ紮浼村凡澶辫仈锛屾棤娉曞浠汇€?,
-      "candidateDeadCannotAdjustError": "璇ヤ紮浼村凡澶辫仈锛屾棤娉曡皟鏁淬€?,
-      "candidateDeadCannotGrantError": "璇ヤ紮浼村凡澶辫仈锛屾棤娉曟巿浜堣亴浣嶃€?,
-      "ministerDeadCannotDiscussError": "璇ヤ紮浼村凡澶辫仈锛屾棤娉曡浜嬨€?
+      "kejuPanelTitle": "机缘招募",
+      "kejuPanelSubtitle": "统一弹窗骨架，邂逅招募、引荐招募共用面板",
+      "wujuPanelTitle": "强者招募",
+      "wujuPanelSubtitle": "统一弹窗骨架，强者、天骄招募共用布局",
+      "talentPanelTitle": "伙伴军团",
+      "talentPanelSubtitle": "招募、委任、培养共用弹窗结构",
+      "policyPanelTitle": "决策议事",
+      "policyPanelSubtitle": "议事、采纳、下达指令统一弹窗骨架",
+      "appointByPositionSubtitle": "统一委任弹窗骨架，后续扩展筛选、排序",
+      "appointByMinisterSubtitle": "统一委任弹窗，伙伴与职位共用模板",
+      "appointLegacySubtitle": "统一老委任路径弹窗，保留筛选与确认",
+      "positionSelectSubtitle": "统一职位选择弹窗，保持委任流程一致",
+      "ministerDetailSubtitle": "统一详情弹窗，包含头像、忠诚、态度",
+      "factionPanelSubtitle": "统一势力弹窗，后续接入成员、忠诚信息",
+      "ministerPanelSubtitle": "统一伙伴列表弹窗，点击进入详情",
+      "unknownError": "未知错误",
+      "appointFailedPrefix": "委任失败: ",
+      "adjustFailedPrefix": "调整失败: ",
+      "kejuStartSuccess": "机缘已开启，候选名单已生成。",
+      "kejuHuishiSuccess": "邂逅候选名单已生成。",
+      "kejuDianshiSuccess": "强者候选名单已生成。",
+      "kejuPublishSuccess": "招募完成。",
+      "kejuReserveSavedSuccess": "已写入候选名单。",
+      "kejuEntryAppliedSuccess": "伙伴加入已生效。",
+      "officeAppointmentAppliedSuccess": "伙伴委任已生效",
+      "positionOccupiedRegenerateError": "该职位已有人，重新生成推荐。",
+      "positionOccupiedRegenerateSimpleError": "该职位已有人，重新生成名单。",
+      "candidateDeadCannotAppointError": "该伙伴已失联，无法委任。",
+      "candidateDeadCannotAdjustError": "该伙伴已失联，无法调整。",
+      "candidateDeadCannotGrantError": "该伙伴已失联，无法授予职位。",
+      "ministerDeadCannotDiscussError": "该伙伴已失联，无法议事。"
     }
   }
 }
@@ -238,823 +266,935 @@
   ],
   "characters": {
     "hero_01": {
-      "name": "鍑岃景",
+      "name": "凌辰",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "鐜勯粍澶т笘鐣?,
-      "positions": ["鎴樺姏缁熷竻"],
+      "hometown": "玄黄大世界",
+      "positions": [
+        "战力统帅"
+      ],
       "faction": "military",
-      "factionLabel": "鎴樺姏宸呭嘲",
+      "factionLabel": "战力巅峰",
       "loyalty": 90,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["淇粰", "鍓戦亾", "鏃犳晫"],
-      "summary": "鍑岃景锛屾潵鑷慨浠欏ぇ涓栫晫鐨勫墤閬撳ぉ楠勶紝涓€鍓戠牬涓囨硶锛屾垬鍔涘啝缁濆彜浠婏紝蹇犺瘹鍙潬锛屾槸瀹夸富鏈€鍧氬疄鐨勬垬鍔涘睆闅溿€?,
-      "attitude": "涓€蹇冭緟浣愬涓伙紝妯壂涓€鍒囧己鏁岋紝杩芥眰姝﹂亾鏋佽嚧銆?,
-      "openingLine": "瀹夸富锛屾湁鎴戝湪锛屼笘闂存棤浜哄彲浼や綘鍒嗘锛?
+      "tags": [
+        "修仙",
+        "剑道",
+        "无敌"
+      ],
+      "summary": "凌辰，来自修仙大世界的剑道天骄，一剑破万法，战力冠绝古今，忠诚可靠，是宿主最坚实的战力屏障。",
+      "attitude": "一心辅佐宿主，横扫一切强敌，追求武道极致。",
+      "openingLine": "宿主，有我在，世间无人可伤你分毫！"
     },
     "hero_02": {
-      "name": "鑻忔竻鏈?,
+      "name": "苏清月",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "闈掍笜绉樺",
-      "positions": ["鏅烘収鍐涘笀"],
+      "hometown": "青丘秘境",
+      "positions": [
+        "智慧军师"
+      ],
       "faction": "donglin",
-      "factionLabel": "鏅烘収鏃犲弻",
+      "factionLabel": "智慧无双",
       "loyalty": 88,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["鏅鸿皨", "榄呮儜", "娲炲療"],
-      "summary": "鑻忔竻鏈堬紝闈掍笜涔濆熬澶╃嫄锛屾櫤璋嬫棤鍙岋紝鎿呴暱甯冨眬绠楄銆佹礊瀵熶汉蹇冿紝鑳戒负瀹夸富瑙勫垝鏈€瀹岀編鐨勫彂灞曡矾绾裤€?,
-      "attitude": "鐢ㄦ櫤鎱ц緟浣愬涓伙紝瑙勯伩椋庨櫓锛屾姝ヤ负钀ャ€?,
-      "openingLine": "瀹夸富锛屾竻鏈堝凡涓轰綘瑙勫垝濂藉綋鍓嶄笘鐣岀殑鏈€浼樿矾绾裤€?
+      "tags": [
+        "智谋",
+        "魅惑",
+        "洞察"
+      ],
+      "summary": "苏清月，青丘九尾天狐，智谋无双，擅长布局算计、洞察人心，能为宿主规划最完美的发展路线。",
+      "attitude": "用智慧辅佐宿主，规避风险，步步为营。",
+      "openingLine": "宿主，清月已为你规划好当前世界的最优路线。"
     },
     "hero_03": {
-      "name": "澧ㄥ皹",
+      "name": "墨尘",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "鏈烘绁炲煙",
-      "positions": ["绉戞妧澶у笀"],
+      "hometown": "机械神域",
+      "positions": [
+        "科技大师"
+      ],
       "faction": "neutral",
-      "factionLabel": "绉戞妧涓诲",
+      "factionLabel": "科技主宰",
       "loyalty": 85,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["绉戞妧", "鍒堕€?, "鏈烘"],
-      "summary": "澧ㄥ皹锛屾潵鑷槦闄呯骞讳笘鐣岀殑椤剁骇绉戝瀹讹紝绮鹃€氭満姊般€佽兘婧愩€佸熀鍥犳妧鏈紝鑳藉埗閫犲悇绉嶉粦绉戞妧瑁呭銆?,
-      "attitude": "涓撴敞绉戞妧鐮斿彂锛屼负瀹夸富鎻愪緵鏈€寮虹鎶€鏀拺銆?,
-      "openingLine": "瀹夸富锛屾渶鏂扮鎶€瑁呭宸茬爺鍙戝畬鎴愶紝璇锋煡鏀躲€?
+      "tags": [
+        "科技",
+        "制造",
+        "机械"
+      ],
+      "summary": "墨尘，来自星际科幻世界的顶级科学家，精通机械、能源、基因技术，能制造各种黑科技装备。",
+      "attitude": "专注科技研发，为宿主提供最强科技支撑。",
+      "openingLine": "宿主，最新科技装备已研发完成，请查收。"
     },
     "hero_04": {
-      "name": "澶滃奖",
+      "name": "夜影",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "鏆楀奖鐣?,
-      "positions": ["闅愮缁熼"],
+      "hometown": "暗影界",
+      "positions": [
+        "隐秘统领"
+      ],
       "faction": "imperial",
-      "factionLabel": "鏆楀奖娼滆",
+      "factionLabel": "暗影潜行",
       "loyalty": 92,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["鏆楁潃", "渚︽煡", "闅愮"],
-      "summary": "澶滃奖锛屾殫褰辩晫椤跺皷鍒哄锛屾潵鏃犲奖鍘绘棤韪紝鎿呴暱渚︽煡銆佹殫鏉€銆佹儏鎶ユ敹闆嗭紝鏄涓绘渶闅愮鐨勫埄鍒冦€?,
-      "attitude": "缁濆蹇犺瘹锛屾墽琛屽涓讳竴鍒囬殣绉樻寚浠ゃ€?,
-      "openingLine": "瀹夸富锛屾儏鎶ュ凡鏀堕泦瀹屾瘯锛岄殢鏃跺彲浠ヨ鍔ㄣ€?
+      "tags": [
+        "暗杀",
+        "侦查",
+        "隐秘"
+      ],
+      "summary": "夜影，暗影界顶尖刺客，来无影去无踪，擅长侦查、暗杀、情报收集，是宿主最隐秘的利刃。",
+      "attitude": "绝对忠诚，执行宿主一切隐秘指令。",
+      "openingLine": "宿主，情报已收集完毕，随时可以行动。"
     },
     "hero_05": {
-      "name": "鏋楀鍏?,
+      "name": "林婉兮",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "绮剧伒妫灄",
-      "positions": ["鐢熷懡绁徃"],
+      "hometown": "精灵森林",
+      "positions": [
+        "生命祭司"
+      ],
       "faction": "neutral",
-      "factionLabel": "鐢熷懡瀹堟姢",
+      "factionLabel": "生命守护",
       "loyalty": 86,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["娌荤枟", "杈呭姪", "鑷劧"],
-      "summary": "鏋楀鍏紝绮剧伒鏃忓ぇ绁徃锛屾帉鎻＄敓鍛介瓟娉曪紝鎿呴暱娌荤枟銆佽緟鍔┿€佸噣鍖栵紝鑳戒繚闅滃洟闃熺敓瀛樿兘鍔涖€?,
-      "attitude": "瀹堟姢浼欎即锛屾不鎰堜激鐥涳紝缁存姢涓栫晫骞宠　銆?,
-      "openingLine": "瀹夸富锛屾湁鎴戝湪锛屼紮浼翠滑涓嶄細杞绘槗鍊掍笅銆?
+      "tags": [
+        "治疗",
+        "辅助",
+        "自然"
+      ],
+      "summary": "林婉兮，精灵族大祭司，掌握生命魔法，擅长治疗、辅助、净化，能保障团队生存能力。",
+      "attitude": "守护伙伴，治愈伤痛，维护世界平衡。",
+      "openingLine": "宿主，有我在，伙伴们不会轻易倒下。"
     },
     "hero_06": {
-      "name": "璧靛ぉ瀹?,
+      "name": "赵天宇",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "鍗庡鍙や唬",
-      "positions": ["缁熷尽鍏冨竻"],
+      "hometown": "华夏古代",
+      "positions": [
+        "统御元帅"
+      ],
       "faction": "military",
-      "factionLabel": "鍏靛鍦ｆ墜",
+      "factionLabel": "兵家圣手",
       "loyalty": 84,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["鍏垫硶", "娌诲啗", "鎵╁紶"],
-      "summary": "璧靛ぉ瀹囷紝鍙や唬鐜嬫湞缁濅笘鍚嶅皢锛岀簿閫氬叺娉曘€佹不鍐涖€佹敾鍩庣暐鍦帮紝鎿呴暱鍔垮姏鎵╁紶涓庨鍦熺粺娌汇€?,
-      "attitude": "杈呬綈瀹夸富寤虹珛鏃犱笂甯濆浗锛屾í鎵洓鏂广€?,
-      "openingLine": "瀹夸富锛屼笁鍐涘凡鏁磋寰呭彂锛岄殢鏃跺彲浠ュ嚭寰侊紒"
+      "tags": [
+        "兵法",
+        "治军",
+        "扩张"
+      ],
+      "summary": "赵天宇，古代王朝绝世名将，精通兵法、治军、攻城略地，擅长势力扩张与领土统治。",
+      "attitude": "辅佐宿主建立无上帝国，横扫四方。",
+      "openingLine": "宿主，三军已整装待发，随时可以出征！"
     },
     "hero_07": {
-      "name": "鐧借嫢鏇?,
+      "name": "白若曦",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "榄旀硶澶ч檰",
-      "positions": ["榄旀硶瀵煎笀"],
+      "hometown": "魔法大陆",
+      "positions": [
+        "魔法导师"
+      ],
       "faction": "neutral",
-      "factionLabel": "榄旀硶鑷冲皧",
+      "factionLabel": "魔法至尊",
       "loyalty": 83,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["榄旀硶", "鍏冪礌", "鍜掓枃"],
-      "summary": "鐧借嫢鏇︼紝榄旀硶澶ч檰娉曠锛岀簿閫氬叏绯婚瓟娉曪紝鑳介噴鏀炬瘉澶╃伃鍦扮殑榄旀硶鏀诲嚮锛屾帉鎺у厓绱犱箣鍔涖€?,
-      "attitude": "杩芥眰榄旀硶鐪熻皼锛岀敤榄旀硶鍔涢噺瀹堟姢瀹夸富銆?,
-      "openingLine": "瀹夸富锛岄瓟娉曚箣鍔涘凡涓轰綘澶囧ソ锛岀⒕纰庝竴鍒囨晫浜恒€?
+      "tags": [
+        "魔法",
+        "元素",
+        "咒文"
+      ],
+      "summary": "白若曦，魔法大陆法神，精通全系魔法，能释放毁天灭地的魔法攻击，掌控元素之力。",
+      "attitude": "追求魔法真谛，用魔法力量守护宿主。",
+      "openingLine": "宿主，魔法之力已为你备好，碾碎一切敌人。"
     },
     "hero_08": {
-      "name": "閾佺墰",
+      "name": "铁牛",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "鏈笘搴熷湡",
-      "positions": ["鍏堥攱鎴樺皢"],
+      "hometown": "末世废土",
+      "positions": [
+        "先锋战将"
+      ],
       "faction": "military",
-      "factionLabel": "鐙傛毚鎴樺姏",
+      "factionLabel": "狂暴战力",
       "loyalty": 95,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["铔姏", "闃插尽", "鐢熷瓨"],
-      "summary": "閾佺墰锛屾湯涓栧垢瀛樿€咃紝鑲夎韩寮烘倣鏃犳瘮锛岄槻寰″姏鎯婁汉锛屾搮闀挎闈㈠啿閿嬶紝鐢熷瓨鑳藉姏鏋佸己銆?,
-      "attitude": "鎲ㄧ洿蹇犺瘹锛屾尅鍦ㄥ涓昏韩鍓嶏紝鎵垮彈涓€鍒囦激瀹炽€?,
-      "openingLine": "瀹夸富锛岃皝瑕佹槸鏁㈡児浣狅紝淇轰竴鎷冲ご鐮告墎浠栵紒"
+      "tags": [
+        "蛮力",
+        "防御",
+        "生存"
+      ],
+      "summary": "铁牛，末世幸存者，肉身强悍无比，防御力惊人，擅长正面冲锋，生存能力极强。",
+      "attitude": "憨直忠诚，挡在宿主身前，承受一切伤害。",
+      "openingLine": "宿主，谁要是敢惹你，俺一拳头砸扁他！"
     },
     "hero_09": {
-      "name": "绉︽棤鍙?,
+      "name": "秦无双",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "娲崚涓栫晫",
-      "positions": ["娲崚鎴樼"],
+      "hometown": "洪荒世界",
+      "positions": [
+        "洪荒战神"
+      ],
       "faction": "military",
-      "factionLabel": "娲崚闇镐富",
+      "factionLabel": "洪荒霸主",
       "loyalty": 89,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["娲崚", "绁炲吔", "绁為€?],
-      "summary": "绉︽棤鍙岋紝娲崚涓婂彜鎴樼锛屾帉鎺х鍏戒箣鍔涳紝鎷ユ湁閫氬ぉ绁為€氾紝鍙垬娲崚涓囨棌锛屽偛瑙嗗彜浠娿€?,
-      "attitude": "濞侀渿娲崚锛岃緟浣愬涓绘垚涓烘椽鑽掍箣涓汇€?,
-      "openingLine": "瀹夸富锛屾椽鑽掍竾鏃忥紝鐨嗗彲鑷ｆ湇浜庝綘锛?
+      "tags": [
+        "洪荒",
+        "神兽",
+        "神通"
+      ],
+      "summary": "秦无双，洪荒上古战神，掌控神兽之力，拥有通天神通，可战洪荒万族，傲视古今。",
+      "attitude": "威震洪荒，辅佐宿主成为洪荒之主。",
+      "openingLine": "宿主，洪荒万族，皆可臣服于你！"
     },
     "hero_10": {
-      "name": "娲涚拑",
+      "name": "洛璃",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "鐜颁唬閮藉競",
-      "positions": ["鍟嗕笟濂崇帇"],
+      "hometown": "现代都市",
+      "positions": [
+        "商业女王"
+      ],
       "faction": "neutral",
-      "factionLabel": "鍟嗕笟濂囨墠",
+      "factionLabel": "商业奇才",
       "loyalty": 82,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["鍟嗕笟", "鐞嗚储", "浜鸿剦"],
-      "summary": "娲涚拑锛岀幇浠ｉ兘甯傞《绾у晢涓氬ぇ浣紝绮鹃€氱悊璐€佹姇璧勩€佷汉鑴夎繍钀ワ紝鑳藉揩閫熺Н绱捣閲忚储瀵屻€?,
-      "attitude": "鐢ㄥ晢涓氭墜娈典负瀹夸富鎵撻€犻噾铻嶅笣鍥斤紝鎺屾帶缁忔祹鍛借剦銆?,
-      "openingLine": "瀹夸富锛岃祫閲戝凡鍒颁綅锛屼换浣曢」鐩兘鍙惎鍔ㄣ€?
+      "tags": [
+        "商业",
+        "理财",
+        "人脉"
+      ],
+      "summary": "洛璃，现代都市顶级商业大佬，精通理财、投资、人脉运营，能快速积累海量财富。",
+      "attitude": "用商业手段为宿主打造金融帝国，掌控经济命脉。",
+      "openingLine": "宿主，资金已到位，任何项目都可启动。"
     },
     "hero_11": {
-      "name": "鍒€閿?,
+      "name": "刀锋",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "璧涘崥閮藉競",
-      "positions": ["涔変綋鎴樺＋"],
+      "hometown": "赛博都市",
+      "positions": [
+        "义体战士"
+      ],
       "faction": "military",
-      "factionLabel": "璧涘崥寮鸿€?,
+      "factionLabel": "赛博强者",
       "loyalty": 87,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["涔変綋", "榛戝", "杩戞垬"],
-      "summary": "鍒€閿嬶紝璧涘崥鏈嬪厠涓栫晫椤剁骇涔変綋鏀归€犱汉锛岀簿閫氳繎鎴樸€侀粦瀹㈡妧鏈€佹綔琛岀獊琚紝鎴樺姏涓庣鎶€鍏煎銆?,
-      "attitude": "娓歌蛋浜庤禌鍗氶兘甯傦紝涓哄涓绘竻闄や竴鍒囩數瀛愪笌鐗╃悊闅滅銆?,
-      "openingLine": "瀹夸富锛岀綉缁滃凡鏀荤牬锛岄槻绾垮凡鐡﹁В锛岃鍔ㄥ惂銆?
+      "tags": [
+        "义体",
+        "黑客",
+        "近战"
+      ],
+      "summary": "刀锋，赛博朋克世界顶级义体改造人，精通近战、黑客技术、潜行突袭，战力与科技兼备。",
+      "attitude": "游走于赛博都市，为宿主清除一切电子与物理障碍。",
+      "openingLine": "宿主，网络已攻破，防线已瓦解，行动吧。"
     },
     "hero_12": {
-      "name": "椋庤鑰?,
+      "name": "风行者",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "寮傜晫鑽夊師",
-      "positions": ["鏂ュ€欑粺棰?],
+      "hometown": "异界草原",
+      "positions": [
+        "斥候统领"
+      ],
       "faction": "imperial",
-      "factionLabel": "鏋侀€熶睛鏌?,
+      "factionLabel": "极速侦查",
       "loyalty": 86,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["閫熷害", "渚︽煡", "楠戝皠"],
-      "summary": "椋庤鑰咃紝寮傜晫鑽夊師绮剧伒锛岄€熷害鏋佽嚧锛屾搮闀块獞灏勩€佸ぇ鑼冨洿渚︽煡锛岃兘蹇€熸帉鎻′笘鐣屽湴褰笌鎯呮姤銆?,
-      "attitude": "椹伴獘澶╁湴锛屼负瀹夸富鎺㈣矾锛屼紶閫掑叧閿儏鎶ャ€?,
-      "openingLine": "瀹夸富锛屼笘鐣屽湴褰笌鏁屼汉鍒嗗竷宸插叏閮ㄦ懜娓呫€?
+      "tags": [
+        "速度",
+        "侦查",
+        "骑射"
+      ],
+      "summary": "风行者，异界草原精灵，速度极致，擅长骑射、大范围侦查，能快速掌握世界地形与情报。",
+      "attitude": "驰骋天地，为宿主探路，传递关键情报。",
+      "openingLine": "宿主，世界地形与敌人分布已全部摸清。"
     },
     "hero_13": {
-      "name": "鑽皹",
+      "name": "药尘",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "涓圭晫",
-      "positions": ["涓归亾鍦ｅ笀"],
+      "hometown": "丹界",
+      "positions": [
+        "丹道圣师"
+      ],
       "faction": "neutral",
-      "factionLabel": "涓归亾鏃犳晫",
+      "factionLabel": "丹道无敌",
       "loyalty": 84,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["鐐间腹", "瑙ｆ瘨", "鍏荤敓"],
-      "summary": "鑽皹锛屼腹鐣屽湥甯堬紝绮鹃€氱偧涓广€佽В姣掋€佸吇鐢熶箣閬擄紝鑳界偧鍒跺悇绉嶇涓癸紝鎻愬崌瀹炲姏銆佸欢骞寸泭瀵裤€?,
-      "attitude": "娼滃績鐐间腹锛屼负瀹夸富鎻愪緵鏈€寮轰腹鑽敮鎸併€?,
-      "openingLine": "瀹夸富锛岀涓瑰凡鎴愶紝鏈嶇敤鍗冲彲绐佺牬澧冪晫銆?
+      "tags": [
+        "炼丹",
+        "解毒",
+        "养生"
+      ],
+      "summary": "药尘，丹界圣师，精通炼丹、解毒、养生之道，能炼制各种神丹，提升实力、延年益寿。",
+      "attitude": "潜心炼丹，为宿主提供最强丹药支持。",
+      "openingLine": "宿主，神丹已成，服用即可突破境界。"
     },
     "hero_14": {
-      "name": "榫欐垬",
+      "name": "龙战",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "榫欐棌绉樺",
-      "positions": ["榫欐棌鏃忛暱"],
+      "hometown": "龙族秘境",
+      "positions": [
+        "龙族族长"
+      ],
       "faction": "military",
-      "factionLabel": "榫欐棌鑷冲皧",
+      "factionLabel": "龙族至尊",
       "loyalty": 91,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["榫欐棌", "鑲夎韩", "绁為€?],
-      "summary": "榫欐垬锛屼笂鍙ら緳鏃忔棌闀匡紝鑲夎韩鎴愬湥锛屾帉鎺ч緳鏃忕閫氾紝鎴樺姏婊斿ぉ锛屾槸涓栭棿鏈€寮哄ぇ鐨勭鏃忛琚栥€?,
-      "attitude": "浠ラ緳鏃忎箣鍔涜緟浣愬涓伙紝闀囧帇涓€鍒囦笉鏈嶃€?,
-      "openingLine": "瀹夸富锛岄緳鏃忓ぇ鍐涘惉浣犺皟閬ｏ紝妯壂璇稿ぉ锛?
+      "tags": [
+        "龙族",
+        "肉身",
+        "神通"
+      ],
+      "summary": "龙战，上古龙族族长，肉身成圣，掌控龙族神通，战力滔天，是世间最强大的种族领袖。",
+      "attitude": "以龙族之力辅佐宿主，镇压一切不服。",
+      "openingLine": "宿主，龙族大军听你调遣，横扫诸天！"
     },
     "hero_15": {
-      "name": "蹇靛啺",
+      "name": "念冰",
       "courtesyName": "",
       "birthYear": 0,
       "deathYear": 9999,
-      "hometown": "鍐扮伀绁炲煙",
-      "positions": ["鍏冪礌浣胯€?],
+      "hometown": "冰火神域",
+      "positions": [
+        "元素使者"
+      ],
       "faction": "neutral",
-      "factionLabel": "鍏冪礌鎺屾帶",
+      "factionLabel": "元素掌控",
       "loyalty": 85,
       "isAlive": true,
       "deathReason": null,
       "deathDay": null,
-      "tags": ["鍐扮伀", "鍏冪礌", "鎺у埗"],
-      "summary": "蹇靛啺锛屽啺鐏弻绯诲厓绱犱娇鑰咃紝鎺屾帶鏋佽嚧鍐扮伀涔嬪姏锛屾搮闀挎帶鍒朵笌澶ц寖鍥存敾鍑伙紝鍏冪礌涔嬪姏鐧诲嘲閫犳瀬銆?,
-      "attitude": "鎺屾帶鍏冪礌骞宠　锛岀敤鍐扮伀涔嬪姏瀹堟姢瀹夸富銆?,
-      "openingLine": "瀹夸富锛屽啺鐏厓绱犲凡瑙夐啋锛屾晫浜哄皢琚喕缁撶剼鐑с€?
+      "tags": [
+        "冰火",
+        "元素",
+        "控制"
+      ],
+      "summary": "念冰，冰火双系元素使者，掌控极致冰火之力，擅长控制与大范围攻击，元素之力登峰造极。",
+      "attitude": "掌控元素平衡，用冰火之力守护宿主。",
+      "openingLine": "宿主，冰火元素已觉醒，敌人将被冻结焚烧。"
     }
   },
   "factions": {
     "donglin": {
-      "name": "鏅烘収鏃犲弻",
+      "name": "智慧无双",
       "color": "#2e7d32",
-      "description": "浠ユ櫤璋嬨€佹礊瀵熴€佽鍒掍负涓荤殑浼欎即锛屾搮闀垮竷灞€銆佺畻璁°€佽閬块闄┿€?,
-      "stance": "鐞嗘€у喅绛栵紝瑙勫垝鏈€浼樿矾绾匡紝淇濋殰瀹夸富瀹夊叏鍙戝睍銆?,
-      "members": ["hero_02", "hero_10"]
+      "description": "以智谋、洞察、规划为主的伙伴，擅长布局、算计、规避风险。",
+      "stance": "理性决策，规划最优路线，保障宿主安全发展。",
+      "members": [
+        "hero_02",
+        "hero_10"
+      ]
     },
     "eunuch": {
-      "name": "闅愮娼滆",
+      "name": "隐秘潜行",
       "color": "#8d6e63",
-      "description": "鎿呴暱闅愮銆佷睛鏌ャ€佹殫鏉€銆佹儏鎶ョ殑浼欎即锛屾槸瀹夸富鏈€闅愮鐨勫姏閲忋€?,
-      "stance": "鏆椾腑琛屽姩锛屾竻闄ら殰纰嶏紝鏀堕泦鎯呮姤锛屼繚鎶ゅ涓诲畨鍏ㄣ€?,
-      "members": ["hero_04", "hero_11"]
+      "description": "擅长隐秘、侦查、暗杀、情报的伙伴，是宿主最隐秘的力量。",
+      "stance": "暗中行动，清除障碍，收集情报，保护宿主安全。",
+      "members": [
+        "hero_04",
+        "hero_11"
+      ]
     },
     "neutral": {
-      "name": "鍏ㄨ兘杈呭姪",
+      "name": "全能辅助",
       "color": "#1565c0",
-      "description": "鎿呴暱娌荤枟銆佺鎶€銆佺偧涓广€佸晢涓氥€侀瓟娉曠殑鍏ㄨ兘鍨嬩紮浼达紝鎻愪緵鍏ㄦ柟浣嶆敮鎸併€?,
-      "stance": "涓撴敞杈呭姪锛屾彁鍗囧洟闃熷疄鍔涳紝淇濋殰璧勬簮渚涚粰銆?,
-      "members": ["hero_03", "hero_05", "hero_07", "hero_12", "hero_13", "hero_15"]
+      "description": "擅长治疗、科技、炼丹、商业、魔法的全能型伙伴，提供全方位支持。",
+      "stance": "专注辅助，提升团队实力，保障资源供给。",
+      "members": [
+        "hero_03",
+        "hero_05",
+        "hero_07",
+        "hero_12",
+        "hero_13",
+        "hero_15"
+      ]
     },
     "military": {
-      "name": "鎴樺姏宸呭嘲",
+      "name": "战力巅峰",
       "color": "#e65100",
-      "description": "鎷ユ湁瓒呭己鎴樺姏鐨勪紮浼达紝鎿呴暱鎴樻枟銆佸啿閿嬨€佹墿寮犮€侀晣鍘嬪己鏁屻€?,
-      "stance": "妯壂涓€鍒囨晫浜猴紝鏀诲煄鐣ュ湴锛屼繚闅滃涓诲娍鍔涙墿寮犮€?,
-      "members": ["hero_01", "hero_06", "hero_08", "hero_09", "hero_14"]
+      "description": "拥有超强战力的伙伴，擅长战斗、冲锋、扩张、镇压强敌。",
+      "stance": "横扫一切敌人，攻城略地，保障宿主势力扩张。",
+      "members": [
+        "hero_01",
+        "hero_06",
+        "hero_08",
+        "hero_09",
+        "hero_14"
+      ]
     },
     "imperial": {
-      "name": "瀹夸富浜插崼",
+      "name": "宿主亲卫",
       "color": "#6a1b9a",
-      "description": "缁濆蹇犺瘹浜庡涓荤殑浜插崼浼欎即锛屽彧鎵ц瀹夸富鎸囦护锛屽畧鎶ゅ涓诲畨鍗便€?,
-      "stance": "缁濆蹇犺瘹锛屽姝ヤ笉绂伙紝鐢ㄧ敓鍛藉畧鎶ゅ涓汇€?,
-      "members": ["hero_04", "hero_08"]
+      "description": "绝对忠诚于宿主的亲卫伙伴，只执行宿主指令，守护宿主安危。",
+      "stance": "绝对忠诚，寸步不离，用生命守护宿主。",
+      "members": [
+        "hero_04",
+        "hero_08"
+      ]
     }
   },
   "courtChats": {
     "hero_01": [
       {
         "from": "minister",
-        "text": "瀹夸富锛屽綋鍓嶄笘鐣屽己鏁屽凡鍑虹幇锛屾槸鍚︾敱鎴戝嚭鎵嬫竻鐞嗭紵"
+        "text": "宿主，当前世界强敌已出现，是否由我出手清理？"
       },
       {
         "from": "player",
-        "text": "鍑岃景锛屾晫浜哄疄鍔涘浣曪紵"
+        "text": "凌辰，敌人实力如何？"
       },
       {
         "from": "minister",
-        "text": "涓嶅牚涓€鍑伙紝鎴戜竴鍓戜究鍙柀鏉€锛岀粷涓嶄細璁╀粬浠▉鑳佸埌瀹夸富銆?
+        "text": "不堪一击，我一剑便可斩杀，绝不会让他们威胁到宿主。"
       }
     ],
     "hero_02": [
       {
         "from": "minister",
-        "text": "瀹夸富锛屾垜宸插垎鏋愬綋鍓嶄笘鐣岃鍒欙紝涓轰綘瑙勫垝涓夋潯鍙戝睍璺嚎銆?
+        "text": "宿主，我已分析当前世界规则，为你规划三条发展路线。"
       },
       {
         "from": "player",
-        "text": "娓呮湀锛屽摢鏉¤矾绾挎渶瀹夊叏锛?
+        "text": "清月，哪条路线最安全？"
       },
       {
         "from": "minister",
-        "text": "绋冲仴鍙戝睍璺嚎锛屽厛绉疮璧勬簮锛屽啀鎻愬崌瀹炲姏锛屾棤浠讳綍椋庨櫓銆?
+        "text": "稳健发展路线，先积累资源，再提升实力，无任何风险。"
       }
     ],
     "hero_03": [
       {
         "from": "minister",
-        "text": "瀹夸富锛屾渶鏂扮鎶€瑁呭宸茬爺鍙戝畬鎴愶紝鍙ぇ骞呮彁鍗囩敓瀛樿兘鍔涖€?
+        "text": "宿主，最新科技装备已研发完成，可大幅提升生存能力。"
       },
       {
         "from": "player",
-        "text": "澧ㄥ皹锛岃兘鍚﹀埗閫犺法涓栫晫浼犻€佽缃紵"
+        "text": "墨尘，能否制造跨世界传送装置？"
       },
       {
         "from": "minister",
-        "text": "闇€瑕佹敹闆嗙壒娈婅祫婧愶紝闆嗛綈鍚庢垜鍙珛鍒诲埗閫狅紝瀹炵幇鑷敱绌胯秺銆?
+        "text": "需要收集特殊资源，集齐后我可立刻制造，实现自由穿越。"
       }
     ],
     "hero_04": [
       {
         "from": "minister",
-        "text": "瀹夸富锛屽懆杈规儏鎶ュ凡鍏ㄩ儴鏀堕泦锛屾棤闅愯棌鍗遍櫓銆?
+        "text": "宿主，周边情报已全部收集，无隐藏危险。"
       },
       {
         "from": "player",
-        "text": "澶滃奖锛屾槸鍚﹀彂鐜版晫瀵瑰娍鍔涜釜杩癸紵"
+        "text": "夜影，是否发现敌对势力踪迹？"
       },
       {
         "from": "minister",
-        "text": "鍙戠幇涓€鑲″皬鍨嬪娍鍔涳紝宸茶鎴戞殫涓竻闄わ紝涓嶄細鐣欎笅浠讳綍鐥曡抗銆?
+        "text": "发现一股小型势力，已被我暗中清除，不会留下任何痕迹。"
       }
     ]
   },
   "modules": {
     "neige": {
-      "name": "瀹夸富涓灑",
-      "description": "缁熷尽浼欎即銆佸喅绛栦簨鍔°€佹帉鎺у叏灞€鐨勬牳蹇冩灑绾姐€?
+      "name": "宿主中枢",
+      "description": "统御伙伴、决策事务、掌控全局的核心枢纽。"
     },
     "fasisi": {
-      "name": "鎯呮姤绯荤粺",
-      "description": "鏀堕泦涓栫晫鎯呮姤銆佷睛鏌ユ晫浜恒€佺洃鎺у眬鍔跨殑鏈烘瀯銆?
+      "name": "情报系统",
+      "description": "收集世界情报、侦查敌人、监控局势的机构。"
     },
     "neiting": {
-      "name": "浜插崼鍐涘洟",
-      "description": "瀹夸富涓撳睘浜插崼锛岃礋璐ｅ畨鍏ㄤ繚鍗€侀殣绉樿鍔ㄣ€?
+      "name": "亲卫军团",
+      "description": "宿主专属亲卫，负责安全保卫、隐秘行动。"
     },
     "difang": {
-      "name": "鍔垮姏棰嗗湴",
-      "description": "瀹夸富鍦ㄥ悇涓栫晫鐨勯鍦般€佹嵁鐐广€佷骇涓氱鐞嗙郴缁熴€?
+      "name": "势力领地",
+      "description": "宿主在各世界的领地、据点、产业管理系统。"
     },
     "junshi": {
-      "name": "鎴樺姏鍐涘洟",
-      "description": "鐢辨垬鍔涗紮浼寸粍鎴愮殑鎴樻枟鍐涘洟锛岃礋璐ｆ垬鏂椼€佹墿寮犮€?
+      "name": "战力军团",
+      "description": "由战力伙伴组成的战斗军团，负责战斗、扩张。"
     }
   },
   "departments": {
     "neige": {
-      "name": "瀹夸富涓灑",
-      "description": "缁熺鍐崇瓥銆佷紮浼寸鐞嗐€佷笘鐣岀┛瓒婄殑鏍稿績鏈烘瀯銆?
+      "name": "宿主中枢",
+      "description": "统筹决策、伙伴管理、世界穿越的核心机构。"
     },
     "dutcheng": {
-      "name": "鎯呮姤閮?,
-      "description": "鏀堕泦鎯呮姤銆佸垎鏋愬眬鍔裤€佺洃鎺ф晫浜恒€?
+      "name": "情报部",
+      "description": "收集情报、分析局势、监控敌人。"
     },
     "tongzheng_si": {
-      "name": "鍐崇瓥閮?,
-      "description": "鍒嗘瀽璁銆佹彁渚涘缓璁€佹墽琛屾寚浠ゃ€?
+      "name": "决策部",
+      "description": "分析议题、提供建议、执行指令。"
     },
     "neiting": {
-      "name": "浜插崼閮?,
-      "description": "瀹夸富瀹夊叏淇濆崼銆侀殣绉樿鍔ㄦ墽琛屻€?
+      "name": "亲卫部",
+      "description": "宿主安全保卫、隐秘行动执行。"
     },
     "local": {
-      "name": "棰嗗湴绠＄悊",
-      "description": "绠＄悊鍚勪笘鐣岄鍦般€佽祫婧愩€佷骇涓氥€?
+      "name": "领地管理",
+      "description": "管理各世界领地、资源、产业。"
     },
     "shuntian_fu": {
-      "name": "鎬婚儴鎹偣",
-      "description": "瀹夸富鍦ㄥ綋鍓嶄笘鐣岀殑鏍稿績鎹偣銆?
+      "name": "总部据点",
+      "description": "宿主在当前世界的核心据点。"
     },
     "military": {
-      "name": "鎴樻枟鍐涘洟",
-      "description": "涓诲姏鎴樻枟閮ㄩ槦锛岃礋璐ｅ緛鎴樸€侀槻寰°€?
+      "name": "战斗军团",
+      "description": "主力战斗部队，负责征战、防御。"
     }
   },
   "positions": {
     "neige_shoufu": {
-      "name": "澶х瀹?,
-      "description": "缁熺鎵€鏈変簨鍔★紝绠＄悊浼欎即鍥㈤槦銆?
+      "name": "大管家",
+      "description": "统筹所有事务，管理伙伴团队。"
     },
     "neige_cifu": {
-      "name": "鍓瀹?,
-      "description": "鍗忓姪澶х瀹讹紝鍒嗙閮ㄥ垎浜嬪姟銆?
+      "name": "副管家",
+      "description": "协助大管家，分管部分事务。"
     },
     "neige_daxueshi": {
-      "name": "鍐涘笀",
-      "description": "鎻愪緵鍐崇瓥寤鸿锛岃鍒掑彂灞曡矾绾裤€?
+      "name": "军师",
+      "description": "提供决策建议，规划发展路线。"
     },
     "dutcheng_duchayuan_zuoduyushi": {
-      "name": "鎯呮姤缁熼",
-      "description": "鎯呮姤绯荤粺鏈€楂樿礋璐ｄ汉銆?
+      "name": "情报统领",
+      "description": "情报系统最高负责人。"
     },
     "dutcheng_duchayuan_yuoduyushi": {
-      "name": "鎯呮姤鍓粺棰?,
-      "description": "鍗忓姪绠＄悊鎯呮姤绯荤粺銆?
+      "name": "情报副统领",
+      "description": "协助管理情报系统。"
     },
     "tongzheng_si_shi": {
-      "name": "鍐崇瓥瀹?,
-      "description": "鍒嗘瀽璁锛屾墽琛屽喅绛栥€?
+      "name": "决策官",
+      "description": "分析议题，执行决策。"
     },
     "shuntian_fu_yin": {
-      "name": "鎹偣缁熼",
-      "description": "绠＄悊鏍稿績鎹偣浜嬪姟銆?
+      "name": "据点统领",
+      "description": "管理核心据点事务。"
     },
     "jiliao_dushi": {
-      "name": "鎴樺姏缁熷竻",
-      "description": "缁熼鎴樻枟鍐涘洟锛屾寚鎸ヤ綔鎴樸€?
+      "name": "战力统帅",
+      "description": "统领战斗军团，指挥作战。"
     },
     "xuanda_zongdu": {
-      "name": "鎵╁紶缁熷竻",
-      "description": "璐熻矗鍔垮姏鎵╁紶锛屽崰棰嗛鍦熴€?
+      "name": "扩张统帅",
+      "description": "负责势力扩张，占领领土。"
     },
     "sanbian_zongdu": {
-      "name": "闃插尽缁熷竻",
-      "description": "璐熻矗棰嗗湴闃插尽锛屾姷寰″鏁屻€?
+      "name": "防御统帅",
+      "description": "负责领地防御，抵御外敌。"
     },
     "shanxi_xunfu": {
-      "name": "璧勬簮鎬荤潱",
-      "description": "绠＄悊璧勬簮閲囬泦銆佺敓浜с€佸偍澶囥€?
+      "name": "资源总督",
+      "description": "管理资源采集、生产、储备。"
     },
     "henan_xunfu": {
-      "name": "绉戞妧鎬荤潱",
-      "description": "绠＄悊绉戞妧鐮斿彂銆佽澶囧埗閫犮€?
+      "name": "科技总督",
+      "description": "管理科技研发、装备制造。"
     },
     "shandong_xunfu": {
-      "name": "鍟嗕笟鎬荤潱",
-      "description": "绠＄悊鍟嗕笟杩愯惀锛岃储瀵岀Н绱€?
+      "name": "商业总督",
+      "description": "管理商业运营，财富积累。"
     },
     "liaodong_zongbing": {
-      "name": "鍏堥攱缁熼",
-      "description": "鎴樻枟鍏堥攱锛屽啿閿嬮櫡闃点€?
+      "name": "先锋统领",
+      "description": "战斗先锋，冲锋陷阵。"
     },
     "ningyuan_zongbing": {
-      "name": "杩戝崼缁熼",
-      "description": "缁熼浜插崼锛屼繚鍗涓汇€?
+      "name": "近卫统领",
+      "description": "统领亲卫，保卫宿主。"
     },
     "shanxi_zongbing": {
-      "name": "渚︽煡缁熼",
-      "description": "缁熼渚︽煡閮ㄩ槦锛屾帰鏌ユ儏鎶ャ€?
+      "name": "侦查统领",
+      "description": "统领侦查部队，探查情报。"
     },
     "siliji_bingbi_taijian": {
-      "name": "闅愮缁熼",
-      "description": "缁熼闅愮閮ㄩ槦锛屾墽琛屾殫鏉€銆佺獊琚€?
+      "name": "隐秘统领",
+      "description": "统领隐秘部队，执行暗杀、突袭。"
     },
     "siliji_zhangyin_taijian": {
-      "name": "浜插崼鎬婚暱",
-      "description": "浜插崼鍐涘洟鏈€楂樿礋璐ｄ汉銆?
+      "name": "亲卫总长",
+      "description": "亲卫军团最高负责人。"
     }
   },
   "policies": {
     "civil_light_tax": {
-      "title": "璧勬簮鍑忚礋",
-      "description": "闄嶄綆璧勬簮娑堣€楋紝鎻愰珮璧勬簮鍒╃敤鐜囥€?
+      "title": "资源减负",
+      "description": "降低资源消耗，提高资源利用率。"
     },
     "civil_tax_reform": {
-      "title": "璧勬簮浼樺寲",
-      "description": "浼樺寲璧勬簮閲囬泦銆佺敓浜с€佸垎閰嶄綋绯汇€?
+      "title": "资源优化",
+      "description": "优化资源采集、生产、分配体系。"
     },
     "civil_canal": {
-      "title": "璧勬簮閫氶亾",
-      "description": "寤虹珛绋冲畾鐨勮祫婧愯繍杈撻€氶亾锛屼繚闅滀緵缁欍€?
+      "title": "资源通道",
+      "description": "建立稳定的资源运输通道，保障供给。"
     },
     "civil_salt_iron": {
-      "title": "鏍稿績璧勬簮鍨勬柇",
-      "description": "鎺屾帶褰撳墠涓栫晫鏍稿績璧勬簮锛屽舰鎴愬瀯鏂紭鍔裤€?
+      "title": "核心资源垄断",
+      "description": "掌控当前世界核心资源，形成垄断优势。"
     },
     "civil_port_office": {
-      "title": "璺ㄤ笘鐣岃锤鏄?,
-      "description": "寮€鍚法涓栫晫璧勬簮璐告槗锛屼簰閫氭湁鏃犮€?
+      "title": "跨世界贸易",
+      "description": "开启跨世界资源贸易，互通有无。"
     },
     "civil_remove_mining_tax": {
-      "title": "璧勬簮閲囬泦鍔犻€?,
-      "description": "鎻愬崌璧勬簮閲囬泦閫熷害锛屽揩閫熺Н绱储瀵屻€?
+      "title": "资源采集加速",
+      "description": "提升资源采集速度，快速积累财富。"
     },
     "civil_royal_allowance_cut": {
-      "title": "娑堣€楃鎺?,
-      "description": "涓ユ牸绠℃帶闈炲繀瑕佹秷鑰楋紝闆嗕腑璧勬簮鍙戝睍銆?
+      "title": "消耗管控",
+      "description": "严格管控非必要消耗，集中资源发展。"
     },
     "civil_post_optimization": {
-      "title": "鏁堢巼鎻愬崌",
-      "description": "浼樺寲浜嬪姟娴佺▼锛屾彁鍗囨暣浣撹繍浣滄晥鐜囥€?
+      "title": "效率提升",
+      "description": "优化事务流程，提升整体运作效率。"
     },
     "civil_tea_horse": {
-      "title": "璧勬簮浜ゆ崲",
-      "description": "鐢ㄥ浣欒祫婧愪氦鎹㈢█缂鸿祫婧愩€?
+      "title": "资源交换",
+      "description": "用多余资源交换稀缺资源。"
     },
     "civil_salt_ticket": {
-      "title": "璧勬簮鍌ㄥ",
-      "description": "寤虹珛澶у瀷璧勬簮鍌ㄥ搴擄紝搴斿鍗辨満銆?
+      "title": "资源储备",
+      "description": "建立大型资源储备库，应对危机。"
     },
     "civil_reserve_granary": {
-      "title": "鐢熷瓨淇濋殰",
-      "description": "鍌ㄥ澶ч噺鐢熷瓨鐗╄祫锛屼繚闅滈暱鏈熺敓瀛樸€?
+      "title": "生存保障",
+      "description": "储备大量生存物资，保障长期生存。"
     },
     "civil_paper_money": {
-      "title": "缁忔祹浣撶郴",
-      "description": "寤虹珛涓撳睘缁忔祹浣撶郴锛屾帉鎺ч噾铻嶅懡鑴夈€?
+      "title": "经济体系",
+      "description": "建立专属经济体系，掌控金融命脉。"
     },
     "military_border_defense": {
-      "title": "棰嗗湴闃插尽",
-      "description": "寮哄寲棰嗗湴闃插尽宸ヤ簨锛屾姷寰″鏁屽叆渚点€?
+      "title": "领地防御",
+      "description": "强化领地防御工事，抵御外敌入侵。"
     },
     "military_firearms": {
-      "title": "瑁呭鍗囩骇",
-      "description": "鍗囩骇浼欎即瑁呭锛屾彁鍗囨暣浣撴垬鍔涖€?
+      "title": "装备升级",
+      "description": "升级伙伴装备，提升整体战力。"
     },
     "military_capital_drill": {
-      "title": "浼欎即璁粌",
-      "description": "寮哄寲浼欎即璁粌锛屾彁鍗囦釜浜哄疄鍔涖€?
+      "title": "伙伴训练",
+      "description": "强化伙伴训练，提升个人实力。"
     },
     "military_recruit": {
-      "title": "浼欎即鎵╁厖",
-      "description": "鎷涘嫙鏇村寮哄姏浼欎即锛屽．澶у洟闃熴€?
+      "title": "伙伴扩充",
+      "description": "招募更多强力伙伴，壮大团队。"
     },
     "military_wagon": {
-      "title": "鎴樻湳閰嶅悎",
-      "description": "璁粌浼欎即鎴樻湳閰嶅悎锛屽彂鎸ュ洟闃熸垬鍔涖€?
+      "title": "战术配合",
+      "description": "训练伙伴战术配合，发挥团队战力。"
     },
     "military_navy": {
-      "title": "鎴樺姏鎵╁紶",
-      "description": "鎵╁ぇ鎴樻枟鍐涘洟瑙勬ā锛屾彁鍗囧緛鎴樿兘鍔涖€?
+      "title": "战力扩张",
+      "description": "扩大战斗军团规模，提升征战能力。"
     },
     "military_fort": {
-      "title": "宸ヤ簨寤洪€?,
-      "description": "寤洪€犻槻寰″伐浜嬨€佹垬鏂楄鏂斤紝宸╁浐闃靛湴銆?
+      "title": "工事建造",
+      "description": "建造防御工事、战斗设施，巩固阵地。"
     },
     "military_command": {
-      "title": "鎴樺姏缁熷悎",
-      "description": "鏁村悎鎵€鏈夋垬鍔涳紝缁熶竴鎸囨尌璋冨害銆?
+      "title": "战力统合",
+      "description": "整合所有战力，统一指挥调度。"
     },
     "military_tuntian": {
-      "title": "鎴樺姏鑷粰",
-      "description": "瀹炵幇鎴樻枟閮ㄩ槦璧勬簮鑷粰锛屽噺灏戞秷鑰椼€?
+      "title": "战力自给",
+      "description": "实现战斗部队资源自给，减少消耗。"
     },
     "military_workshop": {
-      "title": "瑁呭鍒堕€?,
-      "description": "寤虹珛瑁呭鍒堕€犲巶锛岃嚜涓荤敓浜у己鍔涜澶囥€?
+      "title": "装备制造",
+      "description": "建立装备制造厂，自主生产强力装备。"
     },
     "politics_balance": {
-      "title": "鍔垮姏骞宠　",
-      "description": "骞宠　涓栫晫鍚勬柟鍔垮姏锛屽潗鏀舵笖鍒┿€?
+      "title": "势力平衡",
+      "description": "平衡世界各方势力，坐收渔利。"
     },
     "politics_memorial": {
-      "title": "鎯呮姤绠℃帶",
-      "description": "涓ユ牸绠℃帶鎯呮姤锛岄槻姝俊鎭硠闇层€?
+      "title": "情报管控",
+      "description": "严格管控情报，防止信息泄露。"
     },
     "politics_limit_cabinet": {
-      "title": "鍐崇瓥闆嗘潈",
-      "description": "瀹夸富鎺屾帶鏈€缁堝喅绛栨潈锛岄伩鍏嶅垎姝с€?
+      "title": "决策集权",
+      "description": "宿主掌控最终决策权，避免分歧。"
     },
     "politics_censorate": {
-      "title": "鍐呴儴鏁撮】",
-      "description": "鏁撮】鍥㈤槦鍐呴儴锛屾彁鍗囧嚌鑱氬姏涓庢墽琛屽姏銆?
+      "title": "内部整顿",
+      "description": "整顿团队内部，提升凝聚力与执行力。"
     },
     "politics_assessment": {
-      "title": "浼欎即鑰冩牳",
-      "description": "瀹氭湡鑰冩牳浼欎即瀹炲姏涓庡繝璇氬害锛屼紭鑳滃姡姹般€?
+      "title": "伙伴考核",
+      "description": "定期考核伙伴实力与忠诚度，优胜劣汰。"
     },
     "politics_limit_eunuch": {
-      "title": "鏉冮檺绠℃帶",
-      "description": "涓ユ牸绠℃帶浼欎即鏉冮檺锛岄槻姝㈡潈鍔涙互鐢ㄣ€?
+      "title": "权限管控",
+      "description": "严格管控伙伴权限，防止权力滥用。"
     },
     "politics_royal_rule": {
-      "title": "濞佹湜鎻愬崌",
-      "description": "鎻愬崌瀹夸富濞佹湜锛岃浼欎即鏇村姞蹇犺瘹銆?
+      "title": "威望提升",
+      "description": "提升宿主威望，让伙伴更加忠诚。"
     },
     "politics_viceroy": {
-      "title": "鍒嗗煙绠＄悊",
-      "description": "鍒掑垎绠＄悊鍖哄煙锛屼笓浜鸿礋璐ｏ紝鎻愬崌鏁堢巼銆?
+      "title": "分域管理",
+      "description": "划分管理区域，专人负责，提升效率。"
     },
     "politics_east_factory": {
-      "title": "闅愮鐩戞帶",
-      "description": "寤虹珛闅愮鐩戞帶浣撶郴锛屾帉鎺т竴鍒囧姩鍚戙€?
+      "title": "隐秘监控",
+      "description": "建立隐秘监控体系，掌控一切动向。"
     },
     "politics_south_study": {
-      "title": "鏍稿績璁簨",
-      "description": "鍙泦鏍稿績浼欎即锛屽晢璁噸澶у喅绛栥€?
+      "title": "核心议事",
+      "description": "召集核心伙伴，商议重大决策。"
     },
     "tech_agri": {
-      "title": "鐢熷瓨绉戞妧",
-      "description": "鐮斿彂鐢熷瓨鐩稿叧绉戞妧锛屾彁鍗囩敓瀛樿兘鍔涖€?
+      "title": "生存科技",
+      "description": "研发生存相关科技，提升生存能力。"
     },
     "tech_engineering": {
-      "title": "宸ヤ笟绉戞妧",
-      "description": "鐮斿彂宸ヤ笟绉戞妧锛屾彁鍗囧埗閫犱笌寤鸿鑳藉姏銆?
+      "title": "工业科技",
+      "description": "研发工业科技，提升制造与建设能力。"
     },
     "tech_calendar": {
-      "title": "涓栫晫瑙勫垯",
-      "description": "鐮旂┒涓栫晫瑙勫垯锛屾帉鎻′笘鐣岃繍琛岃寰嬨€?
+      "title": "世界规则",
+      "description": "研究世界规则，掌握世界运行规律。"
     },
     "tech_firearm_theory": {
-      "title": "鎴樻枟绉戞妧",
-      "description": "鐮斿彂鎴樻枟鐩稿叧绉戞妧锛屾彁鍗囨垬鍔涖€?
+      "title": "战斗科技",
+      "description": "研发战斗相关科技，提升战力。"
     },
     "tech_water": {
-      "title": "鐜閫傚簲",
-      "description": "鐮斿彂鐜閫傚簲绉戞妧锛岄€傞厤浠讳綍涓栫晫鐜銆?
+      "title": "环境适应",
+      "description": "研发环境适应科技，适配任何世界环境。"
     },
     "tech_ship": {
-      "title": "绌胯秺绉戞妧",
-      "description": "鐮斿彂绌胯秺鐩稿叧绉戞妧锛屾彁鍗囩┛瓒婅兘鍔涖€?
+      "title": "穿越科技",
+      "description": "研发穿越相关科技，提升穿越能力。"
     },
     "tech_medicine": {
-      "title": "鍖荤枟绉戞妧",
-      "description": "鐮斿彂鍖荤枟绉戞妧锛屼繚闅滀紮浼寸敓鍛藉畨鍏ㄣ€?
+      "title": "医疗科技",
+      "description": "研发医疗科技，保障伙伴生命安全。"
     },
     "tech_math": {
-      "title": "鏅烘収绉戞妧",
-      "description": "鐮斿彂鏅烘収绉戞妧锛屾彁鍗囧垎鏋愪笌瑙勫垝鑳藉姏銆?
+      "title": "智慧科技",
+      "description": "研发智慧科技，提升分析与规划能力。"
     },
     "diplomacy_mongol": {
-      "title": "鍔垮姏缁撶洘",
-      "description": "涓庝笘鐣屽弸濂藉娍鍔涚粨鐩燂紝鍏卞悓瀵规姉寮烘晫銆?
+      "title": "势力结盟",
+      "description": "与世界友好势力结盟，共同对抗强敌。"
     },
     "diplomacy_korea": {
-      "title": "鍔垮姏浜ゅソ",
-      "description": "涓庡懆杈瑰娍鍔涗繚鎸佸弸濂斤紝鑾峰彇鏀寔銆?
+      "title": "势力交好",
+      "description": "与周边势力保持友好，获取支持。"
     },
     "diplomacy_macao": {
-      "title": "鍔垮姏鍚堜綔",
-      "description": "涓庡叾浠栧娍鍔涘悎浣滐紝浜掑埄鍏辫耽銆?
+      "title": "势力合作",
+      "description": "与其他势力合作，互利共赢。"
     },
     "diplomacy_japan": {
-      "title": "璺ㄤ笘鐣岀粨鐩?,
-      "description": "涓庡叾浠栦笘鐣屽弸濂藉娍鍔涘缓绔嬭仈鐩熴€?
+      "title": "跨世界结盟",
+      "description": "与其他世界友好势力建立联盟。"
     },
     "diplomacy_rome": {
-      "title": "澶氬厓澶栦氦",
-      "description": "寮€灞曞鍏冨浜わ紝缁撲氦鍚勮矾鍔垮姏銆?
+      "title": "多元外交",
+      "description": "开展多元外交，结交各路势力。"
     },
     "diplomacy_southwest": {
-      "title": "鏈湡瀹夋姎",
-      "description": "瀹夋姎褰撳墠涓栫晫鏈湡鍔垮姏锛屽噺灏戝啿绐併€?
+      "title": "本土安抚",
+      "description": "安抚当前世界本土势力，减少冲突。"
     },
     "people_epidemic": {
-      "title": "鍗辨満搴斿",
-      "description": "寤虹珛鍗辨満搴斿鏈哄埗锛屽鐞嗕笘鐣岀伨闅俱€?
+      "title": "危机应对",
+      "description": "建立危机应对机制，处理世界灾难。"
     },
     "people_refugee": {
-      "title": "浜哄憳鏀跺",
-      "description": "鏀跺涓栫晫骞稿瓨鑰咃紝鎵╁厖鍔垮姏浜哄彛銆?
+      "title": "人员收容",
+      "description": "收容世界幸存者，扩充势力人口。"
     },
     "people_charity_granary": {
-      "title": "姘戝績鏀舵嫝",
-      "description": "鏁戞祹姘戜紬锛屾敹鎷㈡皯蹇冿紝鎻愬崌澹版湜銆?
+      "title": "民心收拢",
+      "description": "救济民众，收拢民心，提升声望。"
     },
     "alt_nanyang_colony": {
-      "title": "涓栫晫娈栨皯",
-      "description": "娈栨皯寮卞皬涓栫晫锛屾墿寮犲涓荤粺娌荤枂鍩熴€?
+      "title": "世界殖民",
+      "description": "殖民弱小世界，扩张宿主统治疆域。"
     }
   },
   "nationInit": {
     "externalThreats": [
       {
         "id": "enemy_01",
-        "name": "涓栫晫鍘熶綇姘?,
+        "name": "世界原住民",
         "power": 50,
-        "description": "褰撳墠涓栫晫鏈湡鍔垮姏锛屽绌胯秺鑰呮姳鏈夋晫鎰忋€?
+        "description": "当前世界本土势力，对穿越者抱有敌意。"
       },
       {
         "id": "enemy_02",
-        "name": "鏁屽绌胯秺鑰?,
+        "name": "敌对穿越者",
         "power": 60,
-        "description": "鍏朵粬绌胯秺鑰咃紝浜夊ず涓栫晫璧勬簮涓庢満閬囥€?
+        "description": "其他穿越者，争夺世界资源与机遇。"
       }
     ],
     "provinces": [
-    {
-        "name": "鍒濆棰嗗湴",
+      {
+        "name": "初始领地",
         "taxSilver": 1000,
         "taxGrain": 1000,
         "recruits": 100,
         "morale": 50,
         "corruption": 0,
         "disaster": 0
-    },
-    {
-        "name": "鍛ㄨ竟鍖哄煙",
+      },
+      {
+        "name": "周边区域",
         "taxSilver": 500,
         "taxGrain": 500,
         "recruits": 50,
         "morale": 40,
         "corruption": 10,
         "disaster": 20
-    },
-    {
-        "name": "闈掗湝骞冲師",
+      },
+      {
+        "name": "青霜平原",
         "taxSilver": 1200,
         "taxGrain": 1400,
         "recruits": 220,
         "morale": 55,
         "corruption": 15,
         "disaster": 18
-    },
-    {
-        "name": "璧ゅ博灞辫剦",
+      },
+      {
+        "name": "赤岩山脉",
         "taxSilver": 1600,
         "taxGrain": 600,
         "recruits": 180,
         "morale": 48,
         "corruption": 22,
         "disaster": 25
-    },
-    {
-        "name": "纰ф按婀栧煙",
+      },
+      {
+        "name": "碧水湖域",
         "taxSilver": 900,
         "taxGrain": 1100,
         "recruits": 150,
         "morale": 60,
         "corruption": 12,
         "disaster": 15
-    },
-    {
-        "name": "榛戝博瑕佸",
+      },
+      {
+        "name": "黑岩要塞",
         "taxSilver": 1400,
         "taxGrain": 700,
         "recruits": 260,
         "morale": 45,
         "corruption": 28,
         "disaster": 30
-    },
-    {
-        "name": "浜戦《楂樺師",
+      },
+      {
+        "name": "云顶高原",
         "taxSilver": 1100,
         "taxGrain": 900,
         "recruits": 200,
         "morale": 52,
         "corruption": 18,
         "disaster": 22
-    },
-    {
-        "name": "钀芥灚鏋楀湴",
+      },
+      {
+        "name": "落枫林地",
         "taxSilver": 800,
         "taxGrain": 1200,
         "recruits": 170,
         "morale": 58,
         "corruption": 14,
         "disaster": 16
-    },
-    {
-        "name": "榛勬矙鎴堝",
+      },
+      {
+        "name": "黄沙戈壁",
         "taxSilver": 1300,
         "taxGrain": 400,
         "recruits": 210,
         "morale": 42,
         "corruption": 25,
         "disaster": 35
-    },
-    {
-        "name": "涓滄捣娌垮哺",
+      },
+      {
+        "name": "东海沿岸",
         "taxSilver": 1800,
         "taxGrain": 1000,
         "recruits": 190,
         "morale": 65,
         "corruption": 20,
         "disaster": 24
-    },
-    {
-        "name": "涓囧吔鑽掑師",
+      },
+      {
+        "name": "万兽荒原",
         "taxSilver": 700,
         "taxGrain": 800,
         "recruits": 240,
         "morale": 49,
         "corruption": 16,
         "disaster": 28
-    },
-    {
-        "name": "绁炶皶绂佸湴",
+      },
+      {
+        "name": "神谕禁地",
         "taxSilver": 2000,
         "taxGrain": 1500,
         "recruits": 300,
         "morale": 70,
         "corruption": 10,
         "disaster": 12
-    }
+      }
     ]
   }
 }

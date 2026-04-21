@@ -100,6 +100,9 @@ async function remindVacantCourtPositionsYearEnd() {
 }
 
 function progressNaturalMinisterDeaths(nextYear, nextMonth) {
+  // Natural deaths are evaluated quarterly to avoid over-dense monthly losses.
+  if ((Number(nextMonth) || 1) % 3 !== 0) return;
+
   const state = getState();
   const allCharacters = getAllCharacters(state);
   if (!allCharacters.length) return;
@@ -134,9 +137,15 @@ function progressNaturalMinisterDeaths(nextYear, nextMonth) {
     const delayedStartYear = Math.min(character.deathYear + lifespanPatchYears, maxDeathYear);
     if (absoluteYear < delayedStartYear) return;
 
+    // Guardrail: do not trigger natural death too early for younger characters.
+    if (typeof character.birthYear === "number") {
+      const age = absoluteYear - character.birthYear;
+      if (age < 58) return;
+    }
+
     const yearsPast = absoluteYear - delayedStartYear;
-    const monthlyChance = Math.min(0.03 + yearsPast * 0.02, 0.25);
-    if (Math.random() >= monthlyChance) return;
+    const quarterlyChance = Math.min(0.015 + yearsPast * 0.008, 0.12);
+    if (Math.random() >= quarterlyChance) return;
 
     const current = characterStatus[character.id] || {};
     characterStatus[character.id] = {

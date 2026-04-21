@@ -1,5 +1,33 @@
 # Commit 日志
 
+## 2026-04-22: fix: stabilize worldview context and death pacing
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+本次更新修正了剧情请求在世界观上下文缺失时的回退风险，确保请求持续携带当前世界标识，避免串入非当前设定语义。同步下调人物自然死亡触发频率与概率曲线，缓解“角色过快死亡”带来的节奏失衡；并刷新了导入样例与规范文档以匹配当前流程。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/api/requestContext.js` | ✏️ | world context 兜底透传，保证 worldVersion/title 在无 worldviewData 时仍可带入请求 |
+| `js/systems/turnSystem.js` | ✏️ | 自然死亡改为季度判定，增加年龄门槛并降低概率上限，放缓死亡速度 |
+| `public/data/import-samples/worldview.sample.json` | ✏️ | 更新世界观导入样例内容，保持字段与现行导入路径一致 |
+| `public/data/import-samples/worldview.import.bundle.txt` | ✏️ | 重新生成导入 bundle 示例，便于直接复制导入 |
+| `ChongzhenSim/世界观导入自动适配AI规范.md` | ✏️ | 同步导入规范文档说明与当前实现细节 |
+
+### 价值
+
+- 降低剧情请求串世界观导致的大模型推理失败概率
+- 让角色生存节奏更符合长期经营体验，减少早期大量死亡
+- 导入样例与规范文档保持一致，减少接入和调试成本
+
+### 验证
+
+- `npm run build` ✅ 通过
+
 ## 2026-04-22: refactor: remove rigid mode and quarterly memorial pipelines
 
 **Commit Hash**: `3c0eb7f`

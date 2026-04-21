@@ -38,19 +38,32 @@ function resolveUnlockedPolicyTitleMap(unlockedPolicies, policyTitleById) {
 
 function buildWorldviewReadonlyContext(state) {
   const worldviewData = state?.config?.worldviewData;
-  if (!worldviewData || typeof worldviewData !== "object") return null;
+  const normalizedWorldviewData = worldviewData && typeof worldviewData === "object"
+    ? worldviewData
+    : {};
 
-  const playerRole = worldviewData.playerRole && typeof worldviewData.playerRole === "object"
-    ? worldviewData.playerRole
+  const playerRole = normalizedWorldviewData.playerRole && typeof normalizedWorldviewData.playerRole === "object"
+    ? normalizedWorldviewData.playerRole
     : null;
   const factionNames = Array.isArray(state?.factions)
     ? state.factions.map((item) => item?.name).filter((name) => typeof name === "string" && name.trim())
     : [];
 
+  const worldviewId = String(
+    normalizedWorldviewData.id || state?.worldVersion || state?.config?.worldVersion || ""
+  ).trim();
+  const worldviewTitle = String(
+    normalizedWorldviewData.title || state?.config?.gameTitle || ""
+  ).trim();
+
+  if (!worldviewId && !worldviewTitle) {
+    return null;
+  }
+
   return {
-    id: worldviewData.id || state?.worldVersion || state?.config?.worldVersion || "",
-    title: worldviewData.title || "",
-    gameTitle: worldviewData.gameTitle || state?.config?.gameTitle || "",
+    id: worldviewId,
+    title: worldviewTitle,
+    gameTitle: normalizedWorldviewData.gameTitle || state?.config?.gameTitle || "",
     playerRole: playerRole
       ? {
         name: playerRole.name || state?.player?.name || "",
@@ -61,7 +74,7 @@ function buildWorldviewReadonlyContext(state) {
         title: state?.player?.title || "",
       },
     factionNames,
-    storyPrompt: worldviewData.storyPrompt || null,
+    storyPrompt: normalizedWorldviewData.storyPrompt || null,
   };
 }
 
