@@ -1,5 +1,32 @@
 # Commit 日志
 
+## 2026-04-22: fix: harden mobile sample download and quarterly rewards
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+本次修复了移动端下载世界观示例文件时可能出现黑屏的问题：将下载入口改为 fetch+Blob，并在支持时优先走系统分享文件流程，避免页面被 txt 资源替换。同步在回合推进中新增季度奖励机制，每逢季度月自动发放 1 点能力点与 1 点国策点，并补充流水线测试覆盖。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ | 下载示例文件改为移动端安全流程（share/files 或 Blob 下载）并补失败提示 |
+| `js/systems/turnSystem.js` | ✏️ | 新增季度月奖励：3/6/9/12 月自动 `abilityPoints +1`、`policyPoints +1` |
+| `js/systems/turnSystem.pipeline.test.js` | ✏️ | 新增季度奖励测试，断言 2 月推进到 3 月时点数正确发放 |
+
+### 价值
+
+- 解决移动端下载示例文件黑屏风险，提升设置页可用性
+- 强化季度成长反馈，减少能力点/国策点获取断层
+- 通过自动化测试锁定行为，降低后续回归风险
+
+### 验证
+
+- `npm run build` ✅ 通过
+- `npx vitest run js/systems/turnSystem.pipeline.test.js` ✅ 通过
+
 ## 2026-04-22: fix: stabilize worldview context and death pacing
 
 **Commit Hash**: (pending)

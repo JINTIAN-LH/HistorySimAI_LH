@@ -226,6 +226,23 @@ async function progressWujuByMonth(nextYear, nextMonth) {
   });
 }
 
+function grantQuarterlyProgressPoints(nextMonth) {
+  if ((Number(nextMonth) || 1) % 3 !== 0) return;
+
+  const state = getState();
+  const currentAbilityPoints = Number.isFinite(Number(state.abilityPoints))
+    ? Number(state.abilityPoints)
+    : 0;
+  const currentPolicyPoints = Number.isFinite(Number(state.policyPoints))
+    ? Number(state.policyPoints)
+    : 0;
+
+  setState({
+    abilityPoints: currentAbilityPoints + 1,
+    policyPoints: currentPolicyPoints + 1,
+  });
+}
+
 export function runCurrentTurn(container, options = {}) {
   const state = getState();
   return renderStoryTurn(state, container, handleChoice, options);
@@ -385,6 +402,8 @@ async function handleChoice(choiceId, choiceText, choiceHint, effects) {
       setState({ prestige: Math.max(0, Math.min(100, (current.prestige || 0) + hostileTurn.prestigeDelta)) });
     }
   }
+
+  grantQuarterlyProgressPoints(nextMonth);
 
   progressNaturalMinisterDeaths(nextYear, nextMonth);
   await progressKejuByMonth(nextYear, nextMonth);

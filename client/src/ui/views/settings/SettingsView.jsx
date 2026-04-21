@@ -38,6 +38,8 @@ function buildProgressText(state) {
 
 const DEFAULT_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/v1";
 const DEFAULT_MODEL = "qwen-plus";
+const WORLDVIEW_SAMPLE_BUNDLE_PATH = "data/import-samples/worldview.import.bundle.txt";
+const WORLDVIEW_SAMPLE_BUNDLE_NAME = "worldview.import.bundle.txt";
 
 function buildRuntimeFormState(status) {
   const fields = status?.fields || {};
@@ -219,6 +221,49 @@ export function SettingsView() {
     setSaveButtonText("已保存");
   };
 
+  const handleDownloadSampleBundle = async (event) => {
+    event.preventDefault();
+    setWvError("");
+
+    try {
+      const response = await fetch(WORLDVIEW_SAMPLE_BUNDLE_PATH, { cache: "no-cache" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const file = new File([blob], WORLDVIEW_SAMPLE_BUNDLE_NAME, { type: "text/plain;charset=utf-8" });
+
+      // Mobile browsers often ignore the download attribute and may replace the current page.
+      if (typeof navigator !== "undefined"
+        && typeof navigator.canShare === "function"
+        && typeof navigator.share === "function"
+        && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: WORLDVIEW_SAMPLE_BUNDLE_NAME,
+        });
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = WORLDVIEW_SAMPLE_BUNDLE_NAME;
+      anchor.rel = "noopener noreferrer";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+
+      window.setTimeout(() => {
+        URL.revokeObjectURL(objectUrl);
+      }, 1000);
+    } catch (error) {
+      console.error("下载示例文件失败", error);
+      setWvError("下载示例文件失败，请长按链接选择下载或稍后重试。");
+    }
+  };
+
   const handleClear = () => {
     if (!window.confirm(`确定要清除当前${currentModeLabel}下的当前槽位存档吗？此操作不可恢复。`)) {
       return;
@@ -391,7 +436,13 @@ export function SettingsView() {
           </div>
           <div style={{ fontSize: "12px", color: "var(--color-text-sub)", display: "flex", gap: "8px", flexWrap: "wrap" }}>
             <span>下载案例文件：</span>
-            <a href="data/import-samples/worldview.import.bundle.txt" download="worldview.import.bundle.txt">worldview.import.bundle.txt（合并示例）</a>
+            <a
+              href={WORLDVIEW_SAMPLE_BUNDLE_PATH}
+              download={WORLDVIEW_SAMPLE_BUNDLE_NAME}
+              onClick={handleDownloadSampleBundle}
+            >
+              worldview.import.bundle.txt（合并示例）
+            </a>
             <span>（内含 worldview.json 与 worldviewOverrides.json 两段示例）</span>
           </div>
 

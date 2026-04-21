@@ -283,4 +283,30 @@ describe("turnSystem dual-mode one-turn loop", () => {
     }));
   });
 
+  it("grants one ability point and one policy point on quarter months", async () => {
+    setState({
+      currentMonth: 2,
+      currentYear: 3,
+      abilityPoints: 0,
+      policyPoints: 0,
+    });
+
+    let choiceTriggered = false;
+    mocked.renderStoryTurnMock.mockImplementation(async (_state, _container, onChoice) => {
+      if (!choiceTriggered) {
+        choiceTriggered = true;
+        await onChoice("classic_choice", "整饬军政", null, { nation: { treasury: 1000 } });
+      }
+      return { choices: [] };
+    });
+
+    const container = document.getElementById("main-view");
+    await runCurrentTurn(container);
+
+    const state = getState();
+    expect(state.currentMonth).toBe(3);
+    expect(state.abilityPoints).toBe(1);
+    expect(state.policyPoints).toBe(1);
+  });
+
 });
