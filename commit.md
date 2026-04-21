@@ -2,7 +2,7 @@
 
 ## 2026-04-22: refactor: remove rigid mode and quarterly memorial pipelines
 
-**Commit Hash**: (pending)
+**Commit Hash**: `3c0eb7f`
 
 ### 改动摘要
 
