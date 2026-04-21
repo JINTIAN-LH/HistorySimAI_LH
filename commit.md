@@ -2,7 +2,7 @@
 
 ## 2026-04-21: fix: avoid duplicate upload version collisions
 
-**Commit Hash**: (pending)
+**Commit Hash**: `9538de3`
 
 ### 改动摘要
 
