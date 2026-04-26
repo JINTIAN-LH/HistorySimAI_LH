@@ -1,5 +1,29 @@
 # Commit 日志
 
+## 2026-04-27: fix(utils): repair appointment parser and restore build
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+修复 `js/utils/appointmentEffects.js` 中任免语义解析函数的结构损坏与重复声明问题，恢复 `deriveAppointmentEffectsFromText` 的可执行状态，并确保生产构建重新通过。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/utils/appointmentEffects.js` | ✏️ | 重写 `deriveAppointmentEffectsFromText` 主体逻辑，恢复任命/免职/赐死解析流程并支持“分别为”映射 |
+| `js/utils/appointmentEffects.js` | ✏️ | 移除重复的 `splitActionClauses` 声明，修复编译期标识符重复错误 |
+
+### 价值
+
+- 消除打包阻塞：`npm run build` 从失败恢复为可通过
+- 任免文本解析路径恢复稳定，避免运行时语法异常
+
+### 验证
+
+- `npm run build` ✅ 通过
+
 ## 2026-04-27: merge: integrate my-feature-branch into main for production deploy
 
 **Commit Hash**: b465354
