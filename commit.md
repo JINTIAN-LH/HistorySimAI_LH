@@ -1,5 +1,30 @@
 # Commit 日志
 
+## 2026-04-27: fix(core): define isRigidMode helper to restore app startup
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+修复 `js/systems/coreGameplaySystem.js` 中 `isRigidMode` 未定义导致的前端启动崩溃（`ReferenceError`），将模式判断函数恢复为可复用的顶层定义，确保回合初始化与处理流程可正常运行。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `js/systems/coreGameplaySystem.js` | ✏️ | 新增顶层 `isRigidMode(state)`，供 `initializeCoreGameplayState` 和 `processCoreGameplayTurn` 共享 |
+| `js/systems/coreGameplaySystem.js` | ✏️ | 移除函数作用域误放置，修复运行时 `isRigidMode is not defined` |
+
+### 价值
+
+- 修复线上白屏主因，应用可正常启动
+- 保障核心回合系统在 classic/rigid 模式下的稳定判断
+
+### 验证
+
+- `npx vitest run js/systems/coreGameplaySystem.test.js` ✅ 通过
+- `npm run build` ✅ 通过
+
 ## 2026-04-27: fix(utils): repair appointment parser and restore build
 
 **Commit Hash**: (pending)

@@ -122,6 +122,11 @@ function resolveBalanceConfig(balanceConfig) {
   };
 }
 
+function isRigidMode(state) {
+  if (!state || typeof state !== "object") return false;
+  return state.mode === "rigid_v1" || state.gameplayMode === "rigid_v1";
+}
+
 function getBalanceFromState(state) {
   return resolveBalanceConfig(state?.config?.balance);
 }
