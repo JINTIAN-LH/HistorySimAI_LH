@@ -1188,7 +1188,7 @@ function renderStoryHistory(container, history, phaseLabels, state, renderId) {
   return true;
 }
 
-function applyOpeningTurnWorldviewOverride(data, state, isFirstTurn) {
+export function applyOpeningTurnWorldviewOverride(data, state, isFirstTurn) {
   if (!isFirstTurn || !data || typeof data !== "object") return data;
 
   const openingTurn = resolveWorldviewOpeningTurn(state);
@@ -1200,17 +1200,8 @@ function applyOpeningTurnWorldviewOverride(data, state, isFirstTurn) {
     return data;
   }
 
-  const hasTemplateParagraphs = Array.isArray(data.storyParagraphs) && data.storyParagraphs.length > 0;
-  const hasTemplateChoices = Array.isArray(data.choices) && data.choices.length > 0;
-
-  // Keep story template as the default first-turn source.
-  // Worldview opening copy is only used when template content is missing.
-  if (hasTemplateParagraphs && hasTemplateChoices) {
-    return data;
-  }
-
   const next = { ...data };
-  if (!hasTemplateParagraphs && (hasBriefingLines || hasBriefingTitle)) {
+  if (hasBriefingLines || hasBriefingTitle) {
     const lines = [];
     if (hasBriefingTitle) {
       lines.push(`【${openingTurn.briefingTitle}】`);
@@ -1221,7 +1212,7 @@ function applyOpeningTurnWorldviewOverride(data, state, isFirstTurn) {
     next.storyParagraphs = lines;
   }
 
-  if (!hasTemplateChoices && hasOpeningChoices) {
+  if (hasOpeningChoices) {
     const templateChoices = Array.isArray(data.choices) ? data.choices : [];
     next.choices = openingTurn.openingChoices.map((item, index) => {
       const fallback = templateChoices[index] || templateChoices[0] || {};

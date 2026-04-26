@@ -1,5 +1,38 @@
 # Commit 日志
 
+## 2026-04-26: feat(ui): add versioned onboarding and reusable text modals
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+本次更新将新开局弹窗升级为“配置驱动 + 版本门控”模式：最近更新文案改为读取 `playerUpdates.json`，并按版本号实现“同版本仅提示一次”。同时把设置页全文弹窗抽成可复用组件，新增复制全文能力，降低后续维护成本。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `client/src/ui/views/start/StartView.jsx` | ✏️ | 新开局引导弹窗接入版本门控，最近更新改为读取 `data/playerUpdates.json` |
+| `client/src/ui/components/OnboardingUpdateModal.jsx` | ➕ | 新增玩家向“玩法引导+最近更新”通用弹窗组件 |
+| `public/data/playerUpdates.json` | ➕ | 新增精简版玩家更新配置，后续发版仅需改文案文件 |
+| `client/src/ui/components/TextPreviewModal.jsx` | ➕ | 新增可复用文本预览弹窗，支持复制全文 |
+| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ | 设置页示例全文弹窗改为复用组件，保留查看与复制流程 |
+| `client/src/ui/views/start/StartView.test.js` | ➕ | 新增版本门控与配置驱动文案测试 |
+| `client/src/ui/views/settings/SettingsView.test.js` | ➕ | 新增查看案例全文与复制全文交互测试 |
+| `js/systems/storySystem.js` | ✏️ | 首回合 openingTurn 覆盖逻辑导出并修正为优先使用自定义开场 |
+| `js/systems/storySystem.template.test.js` | ✏️ | 增补首回合 world opening 覆盖回归测试 |
+| `js/persistentBrowserStorage.js` | ✏️ | 持久化白名单增加 onboarding 版本记录键 |
+
+### 价值
+
+- 发版维护简化：更新提示可仅通过 `playerUpdates.json` 调整
+- 新玩家体验更稳定：新开局提示按版本去重，避免重复打扰
+- 组件复用提升：文本弹窗统一能力（查看/复制）可在后续页面复用
+
+### 验证
+
+- `npm run build` ✅ 通过
+
 ## 2026-04-22: fix(settings): improve mobile sample bundle download
 
 **Commit Hash**: (pending)

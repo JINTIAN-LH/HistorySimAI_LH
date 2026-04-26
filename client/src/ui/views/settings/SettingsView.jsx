@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { router } from "@legacy/router.js";
 import { getState, resetState, setState } from "@legacy/state.js";
 import { fetchConfigStatus, saveRuntimeConfig } from "@client/bootstrap/configurationGate.js";
@@ -24,6 +24,7 @@ import {
   buildWorldviewPreview,
 } from "@legacy/worldview/worldviewStorage.js";
 import { formatEraTimeByRelativeYear } from "@legacy/worldview/worldviewRuntimeAccessor.js";
+import { TextPreviewModal } from "@client/ui/components/TextPreviewModal.jsx";
 
 function getModeLabel(mode) {
   return mode === "classic" ? "经典模式" : "经典模式";
@@ -136,6 +137,10 @@ export function SettingsView() {
   const [wvPreview, setWvPreview] = useState(null);
   const [wvImporting, setWvImporting] = useState(false);
   const [wvError, setWvError] = useState("");
+  const [wvSampleModalOpen, setWvSampleModalOpen] = useState(false);
+  const [wvSampleLoading, setWvSampleLoading] = useState(false);
+  const [wvSampleError, setWvSampleError] = useState("");
+  const [wvSampleText, setWvSampleText] = useState("");
   const [wvActive, setWvActive] = useState(() => hasCustomWorldview());
   const [wvActivePreview, setWvActivePreview] = useState(() => {
     const existing = loadCustomWorldview();
@@ -282,6 +287,28 @@ export function SettingsView() {
     } catch (error) {
       console.error("下载示例文件失败", error);
       setWvError("下载示例文件失败，请长按链接选择下载或稍后重试。");
+    }
+  };
+
+  const handleViewSampleBundle = async () => {
+    setWvSampleModalOpen(true);
+    setWvSampleError("");
+
+    if (wvSampleText) return;
+
+    setWvSampleLoading(true);
+    try {
+      const response = await fetch(WORLDVIEW_SAMPLE_BUNDLE_PATH, { cache: "no-cache" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const text = await response.text();
+      setWvSampleText(String(text || ""));
+    } catch (error) {
+      console.error("读取示例文件全文失败", error);
+      setWvSampleError("读取示例文件失败，请稍后重试。");
+    } finally {
+      setWvSampleLoading(false);
     }
   };
 
@@ -464,6 +491,14 @@ export function SettingsView() {
             >
               worldview.import.bundle.txt（合并示例）
             </a>
+            <button
+              type="button"
+              onClick={handleViewSampleBundle}
+              disabled={wvSampleLoading}
+              style={{ fontSize: "12px", padding: "2px 8px" }}
+            >
+              {wvSampleLoading ? "读取中…" : "查看案例全文"}
+            </button>
             <span>（内含 worldview.json 与 worldviewOverrides.json 两段示例）</span>
           </div>
 
@@ -662,6 +697,19 @@ export function SettingsView() {
           </button>
         </div>
       </div>
+
+      <TextPreviewModal
+        open={wvSampleModalOpen}
+        title="worldview.import.bundle.txt 原始全文"
+        text={wvSampleText}
+        loading={wvSampleLoading}
+        error={wvSampleError}
+        emptyText="（示例文件为空）"
+        copyLabel="复制全文"
+        copiedLabel="已复制全文"
+        copyFailedLabel="复制失败，请手动复制"
+        onClose={() => setWvSampleModalOpen(false)}
+      />
     </div>
   );
 }

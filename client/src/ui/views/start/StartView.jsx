@@ -1,16 +1,47 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { loadJSON } from "@legacy/dataLoader.js";
 import { router } from "@legacy/router.js";
 import { getState, setState } from "@legacy/state.js";
 import { saveGame, setSavedGameplayMode } from "@legacy/storage.js";
 import { showGoalPanel } from "@ui/goalPanel.js";
 import { useLegacySelector } from "@client/ui/hooks/useLegacySelector.js";
+import { getPersistentLocalItem, setPersistentLocalItem } from "@legacy/persistentBrowserStorage.js";
 import {
   resolveWorldviewStartIntroLines,
   resolveWorldviewStartPageCopy,
 } from "@legacy/worldview/worldviewRuntimeAccessor.js";
+import { OnboardingUpdateModal } from "@client/ui/components/OnboardingUpdateModal.jsx";
 
 let startPhase = "intro";
+const ONBOARDING_SEEN_KEY = "history_sim_onboarding_seen_v1";
+const DEFAULT_ONBOARDING_CONTENT_VERSION = "1.2.0";
+
+const GUIDE_ITEMS = [
+  "前几回合先稳住国库与民心，再考虑高风险扩张。",
+  "每次下诏前先看效果预估，避免资源连续透支。",
+  "优先补齐文治与军务短板，人才结构比单项高数值更重要。",
+  "边患连续走高时先止损，压住连锁惩罚再反推节奏。",
+];
+
+const DEFAULT_UPDATE_ITEMS = [
+  "困难模式开场链路与剧情连续性已修复，首回合更稳定。",
+  "动态决策兜底增强，非常规选项也能继续推进回合。",
+  "国势信息展示更集中，关键指标更容易快速判断。",
+  "人才与人事链路补强，中后期可用人手更稳定。",
+];
+
+function normalizePlayerUpdatesConfig(raw) {
+  const version = typeof raw?.version === "string" && raw.version.trim()
+    ? raw.version.trim()
+    : DEFAULT_ONBOARDING_CONTENT_VERSION;
+  const updates = Array.isArray(raw?.updates)
+    ? raw.updates.filter((item) => typeof item === "string" && item.trim()).map((item) => item.trim())
+    : [];
+  return {
+    version,
+    updates: updates.length ? updates : DEFAULT_UPDATE_ITEMS,
+  };
+}
 
 export function setStartPhase(phase) {
   startPhase = phase === "create" ? "create" : "intro";
@@ -41,6 +72,10 @@ export function StartView() {
   const [introLines, setIntroLines] = useState([]);
   const [revealedLines, setRevealedLines] = useState([]);
   const [canStart, setCanStart] = useState(false);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [onboardingVersion, setOnboardingVersion] = useState(DEFAULT_ONBOARDING_CONTENT_VERSION);
+  const [updateItems, setUpdateItems] = useState(DEFAULT_UPDATE_ITEMS);
+  const [updatesLoaded, setUpdatesLoaded] = useState(false);
 
   useEffect(() => {
     let disposed = false;
@@ -105,12 +140,55 @@ export function StartView() {
     };
   }, [introLines]);
 
-  const handleStart = () => {
+  const loadPlayerUpdatesConfig = async () => {
+    try {
+      const data = await loadJSON("data/playerUpdates.json");
+      const normalized = normalizePlayerUpdatesConfig(data);
+      setOnboardingVersion(normalized.version);
+      setUpdateItems(normalized.updates);
+      return normalized;
+    } catch (error) {
+      console.warn("加载玩家更新配置失败，使用内置文案", error);
+      return {
+        version: onboardingVersion,
+        updates: updateItems,
+      };
+    } finally {
+      setUpdatesLoaded(true);
+    }
+  };
+
+  useEffect(() => {
+    void loadPlayerUpdatesConfig();
+  }, []);
+
+  const continueStart = () => {
     applyModeSelection();
     setState({ gameStarted: true });
     saveGame();
     router.setView(router.VIEW_IDS.EDICT);
     showGoalPanel();
+  };
+
+  const handleStart = async () => {
+    let effectiveVersion = onboardingVersion;
+    if (!updatesLoaded) {
+      const latest = await loadPlayerUpdatesConfig();
+      effectiveVersion = latest.version;
+    }
+
+    const seenVersion = getPersistentLocalItem(ONBOARDING_SEEN_KEY);
+    if (seenVersion === effectiveVersion) {
+      continueStart();
+      return;
+    }
+    setShowOnboardingModal(true);
+  };
+
+  const handleConfirmOnboarding = () => {
+    setPersistentLocalItem(ONBOARDING_SEEN_KEY, onboardingVersion);
+    setShowOnboardingModal(false);
+    continueStart();
   };
 
   return (
@@ -168,6 +246,14 @@ export function StartView() {
           </div>
         </section>
       </div>
+
+      <OnboardingUpdateModal
+        open={showOnboardingModal}
+        title="开局提示：玩法引导与最近更新"
+        guideItems={GUIDE_ITEMS}
+        updateItems={updateItems}
+        onConfirm={handleConfirmOnboarding}
+      />
     </div>
   );
 }
