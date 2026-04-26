@@ -1,5 +1,30 @@
 # Commit 日志
 
+## 2026-04-27: fix(server): add API fallbacks and enrich opening briefing
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+本次更新在服务端新增了示例导入包与埋点上报的兼容兜底接口，修复 `api.kurangames.com` 场景下的 404/500 问题。同时补充世界观开局叙事与选项，提升第一回合信息密度与决策可读性。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `server/index.js` | ✏️ | 新增 `GET /data/import-samples/worldview.import.bundle.txt` 兜底路由，并新增 `/analytics/game-entry` 与 `/api/analytics/game-entry` 兼容 ACK 接口（204） |
+| `public/data/worldview.json` | ✏️ | 扩展 openingTurn 简报文案，新增“先议事（unite_discuss）”开局选项 |
+
+### 价值
+
+- 修复 API 域下示例文件下载/预览 404
+- 消除 analytics game-entry 500，降低前端报错噪音
+- 提升开局剧情沉浸感与决策分支表达
+
+### 验证
+
+- `npm run build` ✅ 通过
+
 ## 2026-04-27: fix(core): define isRigidMode helper to restore app startup
 
 **Commit Hash**: (pending)

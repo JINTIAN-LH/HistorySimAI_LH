@@ -138,6 +138,8 @@ function createApp(options = {}) {
   const charactersPath = options.charactersPath || path.join(__dirname, "..", "public", "data", "characters.json");
   const positionsPath = options.positionsPath || path.join(__dirname, "..", "public", "data", "positions.json");
   const worldviewPath = options.worldviewPath || path.join(__dirname, "..", "public", "data", "worldview.json");
+  const worldviewSampleBundlePath = options.worldviewSampleBundlePath
+    || path.join(__dirname, "..", "public", "data", "import-samples", "worldview.import.bundle.txt");
   const worldviewOverrides = options.worldviewOverrides && typeof options.worldviewOverrides === "object"
     ? options.worldviewOverrides
     : undefined;
@@ -245,6 +247,16 @@ function createApp(options = {}) {
     return res.status(403).json({
       error: "config-status is disabled for public deployments",
     });
+  }
+
+  function sendWorldviewSampleBundle(res) {
+    if (!fs.existsSync(worldviewSampleBundlePath)) {
+      return res.status(404).json({ error: "sample bundle not found" });
+    }
+
+    res.set("Cache-Control", "no-store");
+    res.type("text/plain; charset=utf-8");
+    return res.sendFile(worldviewSampleBundlePath);
   }
 
   function getCharacters() {
@@ -655,6 +667,10 @@ function createApp(options = {}) {
 
     return base;
   }
+
+  app.get("/data/import-samples/worldview.import.bundle.txt", (_req, res) => {
+    return sendWorldviewSampleBundle(res);
+  });
 
   app.get("/api/chongzhen/config-status", (req, res) => {
     if (!isConfigManagementEnabled(req)) {
@@ -1408,6 +1424,11 @@ ${rulerTitle}就以下议题向群臣垂询：「${question}」
       characterStatus,
       appointments,
     });
+  });
+
+  app.all(["/analytics/game-entry", "/api/analytics/game-entry"], (_req, res) => {
+    // Compatibility ACK endpoint for production analytics collector.
+    return res.status(204).end();
   });
 
   return {
