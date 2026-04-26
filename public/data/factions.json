@@ -1,0 +1,66 @@
+{
+  "factions": [
+    {
+      "id": "donglin",
+      "name": "智慧无双",
+      "color": "#2e7d32",
+      "description": "以智谋、洞察、规划为主的伙伴，擅长布局、算计、规避风险。",
+      "stance": "理性决策，规划最优路线，保障宿主安全发展。",
+      "members": [
+        "hero_02",
+        "hero_10"
+      ]
+    },
+    {
+      "id": "eunuch",
+      "name": "隐秘潜行",
+      "color": "#8d6e63",
+      "description": "擅长隐秘、侦查、暗杀、情报的伙伴，是宿主最隐秘的力量。",
+      "stance": "暗中行动，清除障碍，收集情报，保护宿主安全。",
+      "members": [
+        "hero_04",
+        "hero_11"
+      ]
+    },
+    {
+      "id": "neutral",
+      "name": "全能辅助",
+      "color": "#1565c0",
+      "description": "擅长治疗、科技、炼丹、商业、魔法的全能型伙伴，提供全方位支持。",
+      "stance": "专注辅助，提升团队实力，保障资源供给。",
+      "members": [
+        "hero_03",
+        "hero_05",
+        "hero_07",
+        "hero_12",
+        "hero_13",
+        "hero_15"
+      ]
+    },
+    {
+      "id": "military",
+      "name": "战力巅峰",
+      "color": "#e65100",
+      "description": "拥有超强战力的伙伴，擅长战斗、冲锋、扩张、镇压强敌。",
+      "stance": "横扫一切敌人，攻城略地，保障宿主势力扩张。",
+      "members": [
+        "hero_01",
+        "hero_06",
+        "hero_08",
+        "hero_09",
+        "hero_14"
+      ]
+    },
+    {
+      "id": "imperial",
+      "name": "宿主亲卫",
+      "color": "#6a1b9a",
+      "description": "绝对忠诚于宿主的亲卫伙伴，只执行宿主指令，守护宿主安危。",
+      "stance": "绝对忠诚，寸步不离，用生命守护宿主。",
+      "members": [
+        "hero_04",
+        "hero_08"
+      ]
+    }
+  ]
+}

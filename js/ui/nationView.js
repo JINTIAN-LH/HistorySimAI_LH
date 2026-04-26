@@ -1,0 +1,353 @@
+import { router } from "../router.js";
+import { getState, setState } from "../state.js";
+import { loadJSON } from "../dataLoader.js";
+import { getStatBarClass } from "../systems/nationSystem.js";
+import { PLAYER_ABILITY_KEYS, getPolicyCatalog, spendAbilityPoint, unlockPolicy } from "../systems/coreGameplaySystem.js";
+import { formatDisplayMetricValue, getDisplayMetricBarValue, getDisplayMetricsBySection } from "../utils/displayStateMetrics.js";
+import {
+  formatEraTimeByRelativeYear,
+  resolveWorldviewPolicyTreeCopy,
+  resolveWorldviewPublicOpinionCopy,
+  resolveWorldviewRulerAbilityCopy,
+  resolveWorldviewWorldEventCopy,
+} from "../worldview/worldviewRuntimeAccessor.js";
+
+let nationInitCache = null;
+let provinceRulesCache = null;
+
+const DEFAULT_PROVINCE_RULES = {
+  regionRules: [
+    { namePattern: "边|frontier|north|西|北", default: { threat: "critical", status: "边境压力持续，需保持高等级戒备。" } },
+    { namePattern: "江|河|湖|港|海", default: { threat: "high", status: "交通与补给线仍受干扰，需要持续整治。" } },
+    { namePattern: "都|京|中枢", default: { threat: "medium", status: "中枢秩序总体可控，但仍需防范突发扰动。" } },
+    { namePattern: ".*", default: { threat: "low", status: "地方局势基本稳定，可推进恢复与建设。" } },
+  ],
+};
+
+function createNode(tag, className = "", text = "") {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text) node.textContent = text;
+  return node;
+}
+
+function appendMetricGrid(parent, state, sectionName, title) {
+  const wrap = createNode("div", "nation-overview");
+  wrap.appendChild(createNode("div", "nation-overview-title", title));
+  const grid = createNode("div", "nation-stats-grid");
+
+  getDisplayMetricsBySection(sectionName).forEach((metric) => {
+    const item = createNode("div", "nation-stat-item");
+    item.appendChild(createNode("div", "nation-stat-label", `${metric.icon} ${metric.label}`));
+    item.appendChild(createNode("div", "nation-stat-value", formatDisplayMetricValue(state, metric.key)));
+
+    const bar = createNode("div", "nation-stat-bar");
+    const barInner = createNode(
+      "div",
+      `nation-stat-bar-inner ${getStatBarClass(getDisplayMetricBarValue(state, metric.key), metric.invert)}`
+    );
+    barInner.style.width = `${Math.min(100, getDisplayMetricBarValue(state, metric.key))}%`;
+    bar.appendChild(barInner);
+    item.appendChild(bar);
+    grid.appendChild(item);
+  });
+
+  wrap.appendChild(grid);
+  parent.appendChild(wrap);
+}
+
+function createFoldSection(title, renderBody) {
+  const section = createNode("div", "fold-section");
+  const header = createNode("div", "fold-header");
+  header.appendChild(createNode("span", "", title));
+  header.appendChild(createNode("span", "fold-arrow", "▶"));
+  const body = createNode("div", "fold-body");
+  header.addEventListener("click", () => section.classList.toggle("fold-section--open"));
+  renderBody(body);
+  section.appendChild(header);
+  section.appendChild(body);
+  return section;
+}
+
+function createCard({ icon = "", title = "", summary = "" }) {
+  const card = createNode("div", "nation-card");
+  if (icon) {
+    card.appendChild(createNode("div", "nation-card-icon", icon));
+  }
+  const body = createNode("div", "nation-card-body");
+  body.appendChild(createNode("div", "nation-card-title", title));
+  if (summary) {
+    body.appendChild(createNode("div", "nation-card-summary", summary));
+  }
+  card.appendChild(body);
+  return { card, body };
+}
+
+function deriveProvinceRuntimeState(province) {
+  const rules = provinceRulesCache?.regionRules || DEFAULT_PROVINCE_RULES.regionRules;
+  const matched = rules.find((rule) => {
+    try {
+      return new RegExp(rule.namePattern).test(province?.name || "");
+    } catch {
+      return false;
+    }
+  });
+  return {
+    threat: matched?.default?.threat || province?.threat || "medium",
+    status: matched?.default?.status || province?.status || "暂无情报",
+  };
+}
+
+export function getProvinceRuntimeState(province) {
+  return deriveProvinceRuntimeState(province);
+}
+
+export function getNationInitData() {
+  return nationInitCache;
+}
+
+function rerender(container) {
+  container.innerHTML = "";
+  renderNationView(container);
+}
+
+function appendClassicSections(root, state, container) {
+  const policyTreeCopy = resolveWorldviewPolicyTreeCopy(state);
+  const rulerAbilityCopy = resolveWorldviewRulerAbilityCopy(state);
+  const factionSupport = state.factionSupport || {};
+  const provinceStats = state.provinceStats || {};
+
+  root.appendChild(createFoldSection("派系支持度", (body) => {
+    (state.factions || []).forEach((faction) => {
+      body.appendChild(createCard({
+        icon: "🏛️",
+        title: `${faction.name} · ${factionSupport[faction.id] || 0}/100`,
+        summary: faction.stance || faction.description || "",
+      }).card);
+    });
+  }));
+
+  const abilityMeta = {
+    management: { label: rulerAbilityCopy.abilityLabels.management || "管理", desc: "提升季度财政与粮储效率。" },
+    military: { label: rulerAbilityCopy.abilityLabels.military || "军事", desc: "强化军事类诏书收益。" },
+    scholarship: { label: rulerAbilityCopy.abilityLabels.scholarship || "学识", desc: "提高改革与农政收益。" },
+    politics: { label: rulerAbilityCopy.abilityLabels.politics || "政治", desc: "提高执行率并缓和党争。" },
+  };
+  root.appendChild(createFoldSection(`${rulerAbilityCopy.panelTitle}（可用点数 ${state.abilityPoints || 0}）`, (body) => {
+    if (rulerAbilityCopy.abilityHint) {
+      body.appendChild(createNode("div", "nation-feed-empty", rulerAbilityCopy.abilityHint));
+    }
+    PLAYER_ABILITY_KEYS.forEach((key) => {
+      const { card } = createCard({
+        title: `${abilityMeta[key].label} · Lv.${state.playerAbilities?.[key] || 0}`,
+        summary: abilityMeta[key].desc,
+      });
+      if ((state.abilityPoints || 0) > 0) {
+        const btn = createNode("button", "nation-mini-btn", "加点");
+        btn.type = "button";
+        btn.addEventListener("click", () => {
+          const patch = spendAbilityPoint(getState(), key);
+          if (!patch) return;
+          setState(patch);
+          rerender(container);
+        });
+        card.appendChild(btn);
+      }
+      body.appendChild(card);
+    });
+  }));
+
+  const policies = getPolicyCatalog(state);
+  const policyTitleMap = Object.fromEntries(policies.map((item) => [item.id, item.title]));
+  root.appendChild(createFoldSection(`${policyTreeCopy.treeTitle}（可用点数 ${state.policyPoints || 0}）`, (body) => {
+    if (policyTreeCopy.treeSubtitle) {
+      body.appendChild(createNode("div", "nation-feed-empty", policyTreeCopy.treeSubtitle));
+    }
+    policies.forEach((policy) => {
+      const unlocked = (state.unlockedPolicies || []).includes(policy.id);
+      const canUnlock = !unlocked
+        && (state.policyPoints || 0) >= policy.cost
+        && (policy.requires || []).every((id) => (state.unlockedPolicies || []).includes(id));
+      const branchLabel = policyTreeCopy.branchLabels[policy.branch] || policy.branch;
+      const requiresText = (policy.requires || []).length
+        ? ` 前置：${(policy.requires || []).map((id) => policyTitleMap[id] || id).join("、")}`
+        : "";
+      const { card } = createCard({
+        title: `${branchLabel} · ${policy.title}${unlocked ? "（已实施）" : ""}`,
+        summary: `${policy.description} 消耗 ${policy.cost} 点。${requiresText}`,
+      });
+      if (!unlocked) {
+        const btn = createNode("button", `nation-mini-btn${canUnlock ? "" : " nation-mini-btn--disabled"}`, canUnlock ? "实施" : "未满足");
+        btn.type = "button";
+        btn.disabled = !canUnlock;
+        btn.addEventListener("click", () => {
+          const patch = unlockPolicy(getState(), policy.id);
+          if (!patch) return;
+          setState(patch);
+          rerender(container);
+        });
+        card.appendChild(btn);
+      }
+      body.appendChild(card);
+    });
+  }));
+
+  root.appendChild(createFoldSection(`自定义国策（${Array.isArray(state.customPolicies) ? state.customPolicies.length : 0}）`, (body) => {
+    const customPolicies = Array.isArray(state.customPolicies) ? state.customPolicies : [];
+    if (!customPolicies.length) {
+      body.appendChild(createNode("div", "nation-feed-empty", "尚未设立自定义国策。可在自拟诏书中写入“设立某机构定为国策”自动收录。"));
+      return;
+    }
+    const categoryText = {
+      fiscal: "季度财政加成",
+      agri: "季度粮储加成",
+      military: "季度军务加成",
+      governance: "执行与监察加成",
+      general: "综合微幅加成",
+    };
+    customPolicies.forEach((policy) => {
+      const createdAt = Number.isFinite(Number(policy.createdYear)) && Number.isFinite(Number(policy.createdMonth))
+        ? formatEraTimeByRelativeYear(state, policy.createdYear, policy.createdMonth)
+        : "设立时间未记录";
+      body.appendChild(createCard({
+        icon: "🏛️",
+        title: policy.name,
+        summary: `${categoryText[policy.category] || categoryText.general} · ${createdAt}`,
+      }).card);
+    });
+  }));
+
+  if (nationInitCache?.provinces) {
+    root.appendChild(createFoldSection("各省概况", (body) => {
+      nationInitCache.provinces.forEach((province) => {
+        const runtime = deriveProvinceRuntimeState(province);
+        const ps = provinceStats[province.name] || {};
+        const { card, body: cardBody } = createCard({
+          title: province.name,
+          summary: runtime.status,
+        });
+        const statsRow = createNode("div", "province-stats-row");
+        const tags = [
+          `税：${(ps.taxSilver || 0).toLocaleString()}两 / ${(ps.taxGrain || 0).toLocaleString()}石`,
+          `兵：${(ps.recruits || 0).toLocaleString()}人`,
+          `民心：${ps.morale ?? 50}/100`,
+          `贪腐：${ps.corruption ?? 50}/100`,
+          `天灾：${ps.disaster ?? 50}/100`,
+        ];
+        tags.forEach((text, index) => statsRow.appendChild(createNode("span", "province-tag", text)));
+        cardBody.appendChild(statsRow);
+        body.appendChild(card);
+      });
+    }));
+  }
+}
+
+function appendSharedSections(root, state) {
+  const worldEventCopy = resolveWorldviewWorldEventCopy(state);
+  const publicOpinionCopy = resolveWorldviewPublicOpinionCopy(state);
+  const hostileForces = Array.isArray(state.hostileForces) && state.hostileForces.length
+    ? state.hostileForces
+    : (nationInitCache?.externalThreats || []);
+
+  if (hostileForces.length) {
+    root.appendChild(createFoldSection("敌对势力", (body) => {
+      hostileForces.forEach((item) => {
+        const power = typeof item.power === "number" ? Math.max(0, Math.min(100, item.power)) : 100;
+        const { card, body: cardBody } = createCard({
+          icon: "⚔️",
+          title: `${item.name}（${item.leader || "未知"}）${item.isDefeated ? "（已灭亡）" : ""}`,
+          summary: `${item.status || "暂无情报"} · 势力值 ${power}/100${item.isDefeated ? " · 相关故事线已闭锁" : ""}`,
+        });
+        const value = createNode("div", "nation-stat-value", `势力：${power}/100`);
+        const bar = createNode("div", "nation-stat-bar");
+        const barInner = createNode("div", "nation-stat-bar-inner");
+        barInner.style.width = `${power}%`;
+        bar.appendChild(barInner);
+        cardBody.appendChild(value);
+        cardBody.appendChild(bar);
+        body.appendChild(card);
+      });
+    }));
+  }
+
+  const feed = createNode("div", "nation-feed");
+  feed.appendChild(createNode("div", "nation-feed-header", worldEventCopy.sectionTitle));
+  const news = state.newsToday || [];
+  if (!news.length) {
+    feed.appendChild(createNode("div", "nation-feed-empty", worldEventCopy.emptyStateText));
+  } else {
+    news.forEach((item) => {
+      feed.appendChild(createCard({
+        icon: item.icon || "📜",
+        title: item.title,
+        summary: item.summary || "",
+      }).card);
+    });
+  }
+  root.appendChild(feed);
+
+  const opinions = createNode("div", "nation-opinions");
+  opinions.appendChild(createNode("div", "nation-opinions-header", publicOpinionCopy.sectionTitle));
+  const publicOpinion = state.publicOpinion || [];
+  if (!publicOpinion.length) {
+    opinions.appendChild(createNode("div", "nation-feed-empty", publicOpinionCopy.emptyStateText));
+  } else {
+    publicOpinion.forEach((item) => {
+      const line = createNode("div", "nation-opinion-item");
+      const userLabel = item.type === "loyal"
+        ? publicOpinionCopy.positiveLabel
+        : item.type === "angry"
+          ? publicOpinionCopy.negativeLabel
+          : publicOpinionCopy.neutralLabel;
+      const user = createNode(
+        "span",
+        `nation-opinion-user ${item.type === "loyal" ? "nation-opinion-user--loyal" : item.type === "angry" ? "nation-opinion-user--angry" : "nation-opinion-user--neutral"}`,
+        item.user || userLabel || "百姓"
+      );
+      const text = createNode("span", "nation-opinion-text", item.text || "");
+      line.appendChild(user);
+      line.appendChild(text);
+      opinions.appendChild(line);
+    });
+  }
+  root.appendChild(opinions);
+}
+
+export function renderNationView(container) {
+  const state = getState();
+  const root = createNode("div", "nation-root");
+  const worldviewTitle = state?.config?.worldviewData?.title || state?.config?.gameTitle || "当前世界";
+  const nationTitle = `${worldviewTitle}国势`;
+  const governanceTitle = `${worldviewTitle}朝局总览`;
+
+  appendMetricGrid(root, state, "nation", nationTitle);
+  appendMetricGrid(root, state, "governance", governanceTitle);
+  appendClassicSections(root, state, container);
+
+  appendSharedSections(root, state);
+  container.appendChild(root);
+}
+
+export async function ensureNationViewDataLoaded() {
+  if (!nationInitCache) {
+    try {
+      nationInitCache = await loadJSON("data/nationInit.json");
+    } catch {
+      nationInitCache = {};
+    }
+  }
+  if (!provinceRulesCache) {
+    try {
+      provinceRulesCache = await loadJSON("data/provinceRules.json");
+    } catch {
+      provinceRulesCache = null;
+    }
+  }
+}
+
+export function registerNationView() {
+  router.registerView("nation", async (container) => {
+    await ensureNationViewDataLoaded();
+    renderNationView(container);
+  });
+}

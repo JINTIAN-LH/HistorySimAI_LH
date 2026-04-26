@@ -11,6 +11,7 @@ build/
 .env.*.local
 
 # Sensitive config (contains API keys)
+server/config.json
 ChongzhenSim/server/config.json
 config.json
 
@@ -19,6 +20,7 @@ config.json
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
@@ -33,6 +35,7 @@ yarn-error.log*
 
 # Cache
 .cache/
+.vite/
 .nexus-map/
 
 # Test coverage
@@ -48,13 +51,14 @@ coverage/
 /commit.md
 /EXAMPLE*.md
 /科举功能模块.md
-ChongzhenSim/科举功能模块.md
-ChongzhenSim/困难模式设计文档.md
-ChongzhenSim/经典模式与困难模式对比文档.md
+/困难模式设计文档.md
+/经典模式与困难模式对比文档.md
 
 # Local development tools (Trae IDE / GSD framework)
 .agents/
 .trae/
 .planning/
 skills-lock.json
-.fleet/
+
+# Fleet execution reports
+.fleet/reports/

@@ -1,0 +1,12 @@
+{
+  "__comment": [
+    "Local fallback config for development only.",
+    "Public deployments should prefer per-player request-scoped LLM config.",
+    "Never commit a real API key to this repository."
+  ],
+  "LLM_API_KEY": "",
+  "LLM_API_BASE": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  "LLM_MODEL": "qwen-plus",
+  "LLM_CHAT_MODEL": "qwen-plus",
+  "PORT": 3002
+}

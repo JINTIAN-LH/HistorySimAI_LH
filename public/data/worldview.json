@@ -1,0 +1,236 @@
+﻿{
+    "id":  "cross_world_default_v1",
+    "title":  "穿越世界模拟器",
+    "gameTitle":  "穿越世界模拟器",
+    "playerRole":  {
+                       "name":  "穿越者",
+                       "title":  "宿主"
+                   },
+    "storyPrompt":  {
+                        "role":  "你是《穿越世界模拟器》游戏的剧情写手。",
+                        "worldview":  [
+                                          "世界观为多元宇宙穿越体系，玩家作为意外觉醒穿越能力的宿主，可随机或定向进入不同世界。",
+                                          "玩家固定扮演穿越者，初始无身份、无资源、无势力，从零开始在陌生世界生存、发展、登顶。",
+                                          "世界类型包含：古代王朝、修仙玄幻、末世废土、星际科幻、魔法奇幻、现代都市、末日丧尸、洪荒神话、异界领主、赛博朋克。"
+                                      ],
+                        "gameplayConstraints":  [
+                                                    "保留现有资源结构、回合节奏与玩法循环，只改变叙事背景与名词，不新增机制。",
+                                                    "所有世界遵循统一规则：属性成长、人才招募、政策决策、事件应对、势力扩张、世界跃迁。"
+                                                ]
+                    },
+    "semanticLabels":  {
+                           "primaryHostileName":  "敌对势力",
+                           "northernHostileAliases":  [
+                                                          "强敌",
+                                                          "异族",
+                                                          "妖兽",
+                                                          "虫族",
+                                                          "机械军团",
+                                                          "黑暗势力",
+                                                          "叛军",
+                                                          "敌对玩家"
+                                                      ],
+                           "rebelForceAliases":  [
+                                                     "乱民",
+                                                     "叛党",
+                                                     "邪修",
+                                                     "变异体",
+                                                     "反抗军",
+                                                     "异端"
+                                                 ],
+                           "dengzhouRebelAliases":  [
+                                                        "地方乱军",
+                                                        "割据势力",
+                                                        "野怪团伙",
+                                                        "掠夺者"
+                                                    ]
+                       },
+    "talentConfig":  {
+                         "tabLabel":  "伙伴",
+                         "tabIcon":  "🤝",
+                         "viewTitle":  "伙伴军团",
+                         "viewSubtitle":  "集结各路强者，组建专属团队，征服万千世界",
+                         "recruitLabel":  "招募",
+                         "recruitTypes":  {
+                                              "imperial_exam":  "机缘邂逅",
+                                              "recommend":  "势力引荐",
+                                              "search":  "定向寻访"
+                                          },
+                         "qualityLabels":  {
+                                               "ordinary":  "普通伙伴",
+                                               "excellent":  "精英强者",
+                                               "epic":  "传说天骄"
+                                           },
+                         "abilityFields":  {
+                                               "military":  "战力",
+                                               "politics":  "统御",
+                                               "economy":  "资源",
+                                               "culture":  "智慧"
+                                           },
+                         "rulerTitle":  "宿主",
+                         "talentNoun":  "伙伴",
+                         "poolLabel":  "候选伙伴",
+                         "interactVerb":  "交谈",
+                         "appointVerb":  "委任",
+                         "trainVerb":  "培养",
+                         "recruitCostResource":  "prestige",
+                         "recruitCostLabel":  "声望"
+                     },
+    "policyConfig":  {
+                         "tabLabel":  "决策",
+                         "tabIcon":  "⚖️",
+                         "viewTitle":  "世界决策",
+                         "viewSubtitle":  "权衡利弊，决断未来，掌控世界走向",
+                         "sessionLabel":  "议事",
+                         "edictLabel":  "指令",
+                         "issueLabel":  "议题",
+                         "ministerLabel":  "伙伴",
+                         "adviceLabel":  "建议",
+                         "rulerTitle":  "宿主",
+                         "askVerb":  "询问",
+                         "issueVerb":  "下达",
+                         "supportLabel":  "赞同",
+                         "opposeLabel":  "反对",
+                         "neutralLabel":  "中立",
+                         "historyLabel":  "决策记录"
+                     },
+    "startPageCopy":  {
+                          "heroTitle":  "穿越世界模拟器",
+                          "heroSubtitle":  "无限世界，无限可能，从今天开始，你将主宰自己的穿越人生",
+                          "startButtonLabel":  "开始穿越",
+                          "continueButtonLabel":  "继续旅程",
+                          "introLines":  [
+                                             "一道神秘光芒闪过，你突然拥有了穿梭万千世界的能力。",
+                                             "没有系统、没有新手礼包，只有一身凡躯和一颗不甘平凡的心。",
+                                             "而你，将在一个个光怪陆离的世界中，挣扎求生，逆袭登顶，成为多元宇宙的传说。"
+                                         ]
+                      },
+    "openingTurn":  {
+                        "briefingTitle":  "首次穿越",
+                        "briefingLines":  [
+                                              "你降临在陌生世界，一无所有，危机四伏。",
+                                              "生存是第一要务，发展是长期目标，你必须做出关键选择。"
+                                          ],
+                        "openingChoices":  [
+                                               {
+                                                   "id":  "stabilize_survive",
+                                                   "label":  "先求生存",
+                                                   "summary":  "优先解决温饱、安全，稳定当前处境"
+                                               },
+                                               {
+                                                   "id":  "secure_develop",
+                                                   "label":  "先谋发展",
+                                                   "summary":  "优先获取资源、信息，为未来扩张铺路"
+                                               }
+                                           ]
+                    },
+    "chronicleFormat":  {
+                            "eraLabel":  "穿越历",
+                            "yearUnit":  "年",
+                            "monthUnit":  "月",
+                            "displayPattern":  "{era}{year}{yearUnit}{month}{monthUnit}",
+                            "fallbackPattern":  "第{year}年{month}月"
+                        },
+    "courtViewCopy":  {
+                          "headerTitle":  "宿主中枢",
+                          "headerSubtitle":  "统御伙伴，决策事务，掌控全局",
+                          "quickActionLabel":  "速决",
+                          "emptyStateText":  "暂无待决策事务，请稍后再试"
+                      },
+    "policyTreeCopy":  {
+                           "treeTitle":  "穿越之路",
+                           "treeSubtitle":  "规划路线，稳步变强，征服世界",
+                           "branchLabels":  {
+                                                "military":  "战力提升",
+                                                "internal":  "势力建设",
+                                                "economy":  "资源积累"
+                                            }
+                       },
+    "rulerAbilityCopy":  {
+                             "panelTitle":  "宿主能力",
+                             "abilityLabels":  {
+                                                   "authority":  "穿越权限",
+                                                   "command":  "统御之力",
+                                                   "insight":  "世界洞察"
+                                               },
+                             "abilityHint":  "宿主能力决定穿越上限与发展速度"
+                         },
+    "worldEventCopy":  {
+                           "sectionTitle":  "世界事件",
+                           "emptyStateText":  "当前世界暂无重大变故",
+                           "severityLabels":  {
+                                                  "high":  "世界危机",
+                                                  "medium":  "区域动荡",
+                                                  "low":  "局部异动"
+                                              }
+                       },
+    "publicOpinionCopy":  {
+                              "sectionTitle":  "世界声望",
+                              "positiveLabel":  "万民敬仰",
+                              "neutralLabel":  "默默无闻",
+                              "negativeLabel":  "声名狼藉",
+                              "emptyStateText":  "暂未形成显著声望"
+                          },
+    "uiSurfaceCopy":  {
+                          "policy":  {
+                                         "inputPlaceholder":  "输入要询问伙伴的问题，或点上方议题快速填入…",
+                                         "followupPlaceholder":  "基于当前议题继续追问…",
+                                         "emptyQuestionError":  "请先输入或选择议题。",
+                                         "emptyEdictError":  "指令内容不得为空。",
+                                         "askFailedError":  "议事失败，请稍后重试。",
+                                         "followupFailedError":  "追问失败，请稍后重试。",
+                                         "issueFailedError":  "下达失败，请稍后重试。",
+                                         "issueSuccess":  "指令已拟定，待你本轮选择时一并生效。",
+                                         "closeSessionLabel":  "结束议事",
+                                         "summaryPrefix":  "综议：",
+                                         "adoptAdviceLabel":  "采纳此议",
+                                         "followupLabel":  "继续追问伙伴：",
+                                         "followupButtonLabel":  "追问",
+                                         "followupBusyLabel":  "议…",
+                                         "historyTitle":  "历次议事"
+                                     },
+                          "edict":  {
+                                        "pageTitle":  "指令中枢",
+                                        "pageSubtitle":  "将剧情正文、指令选择、反馈与自拟指令入口固定在统一玩法骨架内",
+                                        "actionsTitle":  "指令选择",
+                                        "actionsHint":  "固定保留选择区与自拟指令入口，锁定后也在这里继续操作",
+                                        "dataTitle":  "世界反馈",
+                                        "dataHint":  "把事件流和声望反馈固定在数据区，减少信息漂移",
+                                        "mainTitle":  "指令正文",
+                                        "mainHint":  "正文区承载历史记录、当回合文本、批注和数值反馈"
+                                    },
+                          "court":  {
+                                        "kejuPanelTitle":  "机缘招募",
+                                        "kejuPanelSubtitle":  "统一弹窗骨架，邂逅招募、引荐招募共用面板",
+                                        "wujuPanelTitle":  "强者招募",
+                                        "wujuPanelSubtitle":  "统一弹窗骨架，强者、天骄招募共用布局",
+                                        "talentPanelTitle":  "伙伴军团",
+                                        "talentPanelSubtitle":  "招募、委任、培养共用弹窗结构",
+                                        "policyPanelTitle":  "决策议事",
+                                        "policyPanelSubtitle":  "议事、采纳、下达指令统一弹窗骨架",
+                                        "appointByPositionSubtitle":  "统一委任弹窗骨架，后续扩展筛选、排序",
+                                        "appointByMinisterSubtitle":  "统一委任弹窗，伙伴与职位共用模板",
+                                        "appointLegacySubtitle":  "统一老委任路径弹窗，保留筛选与确认",
+                                        "positionSelectSubtitle":  "统一职位选择弹窗，保持委任流程一致",
+                                        "ministerDetailSubtitle":  "统一详情弹窗，包含头像、忠诚、态度",
+                                        "factionPanelSubtitle":  "统一势力弹窗，后续接入成员、忠诚信息",
+                                        "ministerPanelSubtitle":  "统一伙伴列表弹窗，点击进入详情",
+                                        "unknownError":  "未知错误",
+                                        "appointFailedPrefix":  "委任失败: ",
+                                        "adjustFailedPrefix":  "调整失败: ",
+                                        "kejuStartSuccess":  "机缘已开启，候选名单已生成。",
+                                        "kejuHuishiSuccess":  "邂逅候选名单已生成。",
+                                        "kejuDianshiSuccess":  "强者候选名单已生成。",
+                                        "kejuPublishSuccess":  "招募完成。",
+                                        "kejuReserveSavedSuccess":  "已写入候选名单。",
+                                        "kejuEntryAppliedSuccess":  "伙伴加入已生效。",
+                                        "officeAppointmentAppliedSuccess":  "伙伴委任已生效",
+                                        "positionOccupiedRegenerateError":  "该职位已有人，重新生成推荐。",
+                                        "positionOccupiedRegenerateSimpleError":  "该职位已有人，重新生成名单。",
+                                        "candidateDeadCannotAppointError":  "该伙伴已失联，无法委任。",
+                                        "candidateDeadCannotAdjustError":  "该伙伴已失联，无法调整。",
+                                        "candidateDeadCannotGrantError":  "该伙伴已失联，无法授予职位。",
+                                        "ministerDeadCannotDiscussError":  "该伙伴已失联，无法议事。"
+                                    }
+                      }
+}

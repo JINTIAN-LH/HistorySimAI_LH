@@ -1,0 +1,380 @@
+{
+  "schemaVersion": 2,
+  "characters": [
+    {
+      "id": "hero_01",
+      "name": "凌辰",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "玄黄大世界",
+      "positions": [
+        "战力统帅"
+      ],
+      "faction": "military",
+      "factionLabel": "战力巅峰",
+      "loyalty": 90,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "修仙",
+        "剑道",
+        "无敌"
+      ],
+      "summary": "凌辰，来自修仙大世界的剑道天骄，一剑破万法，战力冠绝古今，忠诚可靠，是宿主最坚实的战力屏障。",
+      "attitude": "一心辅佐宿主，横扫一切强敌，追求武道极致。",
+      "openingLine": "宿主，有我在，世间无人可伤你分毫！"
+    },
+    {
+      "id": "hero_02",
+      "name": "苏清月",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "青丘秘境",
+      "positions": [
+        "智慧军师"
+      ],
+      "faction": "donglin",
+      "factionLabel": "智慧无双",
+      "loyalty": 88,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "智谋",
+        "魅惑",
+        "洞察"
+      ],
+      "summary": "苏清月，青丘九尾天狐，智谋无双，擅长布局算计、洞察人心，能为宿主规划最完美的发展路线。",
+      "attitude": "用智慧辅佐宿主，规避风险，步步为营。",
+      "openingLine": "宿主，清月已为你规划好当前世界的最优路线。"
+    },
+    {
+      "id": "hero_03",
+      "name": "墨尘",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "机械神域",
+      "positions": [
+        "科技大师"
+      ],
+      "faction": "neutral",
+      "factionLabel": "科技主宰",
+      "loyalty": 85,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "科技",
+        "制造",
+        "机械"
+      ],
+      "summary": "墨尘，来自星际科幻世界的顶级科学家，精通机械、能源、基因技术，能制造各种黑科技装备。",
+      "attitude": "专注科技研发，为宿主提供最强科技支撑。",
+      "openingLine": "宿主，最新科技装备已研发完成，请查收。"
+    },
+    {
+      "id": "hero_04",
+      "name": "夜影",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "暗影界",
+      "positions": [
+        "隐秘统领"
+      ],
+      "faction": "imperial",
+      "factionLabel": "暗影潜行",
+      "loyalty": 92,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "暗杀",
+        "侦查",
+        "隐秘"
+      ],
+      "summary": "夜影，暗影界顶尖刺客，来无影去无踪，擅长侦查、暗杀、情报收集，是宿主最隐秘的利刃。",
+      "attitude": "绝对忠诚，执行宿主一切隐秘指令。",
+      "openingLine": "宿主，情报已收集完毕，随时可以行动。"
+    },
+    {
+      "id": "hero_05",
+      "name": "林婉兮",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "精灵森林",
+      "positions": [
+        "生命祭司"
+      ],
+      "faction": "neutral",
+      "factionLabel": "生命守护",
+      "loyalty": 86,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "治疗",
+        "辅助",
+        "自然"
+      ],
+      "summary": "林婉兮，精灵族大祭司，掌握生命魔法，擅长治疗、辅助、净化，能保障团队生存能力。",
+      "attitude": "守护伙伴，治愈伤痛，维护世界平衡。",
+      "openingLine": "宿主，有我在，伙伴们不会轻易倒下。"
+    },
+    {
+      "id": "hero_06",
+      "name": "赵天宇",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "华夏古代",
+      "positions": [
+        "统御元帅"
+      ],
+      "faction": "military",
+      "factionLabel": "兵家圣手",
+      "loyalty": 84,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "兵法",
+        "治军",
+        "扩张"
+      ],
+      "summary": "赵天宇，古代王朝绝世名将，精通兵法、治军、攻城略地，擅长势力扩张与领土统治。",
+      "attitude": "辅佐宿主建立无上帝国，横扫四方。",
+      "openingLine": "宿主，三军已整装待发，随时可以出征！"
+    },
+    {
+      "id": "hero_07",
+      "name": "白若曦",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "魔法大陆",
+      "positions": [
+        "魔法导师"
+      ],
+      "faction": "neutral",
+      "factionLabel": "魔法至尊",
+      "loyalty": 83,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "魔法",
+        "元素",
+        "咒文"
+      ],
+      "summary": "白若曦，魔法大陆法神，精通全系魔法，能释放毁天灭地的魔法攻击，掌控元素之力。",
+      "attitude": "追求魔法真谛，用魔法力量守护宿主。",
+      "openingLine": "宿主，魔法之力已为你备好，碾碎一切敌人。"
+    },
+    {
+      "id": "hero_08",
+      "name": "铁牛",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "末世废土",
+      "positions": [
+        "先锋战将"
+      ],
+      "faction": "military",
+      "factionLabel": "狂暴战力",
+      "loyalty": 95,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "蛮力",
+        "防御",
+        "生存"
+      ],
+      "summary": "铁牛，末世幸存者，肉身强悍无比，防御力惊人，擅长正面冲锋，生存能力极强。",
+      "attitude": "憨直忠诚，挡在宿主身前，承受一切伤害。",
+      "openingLine": "宿主，谁要是敢惹你，俺一拳头砸扁他！"
+    },
+    {
+      "id": "hero_09",
+      "name": "秦无双",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "洪荒世界",
+      "positions": [
+        "洪荒战神"
+      ],
+      "faction": "military",
+      "factionLabel": "洪荒霸主",
+      "loyalty": 89,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "洪荒",
+        "神兽",
+        "神通"
+      ],
+      "summary": "秦无双，洪荒上古战神，掌控神兽之力，拥有通天神通，可战洪荒万族，傲视古今。",
+      "attitude": "威震洪荒，辅佐宿主成为洪荒之主。",
+      "openingLine": "宿主，洪荒万族，皆可臣服于你！"
+    },
+    {
+      "id": "hero_10",
+      "name": "洛璃",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "现代都市",
+      "positions": [
+        "商业女王"
+      ],
+      "faction": "neutral",
+      "factionLabel": "商业奇才",
+      "loyalty": 82,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "商业",
+        "理财",
+        "人脉"
+      ],
+      "summary": "洛璃，现代都市顶级商业大佬，精通理财、投资、人脉运营，能快速积累海量财富。",
+      "attitude": "用商业手段为宿主打造金融帝国，掌控经济命脉。",
+      "openingLine": "宿主，资金已到位，任何项目都可启动。"
+    },
+    {
+      "id": "hero_11",
+      "name": "刀锋",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "赛博都市",
+      "positions": [
+        "义体战士"
+      ],
+      "faction": "military",
+      "factionLabel": "赛博强者",
+      "loyalty": 87,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "义体",
+        "黑客",
+        "近战"
+      ],
+      "summary": "刀锋，赛博朋克世界顶级义体改造人，精通近战、黑客技术、潜行突袭，战力与科技兼备。",
+      "attitude": "游走于赛博都市，为宿主清除一切电子与物理障碍。",
+      "openingLine": "宿主，网络已攻破，防线已瓦解，行动吧。"
+    },
+    {
+      "id": "hero_12",
+      "name": "风行者",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "异界草原",
+      "positions": [
+        "斥候统领"
+      ],
+      "faction": "imperial",
+      "factionLabel": "极速侦查",
+      "loyalty": 86,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "速度",
+        "侦查",
+        "骑射"
+      ],
+      "summary": "风行者，异界草原精灵，速度极致，擅长骑射、大范围侦查，能快速掌握世界地形与情报。",
+      "attitude": "驰骋天地，为宿主探路，传递关键情报。",
+      "openingLine": "宿主，世界地形与敌人分布已全部摸清。"
+    },
+    {
+      "id": "hero_13",
+      "name": "药尘",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "丹界",
+      "positions": [
+        "丹道圣师"
+      ],
+      "faction": "neutral",
+      "factionLabel": "丹道无敌",
+      "loyalty": 84,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "炼丹",
+        "解毒",
+        "养生"
+      ],
+      "summary": "药尘，丹界圣师，精通炼丹、解毒、养生之道，能炼制各种神丹，提升实力、延年益寿。",
+      "attitude": "潜心炼丹，为宿主提供最强丹药支持。",
+      "openingLine": "宿主，神丹已成，服用即可突破境界。"
+    },
+    {
+      "id": "hero_14",
+      "name": "龙战",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "龙族秘境",
+      "positions": [
+        "龙族族长"
+      ],
+      "faction": "military",
+      "factionLabel": "龙族至尊",
+      "loyalty": 91,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "龙族",
+        "肉身",
+        "神通"
+      ],
+      "summary": "龙战，上古龙族族长，肉身成圣，掌控龙族神通，战力滔天，是世间最强大的种族领袖。",
+      "attitude": "以龙族之力辅佐宿主，镇压一切不服。",
+      "openingLine": "宿主，龙族大军听你调遣，横扫诸天！"
+    },
+    {
+      "id": "hero_15",
+      "name": "念冰",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "冰火神域",
+      "positions": [
+        "元素使者"
+      ],
+      "faction": "neutral",
+      "factionLabel": "元素掌控",
+      "loyalty": 85,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "冰火",
+        "元素",
+        "控制"
+      ],
+      "summary": "念冰，冰火双系元素使者，掌控极致冰火之力，擅长控制与大范围攻击，元素之力登峰造极。",
+      "attitude": "掌控元素平衡，用冰火之力守护宿主。",
+      "openingLine": "宿主，冰火元素已觉醒，敌人将被冻结焚烧。"
+    }
+  ]
+}

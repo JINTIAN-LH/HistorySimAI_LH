@@ -1,0 +1,157 @@
+{
+  "treasury": 200000,
+  "grain": 15000,
+  "militaryStrength": 55,
+  "civilMorale": 55,
+  "borderThreat": 45,
+  "disasterLevel": 30,
+  "corruptionLevel": 25,
+  "provinces": [
+    {
+      "name": "初始领地",
+      "status": "区域局势待侦察与治理",
+      "threat": "low",
+      "taxSilver": 1000,
+      "taxGrain": 1000,
+      "recruits": 100,
+      "morale": 50,
+      "corruption": 0,
+      "disaster": 0
+    },
+    {
+      "name": "周边区域",
+      "status": "区域局势待侦察与治理",
+      "threat": "medium",
+      "taxSilver": 500,
+      "taxGrain": 500,
+      "recruits": 50,
+      "morale": 40,
+      "corruption": 10,
+      "disaster": 20
+    },
+    {
+      "name": "青霜平原",
+      "status": "区域局势待侦察与治理",
+      "threat": "low",
+      "taxSilver": 1200,
+      "taxGrain": 1400,
+      "recruits": 220,
+      "morale": 55,
+      "corruption": 15,
+      "disaster": 18
+    },
+    {
+      "name": "赤岩山脉",
+      "status": "区域局势待侦察与治理",
+      "threat": "medium",
+      "taxSilver": 1600,
+      "taxGrain": 600,
+      "recruits": 180,
+      "morale": 48,
+      "corruption": 22,
+      "disaster": 25
+    },
+    {
+      "name": "碧水湖域",
+      "status": "区域局势待侦察与治理",
+      "threat": "low",
+      "taxSilver": 900,
+      "taxGrain": 1100,
+      "recruits": 150,
+      "morale": 60,
+      "corruption": 12,
+      "disaster": 15
+    },
+    {
+      "name": "黑岩要塞",
+      "status": "区域局势待侦察与治理",
+      "threat": "high",
+      "taxSilver": 1400,
+      "taxGrain": 700,
+      "recruits": 260,
+      "morale": 45,
+      "corruption": 28,
+      "disaster": 30
+    },
+    {
+      "name": "云顶高原",
+      "status": "区域局势待侦察与治理",
+      "threat": "medium",
+      "taxSilver": 1100,
+      "taxGrain": 900,
+      "recruits": 200,
+      "morale": 52,
+      "corruption": 18,
+      "disaster": 22
+    },
+    {
+      "name": "落枫林地",
+      "status": "区域局势待侦察与治理",
+      "threat": "low",
+      "taxSilver": 800,
+      "taxGrain": 1200,
+      "recruits": 170,
+      "morale": 58,
+      "corruption": 14,
+      "disaster": 16
+    },
+    {
+      "name": "黄沙戈壁",
+      "status": "区域局势待侦察与治理",
+      "threat": "high",
+      "taxSilver": 1300,
+      "taxGrain": 400,
+      "recruits": 210,
+      "morale": 42,
+      "corruption": 25,
+      "disaster": 35
+    },
+    {
+      "name": "东海沿岸",
+      "status": "区域局势待侦察与治理",
+      "threat": "medium",
+      "taxSilver": 1800,
+      "taxGrain": 1000,
+      "recruits": 190,
+      "morale": 65,
+      "corruption": 20,
+      "disaster": 24
+    },
+    {
+      "name": "万兽荒原",
+      "status": "区域局势待侦察与治理",
+      "threat": "medium",
+      "taxSilver": 700,
+      "taxGrain": 800,
+      "recruits": 240,
+      "morale": 49,
+      "corruption": 16,
+      "disaster": 28
+    },
+    {
+      "name": "神谕禁地",
+      "status": "区域局势待侦察与治理",
+      "threat": "low",
+      "taxSilver": 2000,
+      "taxGrain": 1500,
+      "recruits": 300,
+      "morale": 70,
+      "corruption": 10,
+      "disaster": 12
+    }
+  ],
+  "externalThreats": [
+    {
+      "name": "世界原住民",
+      "leader": "未知",
+      "status": "当前世界本土势力，对穿越者抱有敌意。",
+      "level": "high"
+    },
+    {
+      "name": "敌对穿越者",
+      "leader": "未知",
+      "status": "其他穿越者，争夺世界资源与机遇。",
+      "level": "critical"
+    }
+  ]
+}

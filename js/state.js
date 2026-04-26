@@ -1,0 +1,333 @@
+import { DEFAULT_WORLD_VERSION } from "./worldVersion.js";
+import { getCandidateCharactersFromState, getKnownCharactersFromState } from "./utils/characterRegistry.js";
+
+const initialState = {
+  schemaVersion: 2,
+  currentDay: 1,
+  currentPhase: "morning",
+  currentMonth: 1,
+  currentYear: 1,
+  weather: "阴寒",
+  worldVersion: DEFAULT_WORLD_VERSION,
+
+  player: {
+    name: "穿越者",
+    title: "宿主",
+    age: 20,
+  },
+
+  nation: {
+    treasury: 500000,
+    grain: 30000,
+    militaryStrength: 60,
+    civilMorale: 35,
+    borderThreat: 75,
+    disasterLevel: 70,
+    corruptionLevel: 80,
+  },
+
+  allCharacters: [],
+  candidateCharacters: [],
+  ministers: [],
+  factions: [],
+  loyalty: {},
+
+  appointments: {},
+  characterStatus: {},
+  // 外部势力势力值（如 { "北方敌军": 100, "地方叛军": 80 }）
+  externalPowers: {},
+
+  // 省级经济与民生数据快照（按省名索引）
+  provinceStats: {},
+
+  lastChoiceId: null,
+  lastChoiceText: null,
+  lastChoiceHint: null,
+  storyHistory: [],
+  currentStoryTurn: null,
+  storyHighlights: [],
+
+  courtChats: {},
+  ministerUnread: {},
+  keju: {
+    stage: "idle",
+    candidatePool: [],
+    publishedList: [],
+    talentReserve: [],
+    generatedCandidates: [],
+    bureauMomentum: 52,
+    reserveQuality: 0,
+    note: "",
+  },
+  wuju: {
+    stage: "idle",
+    candidatePool: [],
+    publishedList: [],
+    talentReserve: [],
+    generatedCandidates: [],
+    bureauMomentum: 50,
+    reserveQuality: 0,
+    note: "",
+  },
+
+  newsToday: [],
+  newsHistory: {},
+  publicOpinion: [],
+  prestige: 58,
+  executionRate: 72,
+  partyStrife: 62,
+  unrest: 18,
+  taxPressure: 52,
+  factionSupport: {},
+  pendingConsequences: [],
+  systemNewsToday: [],
+  systemPublicOpinion: [],
+  abilityPoints: 0,
+  policyPoints: 0,
+  playerAbilities: {
+    management: 0,
+    military: 0,
+    scholarship: 0,
+    politics: 0,
+  },
+  unlockedPolicies: [],
+  customPolicies: [],
+  hostileForces: [],
+  closedStorylines: [],
+  storyFacts: null,
+
+  goals: [],
+  trackedGoalId: null,
+
+  talent: {
+    pool: [],
+    interactionHistory: {},
+    recruiting: false,
+  },
+
+  policyDiscussion: {
+    activeSession: null,
+    sessionHistory: [],
+    asking: false,
+    pendingIssuedEdict: null,
+  },
+
+  gameStarted: false,
+  mode: "classic",
+};
+
+let state = JSON.parse(JSON.stringify(initialState));
+const stateListeners = new Set();
+
+function resolveStateSelector(selector) {
+  return typeof selector === "function" ? selector : (currentState) => currentState;
+}
+
+function notifyStateListeners() {
+  stateListeners.forEach((listener) => {
+    try {
+      listener(state);
+    } catch (error) {
+      console.error("[state] listener failed", error);
+    }
+  });
+}
+
+function syncCandidateCharacters(nextState) {
+  return getCandidateCharactersFromState(nextState);
+}
+
+function sanitizeAppointments(nextState) {
+  const source = nextState?.appointments && typeof nextState.appointments === "object"
+    ? nextState.appointments
+    : {};
+  const aliveStatus = nextState?.characterStatus && typeof nextState.characterStatus === "object"
+    ? nextState.characterStatus
+    : {};
+  const validIds = new Set(
+    getKnownCharactersFromState(nextState)
+      .map((character) => character?.id)
+      .filter((id) => typeof id === "string" && id)
+  );
+
+  if (!validIds.size) {
+    return { ...source };
+  }
+
+  const sanitized = {};
+  Object.entries(source).forEach(([positionId, holderId]) => {
+    if (typeof positionId !== "string" || typeof holderId !== "string") return;
+    if (!positionId || !holderId) return;
+    if (!validIds.has(holderId)) return;
+    if (aliveStatus[holderId]?.isAlive === false) return;
+    sanitized[positionId] = holderId;
+  });
+
+  return sanitized;
+}
+
+function deriveCourtMinistersFromState(nextState) {
+  const allCharacters = getKnownCharactersFromState(nextState);
+  const appointments = sanitizeAppointments(nextState);
+  const characterStatus = nextState.characterStatus && typeof nextState.characterStatus === "object"
+    ? nextState.characterStatus
+    : {};
+  const byId = new Map(allCharacters.map((char) => [char?.id, char]).filter(([id]) => typeof id === "string" && id));
+
+  return Array.from(new Set(Object.values(appointments).filter((id) => typeof id === "string" && id)))
+    .map((id) => byId.get(id))
+    .filter((char) => char && characterStatus[char.id]?.isAlive !== false);
+}
+
+export function getState() {
+  return state;
+}
+
+export function setState(partial) {
+  const nextState = { ...state, ...partial };
+  if (
+    Object.prototype.hasOwnProperty.call(partial, "allCharacters") ||
+    Object.prototype.hasOwnProperty.call(partial, "candidateCharacters") ||
+    Object.prototype.hasOwnProperty.call(partial, "appointments") ||
+    Object.prototype.hasOwnProperty.call(partial, "characterStatus") ||
+    Object.prototype.hasOwnProperty.call(partial, "talent") ||
+    Object.prototype.hasOwnProperty.call(partial, "keju") ||
+    Object.prototype.hasOwnProperty.call(partial, "wuju")
+  ) {
+    nextState.candidateCharacters = syncCandidateCharacters(nextState);
+    nextState.appointments = sanitizeAppointments(nextState);
+    nextState.ministers = deriveCourtMinistersFromState(nextState);
+  }
+  state = nextState;
+  notifyStateListeners();
+}
+
+export function resetState() {
+  state = JSON.parse(JSON.stringify(initialState));
+  notifyStateListeners();
+}
+
+export function subscribeState(listener) {
+  if (typeof listener !== "function") {
+    return () => {};
+  }
+  stateListeners.add(listener);
+  return () => {
+    stateListeners.delete(listener);
+  };
+}
+
+export function selectState(selector) {
+  return resolveStateSelector(selector)(state);
+}
+
+export function subscribeStateSelector(selector, listener, isEqual = Object.is) {
+  if (typeof listener !== "function") {
+    return () => {};
+  }
+
+  const select = resolveStateSelector(selector);
+  let selected = select(state);
+
+  const wrappedListener = (nextState) => {
+    const nextSelected = select(nextState);
+    if (isEqual(selected, nextSelected)) {
+      return;
+    }
+    selected = nextSelected;
+    listener();
+  };
+
+  stateListeners.add(wrappedListener);
+  return () => {
+    stateListeners.delete(wrappedListener);
+  };
+}
+
+export function getRosterCharacters() {
+  return getKnownCharactersFromState(state);
+}
+
+export function initializeAppointments(positions, characters) {
+  const appointments = {};
+  positions.forEach((pos) => {
+    if (pos.defaultHolder) {
+      appointments[pos.id] = pos.defaultHolder;
+    }
+  });
+  setState({ appointments });
+  return appointments;
+}
+
+export function initializeCharacterStatus(characters) {
+  const characterStatus = {};
+  characters.forEach((char) => {
+    characterStatus[char.id] = {
+      isAlive: char.isAlive,
+      deathReason: char.deathReason,
+      deathDay: char.deathDay,
+    };
+  });
+  setState({ characterStatus });
+  return characterStatus;
+}
+
+export function getAliveCharacters(characters) {
+  const status = state.characterStatus;
+  return characters.filter((char) => status[char.id]?.isAlive !== false);
+}
+
+export function getDeadCharacters(characters) {
+  const status = state.characterStatus;
+  return characters.filter((char) => status[char.id]?.isAlive === false);
+}
+
+export function getCharacterByPosition(positionId) {
+  const characterId = state.appointments[positionId];
+  if (!characterId) return null;
+  return getRosterCharacters().find((m) => m.id === characterId);
+}
+
+export function appointCharacter(positionId, characterId) {
+  const appointments = { ...state.appointments };
+  const oldHolder = appointments[positionId];
+  
+  appointments[positionId] = characterId;
+  setState({ appointments });
+  
+  return { positionId, newHolder: characterId, oldHolder };
+}
+
+export function removeCharacterFromPosition(positionId) {
+  const appointments = { ...state.appointments };
+  const oldHolder = appointments[positionId];
+  
+  delete appointments[positionId];
+  setState({ appointments });
+  
+  return { positionId, oldHolder };
+}
+
+export function markCharacterDead(characterId, reason, day) {
+  const characterStatus = { ...state.characterStatus };
+  characterStatus[characterId] = {
+    isAlive: false,
+    deathReason: reason,
+    deathDay: day,
+  };
+  
+  const appointments = { ...state.appointments };
+  for (const [posId, charId] of Object.entries(appointments)) {
+    if (charId === characterId) {
+      delete appointments[posId];
+    }
+  }
+  
+  setState({ characterStatus, appointments });
+  
+  return characterStatus[characterId];
+}
+
+export function isCharacterAlive(characterId) {
+  return state.characterStatus[characterId]?.isAlive !== false;
+}

@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "description": "各地动态规则配置，namePattern 为正则表达式字符串，按 regionRules 顺序匹配。",
+  "regionRules": [
+    {
+      "namePattern": "黑岩要塞|黄沙戈壁|边界",
+      "default": {
+        "threat": "medium",
+        "status": "边境压力持续存在，需保持常态化警戒。"
+      },
+      "states": [
+        {
+          "whenAny": [
+            {
+              "metric": "borderThreat",
+              "op": ">=",
+              "value": 70
+            },
+            {
+              "metric": "militaryStrength",
+              "op": "<=",
+              "value": 45
+            }
+          ],
+          "threat": "high",
+          "status": "边境警报升级，需立即补充守备与资源。"
+        },
+        {
+          "whenAll": [
+            {
+              "metric": "borderThreat",
+              "op": "<=",
+              "value": 40
+            },
+            {
+              "metric": "militaryStrength",
+              "op": ">=",
+              "value": 65
+            }
+          ],
+          "threat": "low",
+          "status": "防线阶段稳定，可转入恢复与建设。"
+        }
+      ]
+    },
+    {
+      "namePattern": "赤岩山脉|万兽荒原|高风险",
+      "default": {
+        "threat": "high",
+        "status": "地形复杂且冲突频发，需持续投入维稳。"
+      },
+      "states": [
+        {
+          "whenAny": [
+            {
+              "metric": "disasterLevel",
+              "op": ">=",
+              "value": 65
+            },
+            {
+              "metric": "unrest",
+              "op": ">=",
+              "value": 30
+            }
+          ],
+          "threat": "critical",
+          "status": "灾害与动荡叠加，区域已接近失控边缘。"
+        }
+      ]
+    },
+    {
+      "namePattern": "东海沿岸|碧水湖域|富庶",
+      "default": {
+        "threat": "low",
+        "status": "产出稳定，是资源与补给的重要来源。"
+      },
+      "states": [
+        {
+          "whenAny": [
+            {
+              "metric": "treasury",
+              "op": "<=",
+              "value": 180000
+            },
+            {
+              "metric": "corruptionLevel",
+              "op": ">=",
+              "value": 65
+            }
+          ],
+          "threat": "medium",
+          "status": "财政与管理承压，产出效率开始下滑。"
+        }
+      ]
+    },
+    {
+      "namePattern": "云顶高原|落枫林地|后方",
+      "default": {
+        "threat": "medium",
+        "status": "整体可控，可作为恢复与调度后方。"
+      },
+      "states": [
+        {
+          "whenAny": [
+            {
+              "metric": "unrest",
+              "op": ">=",
+              "value": 35
+            }
+          ],
+          "threat": "high",
+          "status": "地方秩序波动明显，需提前部署稳控。"
+        }
+      ]
+    }
+  ]
+}

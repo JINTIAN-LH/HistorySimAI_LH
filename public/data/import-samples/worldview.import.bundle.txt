@@ -1,0 +1,1200 @@
+这是一个用于导入的历史模拟世界视图和覆盖配置文件的示例数据束。
+
+=== worldview.json ===
+{
+  "id": "cross_world_default_v1",
+  "title": "穿越世界模拟器",
+  "gameTitle": "穿越世界模拟器",
+  "playerRole": {
+    "name": "穿越者",
+    "title": "宿主"
+  },
+  "storyPrompt": {
+    "role": "你是《穿越世界模拟器》游戏的剧情写手。",
+    "worldview": [
+      "世界观为多元宇宙穿越体系，玩家作为意外觉醒穿越能力的宿主，可随机或定向进入不同世界。",
+      "玩家固定扮演穿越者，初始无身份、无资源、无势力，从零开始在陌生世界生存、发展、登顶。",
+      "世界类型包含：古代王朝、修仙玄幻、末世废土、星际科幻、魔法奇幻、现代都市、末日丧尸、洪荒神话、异界领主、赛博朋克。"
+    ],
+    "gameplayConstraints": [
+      "保留现有资源结构、回合节奏与玩法循环，只改变叙事背景与名词，不新增机制。",
+      "所有世界遵循统一规则：属性成长、人才招募、政策决策、事件应对、势力扩张、世界跃迁。"
+    ]
+  },
+  "semanticLabels": {
+    "primaryHostileName": "敌对势力",
+    "northernHostileAliases": [
+      "强敌",
+      "异族",
+      "妖兽",
+      "虫族",
+      "机械军团",
+      "黑暗势力",
+      "叛军",
+      "敌对玩家"
+    ],
+    "rebelForceAliases": [
+      "乱民",
+      "叛党",
+      "邪修",
+      "变异体",
+      "反抗军",
+      "异端"
+    ],
+    "dengzhouRebelAliases": [
+      "地方乱军",
+      "割据势力",
+      "野怪团伙",
+      "掠夺者"
+    ]
+  },
+  "talentConfig": {
+    "tabLabel": "伙伴",
+    "tabIcon": "🤝",
+    "viewTitle": "伙伴军团",
+    "viewSubtitle": "集结各路强者，组建专属团队，征服万千世界",
+    "recruitLabel": "招募",
+    "recruitTypes": {
+      "imperial_exam": "机缘邂逅",
+      "recommend": "势力引荐",
+      "search": "定向寻访"
+    },
+    "qualityLabels": {
+      "ordinary": "普通伙伴",
+      "excellent": "精英强者",
+      "epic": "传说天骄"
+    },
+    "abilityFields": {
+      "military": "战力",
+      "politics": "统御",
+      "economy": "资源",
+      "culture": "智慧"
+    },
+    "rulerTitle": "宿主",
+    "talentNoun": "伙伴",
+    "poolLabel": "候选伙伴",
+    "interactVerb": "交谈",
+    "appointVerb": "委任",
+    "trainVerb": "培养",
+    "recruitCostResource": "prestige",
+    "recruitCostLabel": "声望"
+  },
+  "policyConfig": {
+    "tabLabel": "决策",
+    "tabIcon": "⚖️",
+    "viewTitle": "世界决策",
+    "viewSubtitle": "权衡利弊，决断未来，掌控世界走向",
+    "sessionLabel": "议事",
+    "edictLabel": "指令",
+    "issueLabel": "议题",
+    "ministerLabel": "伙伴",
+    "adviceLabel": "建议",
+    "rulerTitle": "宿主",
+    "askVerb": "询问",
+    "issueVerb": "下达",
+    "supportLabel": "赞同",
+    "opposeLabel": "反对",
+    "neutralLabel": "中立",
+    "historyLabel": "决策记录"
+  },
+  "startPageCopy": {
+    "heroTitle": "穿越世界模拟器",
+    "heroSubtitle": "无限世界，无限可能，从今天开始，你将主宰自己的穿越人生",
+    "startButtonLabel": "开始穿越",
+    "continueButtonLabel": "继续旅程",
+    "introLines": [
+      "一道神秘光芒闪过，你突然拥有了穿梭万千世界的能力。",
+      "没有系统、没有新手礼包，只有一身凡躯和一颗不甘平凡的心。",
+      "而你，将在一个个光怪陆离的世界中，挣扎求生，逆袭登顶，成为多元宇宙的传说。"
+    ]
+  },
+  "openingTurn": {
+    "briefingTitle": "首次穿越",
+    "briefingLines": [
+      "你降临在陌生世界的临时中枢据点，外环侦察点刚刚传回敌情。",
+      "后勤清点显示银币与粮草都在警戒线附近，任何决策都会牵动全局。",
+      "作战组主张先固防线，治理组主张先稳民心，技术组建议先统一路线。",
+      "这是你真正意义上的第一道指令：先保生存、先稳内区，还是先集体议决。"
+    ],
+    "openingChoices": [
+      {
+        "id": "stabilize_survive",
+        "label": "先固防线",
+        "summary": "优先加固外环防线，压低敌对势力突破风险"
+      },
+      {
+        "id": "secure_develop",
+        "label": "先稳内区",
+        "summary": "优先安置流散者与补给分发，稳住据点秩序"
+      },
+      {
+        "id": "align_strategy",
+        "label": "先统一路线",
+        "summary": "召集核心伙伴议事，先统一短期生存与扩张节奏"
+      }
+    ]
+  },
+  "chronicleFormat": {
+    "eraLabel": "穿越历",
+    "yearUnit": "年",
+    "monthUnit": "月",
+    "displayPattern": "{era}{year}{yearUnit}{month}{monthUnit}",
+    "fallbackPattern": "第{year}年{month}月"
+  },
+  "courtViewCopy": {
+    "headerTitle": "宿主中枢",
+    "headerSubtitle": "统御伙伴，决策事务，掌控全局",
+    "quickActionLabel": "速决",
+    "emptyStateText": "暂无待决策事务，请稍后再试"
+  },
+  "policyTreeCopy": {
+    "treeTitle": "穿越之路",
+    "treeSubtitle": "规划路线，稳步变强，征服世界",
+    "branchLabels": {
+      "military": "战力提升",
+      "internal": "势力建设",
+      "economy": "资源积累"
+    }
+  },
+  "rulerAbilityCopy": {
+    "panelTitle": "宿主能力",
+    "abilityLabels": {
+      "authority": "穿越权限",
+      "command": "统御之力",
+      "insight": "世界洞察"
+    },
+    "abilityHint": "宿主能力决定穿越上限与发展速度"
+  },
+  "worldEventCopy": {
+    "sectionTitle": "世界事件",
+    "emptyStateText": "当前世界暂无重大变故",
+    "severityLabels": {
+      "high": "世界危机",
+      "medium": "区域动荡",
+      "low": "局部异动"
+    }
+  },
+  "publicOpinionCopy": {
+    "sectionTitle": "世界声望",
+    "positiveLabel": "万民敬仰",
+    "neutralLabel": "默默无闻",
+    "negativeLabel": "声名狼藉",
+    "emptyStateText": "暂未形成显著声望"
+  },
+  "uiSurfaceCopy": {
+    "policy": {
+      "inputPlaceholder": "输入要询问伙伴的问题，或点上方议题快速填入…",
+      "followupPlaceholder": "基于当前议题继续追问…",
+      "emptyQuestionError": "请先输入或选择议题。",
+      "emptyEdictError": "指令内容不得为空。",
+      "askFailedError": "议事失败，请稍后重试。",
+      "followupFailedError": "追问失败，请稍后重试。",
+      "issueFailedError": "下达失败，请稍后重试。",
+      "issueSuccess": "指令已拟定，待你本轮选择时一并生效。",
+      "closeSessionLabel": "结束议事",
+      "summaryPrefix": "综议：",
+      "adoptAdviceLabel": "采纳此议",
+      "followupLabel": "继续追问伙伴：",
+      "followupButtonLabel": "追问",
+      "followupBusyLabel": "议…",
+      "historyTitle": "历次议事"
+    },
+    "edict": {
+      "pageTitle": "指令中枢",
+      "pageSubtitle": "将剧情正文、指令选择、反馈与自拟指令入口固定在统一玩法骨架内",
+      "actionsTitle": "指令选择",
+      "actionsHint": "固定保留选择区与自拟指令入口，锁定后也在这里继续操作",
+      "dataTitle": "世界反馈",
+      "dataHint": "把事件流和声望反馈固定在数据区，减少信息漂移",
+      "mainTitle": "指令正文",
+      "mainHint": "正文区承载历史记录、当回合文本、批注和数值反馈"
+    },
+    "court": {
+      "kejuPanelTitle": "机缘招募",
+      "kejuPanelSubtitle": "统一弹窗骨架，邂逅招募、引荐招募共用面板",
+      "wujuPanelTitle": "强者招募",
+      "wujuPanelSubtitle": "统一弹窗骨架，强者、天骄招募共用布局",
+      "talentPanelTitle": "伙伴军团",
+      "talentPanelSubtitle": "招募、委任、培养共用弹窗结构",
+      "policyPanelTitle": "决策议事",
+      "policyPanelSubtitle": "议事、采纳、下达指令统一弹窗骨架",
+      "appointByPositionSubtitle": "统一委任弹窗骨架，后续扩展筛选、排序",
+      "appointByMinisterSubtitle": "统一委任弹窗，伙伴与职位共用模板",
+      "appointLegacySubtitle": "统一老委任路径弹窗，保留筛选与确认",
+      "positionSelectSubtitle": "统一职位选择弹窗，保持委任流程一致",
+      "ministerDetailSubtitle": "统一详情弹窗，包含头像、忠诚、态度",
+      "factionPanelSubtitle": "统一势力弹窗，后续接入成员、忠诚信息",
+      "ministerPanelSubtitle": "统一伙伴列表弹窗，点击进入详情",
+      "unknownError": "未知错误",
+      "appointFailedPrefix": "委任失败: ",
+      "adjustFailedPrefix": "调整失败: ",
+      "kejuStartSuccess": "机缘已开启，候选名单已生成。",
+      "kejuHuishiSuccess": "邂逅候选名单已生成。",
+      "kejuDianshiSuccess": "强者候选名单已生成。",
+      "kejuPublishSuccess": "招募完成。",
+      "kejuReserveSavedSuccess": "已写入候选名单。",
+      "kejuEntryAppliedSuccess": "伙伴加入已生效。",
+      "officeAppointmentAppliedSuccess": "伙伴委任已生效",
+      "positionOccupiedRegenerateError": "该职位已有人，重新生成推荐。",
+      "positionOccupiedRegenerateSimpleError": "该职位已有人，重新生成名单。",
+      "candidateDeadCannotAppointError": "该伙伴已失联，无法委任。",
+      "candidateDeadCannotAdjustError": "该伙伴已失联，无法调整。",
+      "candidateDeadCannotGrantError": "该伙伴已失联，无法授予职位。",
+      "ministerDeadCannotDiscussError": "该伙伴已失联，无法议事。"
+    }
+  }
+}
+
+=== worldviewOverrides.json ===
+{
+  "allowedCharacterIds": [
+    "hero_01",
+    "hero_02",
+    "hero_03",
+    "hero_04",
+    "hero_05",
+    "hero_06",
+    "hero_07",
+    "hero_08",
+    "hero_09",
+    "hero_10",
+    "hero_11",
+    "hero_12",
+    "hero_13",
+    "hero_14",
+    "hero_15"
+  ],
+  "characters": {
+    "hero_01": {
+      "name": "凌辰",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "玄黄大世界",
+      "positions": [
+        "战力统帅"
+      ],
+      "faction": "military",
+      "factionLabel": "战力巅峰",
+      "loyalty": 90,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "修仙",
+        "剑道",
+        "无敌"
+      ],
+      "summary": "凌辰，来自修仙大世界的剑道天骄，一剑破万法，战力冠绝古今，忠诚可靠，是宿主最坚实的战力屏障。",
+      "attitude": "一心辅佐宿主，横扫一切强敌，追求武道极致。",
+      "openingLine": "宿主，有我在，世间无人可伤你分毫！"
+    },
+    "hero_02": {
+      "name": "苏清月",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "青丘秘境",
+      "positions": [
+        "智慧军师"
+      ],
+      "faction": "donglin",
+      "factionLabel": "智慧无双",
+      "loyalty": 88,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "智谋",
+        "魅惑",
+        "洞察"
+      ],
+      "summary": "苏清月，青丘九尾天狐，智谋无双，擅长布局算计、洞察人心，能为宿主规划最完美的发展路线。",
+      "attitude": "用智慧辅佐宿主，规避风险，步步为营。",
+      "openingLine": "宿主，清月已为你规划好当前世界的最优路线。"
+    },
+    "hero_03": {
+      "name": "墨尘",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "机械神域",
+      "positions": [
+        "科技大师"
+      ],
+      "faction": "neutral",
+      "factionLabel": "科技主宰",
+      "loyalty": 85,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "科技",
+        "制造",
+        "机械"
+      ],
+      "summary": "墨尘，来自星际科幻世界的顶级科学家，精通机械、能源、基因技术，能制造各种黑科技装备。",
+      "attitude": "专注科技研发，为宿主提供最强科技支撑。",
+      "openingLine": "宿主，最新科技装备已研发完成，请查收。"
+    },
+    "hero_04": {
+      "name": "夜影",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "暗影界",
+      "positions": [
+        "隐秘统领"
+      ],
+      "faction": "imperial",
+      "factionLabel": "暗影潜行",
+      "loyalty": 92,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "暗杀",
+        "侦查",
+        "隐秘"
+      ],
+      "summary": "夜影，暗影界顶尖刺客，来无影去无踪，擅长侦查、暗杀、情报收集，是宿主最隐秘的利刃。",
+      "attitude": "绝对忠诚，执行宿主一切隐秘指令。",
+      "openingLine": "宿主，情报已收集完毕，随时可以行动。"
+    },
+    "hero_05": {
+      "name": "林婉兮",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "精灵森林",
+      "positions": [
+        "生命祭司"
+      ],
+      "faction": "neutral",
+      "factionLabel": "生命守护",
+      "loyalty": 86,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "治疗",
+        "辅助",
+        "自然"
+      ],
+      "summary": "林婉兮，精灵族大祭司，掌握生命魔法，擅长治疗、辅助、净化，能保障团队生存能力。",
+      "attitude": "守护伙伴，治愈伤痛，维护世界平衡。",
+      "openingLine": "宿主，有我在，伙伴们不会轻易倒下。"
+    },
+    "hero_06": {
+      "name": "赵天宇",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "华夏古代",
+      "positions": [
+        "统御元帅"
+      ],
+      "faction": "military",
+      "factionLabel": "兵家圣手",
+      "loyalty": 84,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "兵法",
+        "治军",
+        "扩张"
+      ],
+      "summary": "赵天宇，古代王朝绝世名将，精通兵法、治军、攻城略地，擅长势力扩张与领土统治。",
+      "attitude": "辅佐宿主建立无上帝国，横扫四方。",
+      "openingLine": "宿主，三军已整装待发，随时可以出征！"
+    },
+    "hero_07": {
+      "name": "白若曦",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "魔法大陆",
+      "positions": [
+        "魔法导师"
+      ],
+      "faction": "neutral",
+      "factionLabel": "魔法至尊",
+      "loyalty": 83,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "魔法",
+        "元素",
+        "咒文"
+      ],
+      "summary": "白若曦，魔法大陆法神，精通全系魔法，能释放毁天灭地的魔法攻击，掌控元素之力。",
+      "attitude": "追求魔法真谛，用魔法力量守护宿主。",
+      "openingLine": "宿主，魔法之力已为你备好，碾碎一切敌人。"
+    },
+    "hero_08": {
+      "name": "铁牛",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "末世废土",
+      "positions": [
+        "先锋战将"
+      ],
+      "faction": "military",
+      "factionLabel": "狂暴战力",
+      "loyalty": 95,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "蛮力",
+        "防御",
+        "生存"
+      ],
+      "summary": "铁牛，末世幸存者，肉身强悍无比，防御力惊人，擅长正面冲锋，生存能力极强。",
+      "attitude": "憨直忠诚，挡在宿主身前，承受一切伤害。",
+      "openingLine": "宿主，谁要是敢惹你，俺一拳头砸扁他！"
+    },
+    "hero_09": {
+      "name": "秦无双",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "洪荒世界",
+      "positions": [
+        "洪荒战神"
+      ],
+      "faction": "military",
+      "factionLabel": "洪荒霸主",
+      "loyalty": 89,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "洪荒",
+        "神兽",
+        "神通"
+      ],
+      "summary": "秦无双，洪荒上古战神，掌控神兽之力，拥有通天神通，可战洪荒万族，傲视古今。",
+      "attitude": "威震洪荒，辅佐宿主成为洪荒之主。",
+      "openingLine": "宿主，洪荒万族，皆可臣服于你！"
+    },
+    "hero_10": {
+      "name": "洛璃",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "现代都市",
+      "positions": [
+        "商业女王"
+      ],
+      "faction": "neutral",
+      "factionLabel": "商业奇才",
+      "loyalty": 82,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "商业",
+        "理财",
+        "人脉"
+      ],
+      "summary": "洛璃，现代都市顶级商业大佬，精通理财、投资、人脉运营，能快速积累海量财富。",
+      "attitude": "用商业手段为宿主打造金融帝国，掌控经济命脉。",
+      "openingLine": "宿主，资金已到位，任何项目都可启动。"
+    },
+    "hero_11": {
+      "name": "刀锋",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "赛博都市",
+      "positions": [
+        "义体战士"
+      ],
+      "faction": "military",
+      "factionLabel": "赛博强者",
+      "loyalty": 87,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "义体",
+        "黑客",
+        "近战"
+      ],
+      "summary": "刀锋，赛博朋克世界顶级义体改造人，精通近战、黑客技术、潜行突袭，战力与科技兼备。",
+      "attitude": "游走于赛博都市，为宿主清除一切电子与物理障碍。",
+      "openingLine": "宿主，网络已攻破，防线已瓦解，行动吧。"
+    },
+    "hero_12": {
+      "name": "风行者",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "异界草原",
+      "positions": [
+        "斥候统领"
+      ],
+      "faction": "imperial",
+      "factionLabel": "极速侦查",
+      "loyalty": 86,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "速度",
+        "侦查",
+        "骑射"
+      ],
+      "summary": "风行者，异界草原精灵，速度极致，擅长骑射、大范围侦查，能快速掌握世界地形与情报。",
+      "attitude": "驰骋天地，为宿主探路，传递关键情报。",
+      "openingLine": "宿主，世界地形与敌人分布已全部摸清。"
+    },
+    "hero_13": {
+      "name": "药尘",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "丹界",
+      "positions": [
+        "丹道圣师"
+      ],
+      "faction": "neutral",
+      "factionLabel": "丹道无敌",
+      "loyalty": 84,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "炼丹",
+        "解毒",
+        "养生"
+      ],
+      "summary": "药尘，丹界圣师，精通炼丹、解毒、养生之道，能炼制各种神丹，提升实力、延年益寿。",
+      "attitude": "潜心炼丹，为宿主提供最强丹药支持。",
+      "openingLine": "宿主，神丹已成，服用即可突破境界。"
+    },
+    "hero_14": {
+      "name": "龙战",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "龙族秘境",
+      "positions": [
+        "龙族族长"
+      ],
+      "faction": "military",
+      "factionLabel": "龙族至尊",
+      "loyalty": 91,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "龙族",
+        "肉身",
+        "神通"
+      ],
+      "summary": "龙战，上古龙族族长，肉身成圣，掌控龙族神通，战力滔天，是世间最强大的种族领袖。",
+      "attitude": "以龙族之力辅佐宿主，镇压一切不服。",
+      "openingLine": "宿主，龙族大军听你调遣，横扫诸天！"
+    },
+    "hero_15": {
+      "name": "念冰",
+      "courtesyName": "",
+      "birthYear": 0,
+      "deathYear": 9999,
+      "hometown": "冰火神域",
+      "positions": [
+        "元素使者"
+      ],
+      "faction": "neutral",
+      "factionLabel": "元素掌控",
+      "loyalty": 85,
+      "isAlive": true,
+      "deathReason": null,
+      "deathDay": null,
+      "tags": [
+        "冰火",
+        "元素",
+        "控制"
+      ],
+      "summary": "念冰，冰火双系元素使者，掌控极致冰火之力，擅长控制与大范围攻击，元素之力登峰造极。",
+      "attitude": "掌控元素平衡，用冰火之力守护宿主。",
+      "openingLine": "宿主，冰火元素已觉醒，敌人将被冻结焚烧。"
+    }
+  },
+  "factions": {
+    "donglin": {
+      "name": "智慧无双",
+      "color": "#2e7d32",
+      "description": "以智谋、洞察、规划为主的伙伴，擅长布局、算计、规避风险。",
+      "stance": "理性决策，规划最优路线，保障宿主安全发展。",
+      "members": [
+        "hero_02",
+        "hero_10"
+      ]
+    },
+    "eunuch": {
+      "name": "隐秘潜行",
+      "color": "#8d6e63",
+      "description": "擅长隐秘、侦查、暗杀、情报的伙伴，是宿主最隐秘的力量。",
+      "stance": "暗中行动，清除障碍，收集情报，保护宿主安全。",
+      "members": [
+        "hero_04",
+        "hero_11"
+      ]
+    },
+    "neutral": {
+      "name": "全能辅助",
+      "color": "#1565c0",
+      "description": "擅长治疗、科技、炼丹、商业、魔法的全能型伙伴，提供全方位支持。",
+      "stance": "专注辅助，提升团队实力，保障资源供给。",
+      "members": [
+        "hero_03",
+        "hero_05",
+        "hero_07",
+        "hero_12",
+        "hero_13",
+        "hero_15"
+      ]
+    },
+    "military": {
+      "name": "战力巅峰",
+      "color": "#e65100",
+      "description": "拥有超强战力的伙伴，擅长战斗、冲锋、扩张、镇压强敌。",
+      "stance": "横扫一切敌人，攻城略地，保障宿主势力扩张。",
+      "members": [
+        "hero_01",
+        "hero_06",
+        "hero_08",
+        "hero_09",
+        "hero_14"
+      ]
+    },
+    "imperial": {
+      "name": "宿主亲卫",
+      "color": "#6a1b9a",
+      "description": "绝对忠诚于宿主的亲卫伙伴，只执行宿主指令，守护宿主安危。",
+      "stance": "绝对忠诚，寸步不离，用生命守护宿主。",
+      "members": [
+        "hero_04",
+        "hero_08"
+      ]
+    }
+  },
+  "courtChats": {
+    "hero_01": [
+      {
+        "from": "minister",
+        "text": "宿主，当前世界强敌已出现，是否由我出手清理？"
+      },
+      {
+        "from": "player",
+        "text": "凌辰，敌人实力如何？"
+      },
+      {
+        "from": "minister",
+        "text": "不堪一击，我一剑便可斩杀，绝不会让他们威胁到宿主。"
+      }
+    ],
+    "hero_02": [
+      {
+        "from": "minister",
+        "text": "宿主，我已分析当前世界规则，为你规划三条发展路线。"
+      },
+      {
+        "from": "player",
+        "text": "清月，哪条路线最安全？"
+      },
+      {
+        "from": "minister",
+        "text": "稳健发展路线，先积累资源，再提升实力，无任何风险。"
+      }
+    ],
+    "hero_03": [
+      {
+        "from": "minister",
+        "text": "宿主，最新科技装备已研发完成，可大幅提升生存能力。"
+      },
+      {
+        "from": "player",
+        "text": "墨尘，能否制造跨世界传送装置？"
+      },
+      {
+        "from": "minister",
+        "text": "需要收集特殊资源，集齐后我可立刻制造，实现自由穿越。"
+      }
+    ],
+    "hero_04": [
+      {
+        "from": "minister",
+        "text": "宿主，周边情报已全部收集，无隐藏危险。"
+      },
+      {
+        "from": "player",
+        "text": "夜影，是否发现敌对势力踪迹？"
+      },
+      {
+        "from": "minister",
+        "text": "发现一股小型势力，已被我暗中清除，不会留下任何痕迹。"
+      }
+    ]
+  },
+  "modules": {
+    "neige": {
+      "name": "宿主中枢",
+      "description": "统御伙伴、决策事务、掌控全局的核心枢纽。"
+    },
+    "fasisi": {
+      "name": "情报系统",
+      "description": "收集世界情报、侦查敌人、监控局势的机构。"
+    },
+    "neiting": {
+      "name": "亲卫军团",
+      "description": "宿主专属亲卫，负责安全保卫、隐秘行动。"
+    },
+    "difang": {
+      "name": "势力领地",
+      "description": "宿主在各世界的领地、据点、产业管理系统。"
+    },
+    "junshi": {
+      "name": "战力军团",
+      "description": "由战力伙伴组成的战斗军团，负责战斗、扩张。"
+    }
+  },
+  "departments": {
+    "neige": {
+      "name": "宿主中枢",
+      "description": "统筹决策、伙伴管理、世界穿越的核心机构。"
+    },
+    "dutcheng": {
+      "name": "情报部",
+      "description": "收集情报、分析局势、监控敌人。"
+    },
+    "tongzheng_si": {
+      "name": "决策部",
+      "description": "分析议题、提供建议、执行指令。"
+    },
+    "neiting": {
+      "name": "亲卫部",
+      "description": "宿主安全保卫、隐秘行动执行。"
+    },
+    "local": {
+      "name": "领地管理",
+      "description": "管理各世界领地、资源、产业。"
+    },
+    "shuntian_fu": {
+      "name": "总部据点",
+      "description": "宿主在当前世界的核心据点。"
+    },
+    "military": {
+      "name": "战斗军团",
+      "description": "主力战斗部队，负责征战、防御。"
+    }
+  },
+  "positions": {
+    "neige_shoufu": {
+      "name": "大管家",
+      "description": "统筹所有事务，管理伙伴团队。"
+    },
+    "neige_cifu": {
+      "name": "副管家",
+      "description": "协助大管家，分管部分事务。"
+    },
+    "neige_daxueshi": {
+      "name": "军师",
+      "description": "提供决策建议，规划发展路线。"
+    },
+    "dutcheng_duchayuan_zuoduyushi": {
+      "name": "情报统领",
+      "description": "情报系统最高负责人。"
+    },
+    "dutcheng_duchayuan_yuoduyushi": {
+      "name": "情报副统领",
+      "description": "协助管理情报系统。"
+    },
+    "tongzheng_si_shi": {
+      "name": "决策官",
+      "description": "分析议题，执行决策。"
+    },
+    "shuntian_fu_yin": {
+      "name": "据点统领",
+      "description": "管理核心据点事务。"
+    },
+    "jiliao_dushi": {
+      "name": "战力统帅",
+      "description": "统领战斗军团，指挥作战。"
+    },
+    "xuanda_zongdu": {
+      "name": "扩张统帅",
+      "description": "负责势力扩张，占领领土。"
+    },
+    "sanbian_zongdu": {
+      "name": "防御统帅",
+      "description": "负责领地防御，抵御外敌。"
+    },
+    "shanxi_xunfu": {
+      "name": "资源总督",
+      "description": "管理资源采集、生产、储备。"
+    },
+    "henan_xunfu": {
+      "name": "科技总督",
+      "description": "管理科技研发、装备制造。"
+    },
+    "shandong_xunfu": {
+      "name": "商业总督",
+      "description": "管理商业运营，财富积累。"
+    },
+    "liaodong_zongbing": {
+      "name": "先锋统领",
+      "description": "战斗先锋，冲锋陷阵。"
+    },
+    "ningyuan_zongbing": {
+      "name": "近卫统领",
+      "description": "统领亲卫，保卫宿主。"
+    },
+    "shanxi_zongbing": {
+      "name": "侦查统领",
+      "description": "统领侦查部队，探查情报。"
+    },
+    "siliji_bingbi_taijian": {
+      "name": "隐秘统领",
+      "description": "统领隐秘部队，执行暗杀、突袭。"
+    },
+    "siliji_zhangyin_taijian": {
+      "name": "亲卫总长",
+      "description": "亲卫军团最高负责人。"
+    }
+  },
+  "policies": {
+    "civil_light_tax": {
+      "title": "资源减负",
+      "description": "降低资源消耗，提高资源利用率。"
+    },
+    "civil_tax_reform": {
+      "title": "资源优化",
+      "description": "优化资源采集、生产、分配体系。"
+    },
+    "civil_canal": {
+      "title": "资源通道",
+      "description": "建立稳定的资源运输通道，保障供给。"
+    },
+    "civil_salt_iron": {
+      "title": "核心资源垄断",
+      "description": "掌控当前世界核心资源，形成垄断优势。"
+    },
+    "civil_port_office": {
+      "title": "跨世界贸易",
+      "description": "开启跨世界资源贸易，互通有无。"
+    },
+    "civil_remove_mining_tax": {
+      "title": "资源采集加速",
+      "description": "提升资源采集速度，快速积累财富。"
+    },
+    "civil_royal_allowance_cut": {
+      "title": "消耗管控",
+      "description": "严格管控非必要消耗，集中资源发展。"
+    },
+    "civil_post_optimization": {
+      "title": "效率提升",
+      "description": "优化事务流程，提升整体运作效率。"
+    },
+    "civil_tea_horse": {
+      "title": "资源交换",
+      "description": "用多余资源交换稀缺资源。"
+    },
+    "civil_salt_ticket": {
+      "title": "资源储备",
+      "description": "建立大型资源储备库，应对危机。"
+    },
+    "civil_reserve_granary": {
+      "title": "生存保障",
+      "description": "储备大量生存物资，保障长期生存。"
+    },
+    "civil_paper_money": {
+      "title": "经济体系",
+      "description": "建立专属经济体系，掌控金融命脉。"
+    },
+    "military_border_defense": {
+      "title": "领地防御",
+      "description": "强化领地防御工事，抵御外敌入侵。"
+    },
+    "military_firearms": {
+      "title": "装备升级",
+      "description": "升级伙伴装备，提升整体战力。"
+    },
+    "military_capital_drill": {
+      "title": "伙伴训练",
+      "description": "强化伙伴训练，提升个人实力。"
+    },
+    "military_recruit": {
+      "title": "伙伴扩充",
+      "description": "招募更多强力伙伴，壮大团队。"
+    },
+    "military_wagon": {
+      "title": "战术配合",
+      "description": "训练伙伴战术配合，发挥团队战力。"
+    },
+    "military_navy": {
+      "title": "战力扩张",
+      "description": "扩大战斗军团规模，提升征战能力。"
+    },
+    "military_fort": {
+      "title": "工事建造",
+      "description": "建造防御工事、战斗设施，巩固阵地。"
+    },
+    "military_command": {
+      "title": "战力统合",
+      "description": "整合所有战力，统一指挥调度。"
+    },
+    "military_tuntian": {
+      "title": "战力自给",
+      "description": "实现战斗部队资源自给，减少消耗。"
+    },
+    "military_workshop": {
+      "title": "装备制造",
+      "description": "建立装备制造厂，自主生产强力装备。"
+    },
+    "politics_balance": {
+      "title": "势力平衡",
+      "description": "平衡世界各方势力，坐收渔利。"
+    },
+    "politics_memorial": {
+      "title": "情报管控",
+      "description": "严格管控情报，防止信息泄露。"
+    },
+    "politics_limit_cabinet": {
+      "title": "决策集权",
+      "description": "宿主掌控最终决策权，避免分歧。"
+    },
+    "politics_censorate": {
+      "title": "内部整顿",
+      "description": "整顿团队内部，提升凝聚力与执行力。"
+    },
+    "politics_assessment": {
+      "title": "伙伴考核",
+      "description": "定期考核伙伴实力与忠诚度，优胜劣汰。"
+    },
+    "politics_limit_eunuch": {
+      "title": "权限管控",
+      "description": "严格管控伙伴权限，防止权力滥用。"
+    },
+    "politics_royal_rule": {
+      "title": "威望提升",
+      "description": "提升宿主威望，让伙伴更加忠诚。"
+    },
+    "politics_viceroy": {
+      "title": "分域管理",
+      "description": "划分管理区域，专人负责，提升效率。"
+    },
+    "politics_east_factory": {
+      "title": "隐秘监控",
+      "description": "建立隐秘监控体系，掌控一切动向。"
+    },
+    "politics_south_study": {
+      "title": "核心议事",
+      "description": "召集核心伙伴，商议重大决策。"
+    },
+    "tech_agri": {
+      "title": "生存科技",
+      "description": "研发生存相关科技，提升生存能力。"
+    },
+    "tech_engineering": {
+      "title": "工业科技",
+      "description": "研发工业科技，提升制造与建设能力。"
+    },
+    "tech_calendar": {
+      "title": "世界规则",
+      "description": "研究世界规则，掌握世界运行规律。"
+    },
+    "tech_firearm_theory": {
+      "title": "战斗科技",
+      "description": "研发战斗相关科技，提升战力。"
+    },
+    "tech_water": {
+      "title": "环境适应",
+      "description": "研发环境适应科技，适配任何世界环境。"
+    },
+    "tech_ship": {
+      "title": "穿越科技",
+      "description": "研发穿越相关科技，提升穿越能力。"
+    },
+    "tech_medicine": {
+      "title": "医疗科技",
+      "description": "研发医疗科技，保障伙伴生命安全。"
+    },
+    "tech_math": {
+      "title": "智慧科技",
+      "description": "研发智慧科技，提升分析与规划能力。"
+    },
+    "diplomacy_mongol": {
+      "title": "势力结盟",
+      "description": "与世界友好势力结盟，共同对抗强敌。"
+    },
+    "diplomacy_korea": {
+      "title": "势力交好",
+      "description": "与周边势力保持友好，获取支持。"
+    },
+    "diplomacy_macao": {
+      "title": "势力合作",
+      "description": "与其他势力合作，互利共赢。"
+    },
+    "diplomacy_japan": {
+      "title": "跨世界结盟",
+      "description": "与其他世界友好势力建立联盟。"
+    },
+    "diplomacy_rome": {
+      "title": "多元外交",
+      "description": "开展多元外交，结交各路势力。"
+    },
+    "diplomacy_southwest": {
+      "title": "本土安抚",
+      "description": "安抚当前世界本土势力，减少冲突。"
+    },
+    "people_epidemic": {
+      "title": "危机应对",
+      "description": "建立危机应对机制，处理世界灾难。"
+    },
+    "people_refugee": {
+      "title": "人员收容",
+      "description": "收容世界幸存者，扩充势力人口。"
+    },
+    "people_charity_granary": {
+      "title": "民心收拢",
+      "description": "救济民众，收拢民心，提升声望。"
+    },
+    "alt_nanyang_colony": {
+      "title": "世界殖民",
+      "description": "殖民弱小世界，扩张宿主统治疆域。"
+    }
+  },
+  "nationInit": {
+    "externalThreats": [
+      {
+        "id": "enemy_01",
+        "name": "世界原住民",
+        "power": 50,
+        "description": "当前世界本土势力，对穿越者抱有敌意。"
+      },
+      {
+        "id": "enemy_02",
+        "name": "敌对穿越者",
+        "power": 60,
+        "description": "其他穿越者，争夺世界资源与机遇。"
+      }
+    ],
+    "provinces": [
+      {
+        "name": "初始领地",
+        "taxSilver": 1000,
+        "taxGrain": 1000,
+        "recruits": 100,
+        "morale": 50,
+        "corruption": 0,
+        "disaster": 0
+      },
+      {
+        "name": "周边区域",
+        "taxSilver": 500,
+        "taxGrain": 500,
+        "recruits": 50,
+        "morale": 40,
+        "corruption": 10,
+        "disaster": 20
+      },
+      {
+        "name": "青霜平原",
+        "taxSilver": 1200,
+        "taxGrain": 1400,
+        "recruits": 220,
+        "morale": 55,
+        "corruption": 15,
+        "disaster": 18
+      },
+      {
+        "name": "赤岩山脉",
+        "taxSilver": 1600,
+        "taxGrain": 600,
+        "recruits": 180,
+        "morale": 48,
+        "corruption": 22,
+        "disaster": 25
+      },
+      {
+        "name": "碧水湖域",
+        "taxSilver": 900,
+        "taxGrain": 1100,
+        "recruits": 150,
+        "morale": 60,
+        "corruption": 12,
+        "disaster": 15
+      },
+      {
+        "name": "黑岩要塞",
+        "taxSilver": 1400,
+        "taxGrain": 700,
+        "recruits": 260,
+        "morale": 45,
+        "corruption": 28,
+        "disaster": 30
+      },
+      {
+        "name": "云顶高原",
+        "taxSilver": 1100,
+        "taxGrain": 900,
+        "recruits": 200,
+        "morale": 52,
+        "corruption": 18,
+        "disaster": 22
+      },
+      {
+        "name": "落枫林地",
+        "taxSilver": 800,
+        "taxGrain": 1200,
+        "recruits": 170,
+        "morale": 58,
+        "corruption": 14,
+        "disaster": 16
+      },
+      {
+        "name": "黄沙戈壁",
+        "taxSilver": 1300,
+        "taxGrain": 400,
+        "recruits": 210,
+        "morale": 42,
+        "corruption": 25,
+        "disaster": 35
+      },
+      {
+        "name": "东海沿岸",
+        "taxSilver": 1800,
+        "taxGrain": 1000,
+        "recruits": 190,
+        "morale": 65,
+        "corruption": 20,
+        "disaster": 24
+      },
+      {
+        "name": "万兽荒原",
+        "taxSilver": 700,
+        "taxGrain": 800,
+        "recruits": 240,
+        "morale": 49,
+        "corruption": 16,
+        "disaster": 28
+      },
+      {
+        "name": "神谕禁地",
+        "taxSilver": 2000,
+        "taxGrain": 1500,
+        "recruits": 300,
+        "morale": 70,
+        "corruption": 10,
+        "disaster": 12
+      }
+    ]
+  }
+}

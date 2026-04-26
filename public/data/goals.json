@@ -1,0 +1,9 @@
+[
+  { "id": "survive_10", "title": "撑过开局 10 天，让据点与势力不崩盘" },
+  { "id": "treasury_up", "title": "开源节流，使资源储备超过 800,000" },
+  { "id": "morale_60", "title": "稳定民心，将民心指数提升至 60 以上" },
+  { "id": "loyalty_all_50", "title": "稳固团队，使核心伙伴忠诚度达到 50 以上" },
+  { "id": "border_down", "title": "压制外部威胁，将边患威胁降至 50 以下" },
+  { "id": "talk_all", "title": "兼听则明，与所有核心伙伴完成至少一次议事" },
+  { "id": "eliminate_external", "title": "扫清外患，消灭所有外部敌对势力" }
+]
