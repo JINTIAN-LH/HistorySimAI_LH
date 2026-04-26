@@ -1,8 +1,31 @@
 # Commit 日志
 
+## 2026-04-27: merge: integrate my-feature-branch into main for production deploy
+
+**Commit Hash**: b465354
+
+### 改动摘要
+
+将 my-feature-branch 合并至 main，修复生产环境 GitHub Pages 静态资源 404（`worldview.import.bundle.txt` 未部署）问题，并将全部新功能推送至生产。冲突以 feature branch 为准，同步清理 ChongzhenSim/ 残留副本。
+
+### 核心改动
+
+- storySystem.js 首回合自定义世界观覆盖修复
+- TextPreviewModal、OnboardingUpdateModal 组件上线
+- 设置页示例文件全文查看/下载功能
+- playerUpdates.json 配置驱动版本弹窗
+- public/data/import-samples/worldview.import.bundle.txt 已包含在构建输出
+
+### 价值
+
+- 生产 404 修复：GitHub Pages 构建现包含 worldview 示例 bundle
+- 全部 my-feature-branch 功能部署至 main
+
+---
+
 ## 2026-04-26: feat(ui): add versioned onboarding and reusable text modals
 
-**Commit Hash**: (pending)
+**Commit Hash**: 2b4235a
 
 ### 改动摘要
 
@@ -35,7 +58,7 @@
 
 ## 2026-04-22: fix(settings): improve mobile sample bundle download
 
-**Commit Hash**: (pending)
+**Commit Hash**: 80f55c2
 
 ### 改动摘要
 
@@ -59,7 +82,7 @@
 
 ## 2026-04-22: fix: harden mobile sample download and quarterly rewards
 
-**Commit Hash**: (pending)
+**Commit Hash**: a025e68
 
 ### 改动摘要
 
@@ -86,7 +109,7 @@
 
 ## 2026-04-22: fix: stabilize worldview context and death pacing
 
-**Commit Hash**: (pending)
+**Commit Hash**: 8b62a0a
 
 ### 改动摘要
 
