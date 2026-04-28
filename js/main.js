@@ -272,6 +272,7 @@ async function preloadBasicData(preferredMode = null) {
     appointments: hasExistingAppointments ? normalizedExistingAppointments : normalizedDefaultAppointments,
     characterStatus: repairedCharacterStatus.characterStatus,
     storyHistory: current.storyHistory || [],
+    currentStoryTurn: customWorldview ? null : (current.currentStoryTurn || null),
     ...coreState,
     externalPowers,
     provinceStats,

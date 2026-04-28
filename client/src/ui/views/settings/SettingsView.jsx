@@ -227,63 +227,34 @@ export function SettingsView() {
   };
 
   const handleDownloadSampleBundle = async (event) => {
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
+
+    // On desktop, let the native <a download> handle it — no preventDefault needed.
+    if (!isMobile) {
+      setWvError("");
+      return;
+    }
+
+    // Mobile: native download attribute is unreliable; use share API or direct URL.
     event.preventDefault();
     setWvError("");
 
     try {
       const bundleUrl = new URL(WORLDVIEW_SAMPLE_BUNDLE_PATH, window.location.origin).toString();
-      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
 
-      // Mobile browsers are more reliable with direct URL open/share than blob download.
-      if (isMobile) {
-        if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-          try {
-            await navigator.share({
-              title: WORLDVIEW_SAMPLE_BUNDLE_NAME,
-              url: bundleUrl,
-            });
-            return;
-          } catch (shareError) {
-            // User canceled share or platform refused; continue with direct open fallback.
-          }
+      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+        try {
+          await navigator.share({
+            title: WORLDVIEW_SAMPLE_BUNDLE_NAME,
+            url: bundleUrl,
+          });
+          return;
+        } catch (shareError) {
+          // User canceled share or platform refused; fall through to direct open.
         }
-
-        window.location.assign(bundleUrl);
-        return;
       }
 
-      const response = await fetch(WORLDVIEW_SAMPLE_BUNDLE_PATH, { cache: "no-cache" });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const blob = await response.blob();
-      const file = new File([blob], WORLDVIEW_SAMPLE_BUNDLE_NAME, { type: "text/plain;charset=utf-8" });
-
-      // Mobile browsers often ignore the download attribute and may replace the current page.
-      if (typeof navigator !== "undefined"
-        && typeof navigator.canShare === "function"
-        && typeof navigator.share === "function"
-        && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: WORLDVIEW_SAMPLE_BUNDLE_NAME,
-        });
-        return;
-      }
-
-      const objectUrl = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = objectUrl;
-      anchor.download = WORLDVIEW_SAMPLE_BUNDLE_NAME;
-      anchor.rel = "noopener noreferrer";
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-
-      window.setTimeout(() => {
-        URL.revokeObjectURL(objectUrl);
-      }, 1000);
+      window.location.assign(bundleUrl);
     } catch (error) {
       console.error("下载示例文件失败", error);
       setWvError("下载示例文件失败，请长按链接选择下载或稍后重试。");
@@ -298,7 +269,8 @@ export function SettingsView() {
 
     setWvSampleLoading(true);
     try {
-      const response = await fetch(WORLDVIEW_SAMPLE_BUNDLE_PATH, { cache: "no-cache" });
+      const bundleUrl = new URL(WORLDVIEW_SAMPLE_BUNDLE_PATH, window.location.origin).toString();
+      const response = await fetch(bundleUrl, { cache: "no-cache" });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }

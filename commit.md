@@ -1,5 +1,32 @@
 # Commit 日志
 
+## 2026-04-28: fix(story): isolate worldview state and sample download
+
+**Commit Hash**: (pending)
+
+### 改动摘要
+
+本次更新修复了自定义世界观切换后的剧情状态串用问题，将故事缓存与当前故事回合按世界观隔离。同时简化设置页示例包下载逻辑，改为桌面端走原生下载、移动端优先走分享/直链，减少移动浏览器兼容性问题。
+
+### 核心改动
+
+| 文件 | 改动 | 说明 |
+|------|------|------|
+| `client/src/ui/views/settings/SettingsView.jsx` | ✏️ | 简化示例包下载流程，区分桌面端原生下载与移动端分享/直链回退 |
+| `js/main.js` | ✏️ | 载入自定义世界观时重置 `currentStoryTurn`，避免沿用旧世界观剧情进度 |
+| `js/systems/storySystem.js` | ✏️ | 将 `worldviewId` 纳入故事缓存键，避免不同世界观复用同一剧情缓存 |
+
+### 价值
+
+- 修复不同世界观之间的剧情状态污染
+- 降低移动端下载示例文件失败或替换当前页面的概率
+- 让故事模板缓存与世界观内容保持一致，减少错配叙事
+
+### 验证
+
+- `npx vitest run js/systems/storySystem.template.test.js js/systems/storySystem.effects.test.js` ✅ 通过
+- `npm run build` ✅ 通过
+
 ## 2026-04-27: fix(server): add API fallbacks and enrich opening briefing
 
 **Commit Hash**: (pending)

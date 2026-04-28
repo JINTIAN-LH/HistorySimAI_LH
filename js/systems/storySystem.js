@@ -1296,7 +1296,8 @@ async function loadStoryData(state, container, renderId, onChoice, options) {
   const year = state.currentYear || 1;
   const month = state.currentMonth || 1;
   const phaseKey = state.currentPhase || "morning";
-  const cacheKey = `${year}_${month}_${phaseKey}`;
+  const worldviewId = state.config?.worldviewData?.id || state.config?.worldVersion || "default";
+  const cacheKey = `${worldviewId}_${year}_${month}_${phaseKey}`;
   const config = state.config || {};
   const isFirstTurn = (state.lastChoiceId == null) && (!Array.isArray(state.storyHistory) || state.storyHistory.length === 0);
   const templatePaths = buildStoryTemplatePaths(state, config);
